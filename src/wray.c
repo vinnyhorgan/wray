@@ -4,6 +4,7 @@
 #include <raylib.h>
 
 #include "lib/argparse/argparse.h"
+#include "lib/wren/wren.h"
 #include "lib/zip/zip.h"
 
 #define WRAY_VERSION "0.1.0"
@@ -16,6 +17,72 @@
 #include <sys/types.h>
 #define mkdir(path) mkdir(path, 0777)
 #endif
+
+static struct zip_t* egg = NULL;
+
+static unsigned char* zipLoadFileData(const char* path, int* size)
+{
+    zip_entry_open(egg, path);
+
+    *size = (int)zip_entry_size(egg);
+    unsigned char* buffer = (unsigned char*)malloc(*size);
+    zip_entry_noallocread(egg, buffer, *size);
+
+    zip_entry_close(egg);
+
+    return buffer;
+}
+
+static char* zipLoadFileText(const char* path)
+{
+    zip_entry_open(egg, path);
+
+    size_t size = zip_entry_size(egg);
+    char* buffer = (char*)malloc(size + 1);
+    zip_entry_noallocread(egg, buffer, size);
+    buffer[size] = '\0';
+
+    zip_entry_close(egg);
+
+    return buffer;
+}
+
+static void wrenWrite(WrenVM* vm, const char* text)
+{
+    printf("%s", text);
+}
+
+static void wrenError(WrenVM* vm, WrenErrorType type, const char* module, int line, const char* message)
+{
+    switch (type) {
+    case WREN_ERROR_COMPILE:
+        printf("[%s line %d] %s\n", module, line, message);
+        break;
+    case WREN_ERROR_RUNTIME:
+        printf("%s\n", message);
+        break;
+    case WREN_ERROR_STACK_TRACE:
+        printf("[%s line %d] in %s\n", module, line, message);
+        break;
+    }
+}
+
+static void runWren(const char* script, const char* module)
+{
+    char* source = LoadFileText(script);
+
+    WrenConfiguration config;
+    wrenInitConfiguration(&config);
+
+    config.writeFn = wrenWrite;
+    config.errorFn = wrenError;
+
+    WrenVM* vm = wrenNewVM(&config);
+    wrenInterpret(vm, module, source);
+
+    UnloadFileText(source);
+    wrenFreeVM(vm);
+}
 
 typedef struct {
     const char* name;
@@ -45,7 +112,7 @@ static int newCommand(int argc, const char** argv)
     }
 
     mkdir(argv[0]);
-    SaveFileText(TextFormat("%s/main.wren", argv[0]), "System.print(\"Hello, World!\");");
+    SaveFileText(TextFormat("%s/main.wren", argv[0]), "System.print(\"Hello, World!\")");
 
     printf("Created project %s.\n", argv[0]);
 
@@ -116,7 +183,7 @@ static int nestCommand(int argc, const char** argv)
 
     zip_close(zip);
 
-    printf("Packaged %s as %s\n", argv[0], output);
+    printf("Packaged %s as %s.\n", argv[0], output);
 
     return 0;
 }
@@ -195,6 +262,38 @@ int main(int argc, char** argv)
 
     if (command) {
         return command->fn(argc, argv);
+    }
+
+    if (DirectoryExists(argv[0])) {
+        ChangeDirectory(argv[0]);
+
+        if (!FileExists("main.wren")) {
+            printf("No main.wren file found in %s.\n", argv[0]);
+            return 1;
+        }
+
+        runWren("main.wren", "main");
+    } else if (FileExists(argv[0]) && TextIsEqual(GetFileExtension(argv[0]), ".egg")) {
+        egg = zip_open(argv[0], 0, 'r');
+
+        SetLoadFileDataCallback(zipLoadFileData);
+        SetLoadFileTextCallback(zipLoadFileText);
+
+        runWren("main.wren", "main");
+
+        zip_close(egg);
+    } else if (FileExists(argv[0])) {
+        if (!TextIsEqual(GetFileExtension(argv[0]), ".wren")) {
+            printf("%s is not a wren source file.\n", argv[0]);
+            return 1;
+        }
+
+        ChangeDirectory(GetDirectoryPath(argv[0]));
+
+        runWren(GetFileName(argv[0]), GetFileNameWithoutExt(argv[0]));
+    } else {
+        printf("No such file or directory: %s.\n", argv[0]);
+        return 1;
     }
 
     return 0;
