@@ -7,6 +7,9 @@
 #include "lib/wren/wren.h"
 #include "lib/zip/zip.h"
 
+#include "api.h"
+#include "api.wren.h"
+
 #define WRAY_VERSION "0.1.0"
 
 #ifdef _WIN32
@@ -47,6 +50,104 @@ static char* zipLoadFileText(const char* path)
     return buffer;
 }
 
+static void onComplete(WrenVM* vm, const char* name, WrenLoadModuleResult result)
+{
+    if (result.source)
+        free((void*)result.source);
+}
+
+static WrenLoadModuleResult wrenLoadModule(WrenVM* vm, const char* name)
+{
+    WrenLoadModuleResult result = { 0 };
+
+    if (TextIsEqual(name, "meta") || TextIsEqual(name, "random"))
+        return result;
+
+    if (TextIsEqual(name, "wray")) {
+        result.source = apiModuleSource;
+        return result;
+    }
+
+    result.source = LoadFileText(TextFormat("%s.wren", name));
+    result.onComplete = onComplete;
+
+    return result;
+}
+
+static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module, const char* className, bool isStatic, const char* signature)
+{
+    if (TextIsEqual(className, "Window")) {
+        if (TextIsEqual(signature, "init(_,_,_)"))
+            return windowInit;
+        if (TextIsEqual(signature, "close()"))
+            return windowClose;
+        if (TextIsEqual(signature, "closed"))
+            return windowGetClosed;
+        if (TextIsEqual(signature, "width"))
+            return windowGetWidth;
+        if (TextIsEqual(signature, "height"))
+            return windowGetHeight;
+        if (TextIsEqual(signature, "fps"))
+            return windowGetFps;
+        if (TextIsEqual(signature, "targetFps=(_)"))
+            return windowSetTargetFps;
+    } else if (TextIsEqual(className, "Graphics")) {
+        if (TextIsEqual(signature, "begin()"))
+            return graphicsBegin;
+        if (TextIsEqual(signature, "end()"))
+            return graphicsEnd;
+        if (TextIsEqual(signature, "clear(_)"))
+            return graphicsClear;
+        if (TextIsEqual(signature, "rect(_,_,_,_,_)"))
+            return graphicsRect;
+        if (TextIsEqual(signature, "text(_,_,_,_,_)"))
+            return graphicsText;
+    } else if (TextIsEqual(className, "Mouse")) {
+        if (TextIsEqual(signature, "pressed(_)"))
+            return mousePressed;
+        if (TextIsEqual(signature, "down(_)"))
+            return mouseDown;
+        if (TextIsEqual(signature, "x"))
+            return mouseGetX;
+        if (TextIsEqual(signature, "y"))
+            return mouseGetY;
+    } else if (TextIsEqual(className, "Color")) {
+        if (TextIsEqual(signature, "init new(_,_,_,_)"))
+            return colorNew;
+        if (TextIsEqual(signature, "init new(_,_,_)"))
+            return colorNew2;
+        if (TextIsEqual(signature, "[_]"))
+            return colorGetIndex;
+        if (TextIsEqual(signature, "[_]=(_)"))
+            return colorSetIndex;
+    } else if (TextIsEqual(className, "Texture")) {
+        if (TextIsEqual(signature, "init new(_)"))
+            return textureNew;
+        if (TextIsEqual(signature, "width"))
+            return textureGetWidth;
+        if (TextIsEqual(signature, "height"))
+            return textureGetHeight;
+        if (TextIsEqual(signature, "draw(_,_,_)"))
+            return textureDraw;
+    }
+
+    return NULL;
+}
+
+static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* module, const char* className)
+{
+    WrenForeignClassMethods methods = { 0 };
+
+    if (TextIsEqual(className, "Color")) {
+        methods.allocate = colorAllocate;
+    } else if (TextIsEqual(className, "Texture")) {
+        methods.allocate = textureAllocate;
+        methods.finalize = textureFinalize;
+    }
+
+    return methods;
+}
+
 static void wrenWrite(WrenVM* vm, const char* text)
 {
     printf("%s", text);
@@ -74,6 +175,9 @@ static void runWren(const char* script, const char* module)
     WrenConfiguration config;
     wrenInitConfiguration(&config);
 
+    config.loadModuleFn = wrenLoadModule;
+    config.bindForeignMethodFn = wrenBindForeignMethod;
+    config.bindForeignClassFn = wrenBindForeignClass;
     config.writeFn = wrenWrite;
     config.errorFn = wrenError;
 

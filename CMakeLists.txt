@@ -36,6 +36,7 @@ FetchContent_Declare(raylib
 FetchContent_MakeAvailable(raylib)
 
 set(SOURCES
+    src/api.c
     src/wray.c
     src/lib/argparse/argparse.c
     src/lib/naett/naett.c
