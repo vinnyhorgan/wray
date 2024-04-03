@@ -43,6 +43,10 @@ set(SOURCES
     src/lib/zip/zip.c
 )
 
+if(WIN32)
+    list(APPEND SOURCES assets/wray.rc)
+endif()
+
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_link_libraries(${PROJECT_NAME} raylib)
 

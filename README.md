@@ -1,2 +1,5 @@
+![wray](assets/wray.png)
+
 # wray
- The tiny wren runtime.
+
+> **The tiny wren runtime.**
