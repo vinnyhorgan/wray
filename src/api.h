@@ -20,6 +20,13 @@ void soundSetVolume(WrenVM* vm);
 void soundSetPitch(WrenVM* vm);
 void soundSetPan(WrenVM* vm);
 
+void fontAllocate(WrenVM* vm);
+void fontFinalize(void* data);
+void fontNew(WrenVM* vm);
+void fontPrint(WrenVM* vm);
+void fontMeasure(WrenVM* vm);
+void fontGetSize(WrenVM* vm);
+
 void windowInit(WrenVM* vm);
 void windowClose(WrenVM* vm);
 void windowGetClosed(WrenVM* vm);

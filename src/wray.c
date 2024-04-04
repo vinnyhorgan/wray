@@ -119,6 +119,15 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return soundSetPitch;
         if (TextIsEqual(signature, "pan=(_)"))
             return soundSetPan;
+    } else if (TextIsEqual(className, "Font")) {
+        if (TextIsEqual(signature, "init new(_,_)"))
+            return fontNew;
+        if (TextIsEqual(signature, "print(_,_,_,_,_,_,_)"))
+            return fontPrint;
+        if (TextIsEqual(signature, "measure(_)"))
+            return fontMeasure;
+        if (TextIsEqual(signature, "size"))
+            return fontGetSize;
     } else if (TextIsEqual(className, "Window")) {
         if (TextIsEqual(signature, "init(_,_,_)"))
             return windowInit;
@@ -189,6 +198,9 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
     } else if (TextIsEqual(className, "Sound")) {
         methods.allocate = soundAllocate;
         methods.finalize = soundFinalize;
+    } else if (TextIsEqual(className, "Font")) {
+        methods.allocate = fontAllocate;
+        methods.finalize = fontFinalize;
     }
 
     return methods;

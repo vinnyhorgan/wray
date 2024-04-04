@@ -20,6 +20,20 @@ foreign class Sound {
     foreign pan=(v)
 }
 
+foreign class Font {
+    foreign construct new(path, size)
+
+    foreign print(text, x, y, r, ox, oy, color)
+
+    print(text, x, y, color) {
+        print(text, x, y, 0, 0, 0, color)
+    }
+
+    foreign measure(text)
+
+    foreign size
+}
+
 class Window {
     foreign static init(width, height, title)
     foreign static close()

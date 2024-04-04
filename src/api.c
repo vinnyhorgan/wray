@@ -164,6 +164,81 @@ void soundSetPan(WrenVM* vm)
     SetSoundPan(*sound, pan);
 }
 
+void fontAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Font));
+}
+
+void fontFinalize(void* data)
+{
+    Font* font = (Font*)data;
+
+    if (IsWindowReady())
+        UnloadFont(*font);
+}
+
+void fontNew(WrenVM* vm)
+{
+    Font* font = (Font*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "size");
+
+    const char* path = wrenGetSlotString(vm, 1);
+    int size = (int)wrenGetSlotDouble(vm, 2);
+
+    if (!IsWindowReady()) {
+        VM_ABORT(vm, "Cannot load font before window initialization.");
+        return;
+    }
+
+    *font = LoadFontEx(path, size, NULL, 0);
+    if (!IsFontReady(*font)) {
+        VM_ABORT(vm, "Failed to load font.");
+        return;
+    }
+}
+
+void fontPrint(WrenVM* vm)
+{
+    Font* font = (Font*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
+
+    const char* text = wrenGetSlotString(vm, 1);
+    int x = (int)wrenGetSlotDouble(vm, 2);
+    int y = (int)wrenGetSlotDouble(vm, 3);
+    float r = (float)wrenGetSlotDouble(vm, 4);
+    int ox = (int)wrenGetSlotDouble(vm, 5);
+    int oy = (int)wrenGetSlotDouble(vm, 6);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 7);
+
+    DrawTextPro(*font, text, (Vector2) { (float)x, (float)y }, (Vector2) { (float)ox, (float)oy }, r, (float)font->baseSize, 0, *color);
+}
+
+void fontMeasure(WrenVM* vm)
+{
+    Font* font = (Font*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+
+    const char* text = wrenGetSlotString(vm, 1);
+    wrenSetSlotDouble(vm, 0, MeasureTextEx(*font, text, (float)font->baseSize, 0).x);
+}
+
+void fontGetSize(WrenVM* vm)
+{
+    Font* font = (Font*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, font->baseSize);
+}
+
 void windowInit(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
@@ -407,7 +482,7 @@ void textureNew(WrenVM* vm)
     const char* path = wrenGetSlotString(vm, 1);
 
     if (!IsWindowReady()) {
-        VM_ABORT(vm, "Cannot create texture before window initialization.");
+        VM_ABORT(vm, "Cannot load texture before window initialization.");
         return;
     }
 
