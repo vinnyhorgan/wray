@@ -55,7 +55,7 @@ void audioSetVolume(WrenVM* vm)
 void soundAllocate(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
-    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Texture));
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Sound));
 }
 
 void soundFinalize(void* data)
@@ -124,6 +124,11 @@ void soundSetVolume(WrenVM* vm)
 
     float volume = (float)wrenGetSlotDouble(vm, 1);
 
+    if (volume < 0.0f || volume > 1.0f) {
+        VM_ABORT(vm, "Volume must be between 0.0 and 1.0.");
+        return;
+    }
+
     SetSoundVolume(*sound, volume);
 }
 
@@ -135,6 +140,11 @@ void soundSetPitch(WrenVM* vm)
 
     float pitch = (float)wrenGetSlotDouble(vm, 1);
 
+    if (pitch < 0.0f) {
+        VM_ABORT(vm, "Pitch must be greater than 0.0.");
+        return;
+    }
+
     SetSoundPitch(*sound, pitch);
 }
 
@@ -145,6 +155,11 @@ void soundSetPan(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 1, NUM, "pan");
 
     float pan = (float)wrenGetSlotDouble(vm, 1);
+
+    if (pan < 0.0f || pan > 1.0f) {
+        VM_ABORT(vm, "Pan must be between 0.0 and 1.0.");
+        return;
+    }
 
     SetSoundPan(*sound, pan);
 }
