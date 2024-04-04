@@ -1,3 +1,25 @@
+class Audio {
+    foreign static init()
+    foreign static close()
+
+    foreign static volume
+    foreign static volume=(v)
+}
+
+foreign class Sound {
+    foreign construct new(path)
+
+    foreign play()
+    foreign stop()
+    foreign pause()
+    foreign resume()
+
+    foreign playing
+    foreign volume=(v)
+    foreign pitch=(v)
+    foreign pan=(v)
+}
+
 class Window {
     foreign static init(width, height, title)
     foreign static close()

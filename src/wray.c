@@ -25,10 +25,17 @@ static struct zip_t* egg = NULL;
 
 static unsigned char* zipLoadFileData(const char* path, int* size)
 {
-    zip_entry_open(egg, path);
+    if (zip_entry_open(egg, path) < 0)
+        return NULL;
 
     *size = (int)zip_entry_size(egg);
+
     unsigned char* buffer = (unsigned char*)malloc(*size);
+    if (buffer == NULL) {
+        zip_entry_close(egg);
+        return NULL;
+    }
+
     zip_entry_noallocread(egg, buffer, *size);
 
     zip_entry_close(egg);
@@ -38,11 +45,19 @@ static unsigned char* zipLoadFileData(const char* path, int* size)
 
 static char* zipLoadFileText(const char* path)
 {
-    zip_entry_open(egg, path);
+    if (zip_entry_open(egg, path) < 0)
+        return NULL;
 
     size_t size = zip_entry_size(egg);
+
     char* buffer = (char*)malloc(size + 1);
+    if (buffer == NULL) {
+        zip_entry_close(egg);
+        return NULL;
+    }
+
     zip_entry_noallocread(egg, buffer, size);
+
     buffer[size] = '\0';
 
     zip_entry_close(egg);
@@ -76,7 +91,35 @@ static WrenLoadModuleResult wrenLoadModule(WrenVM* vm, const char* name)
 
 static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module, const char* className, bool isStatic, const char* signature)
 {
-    if (TextIsEqual(className, "Window")) {
+    if (TextIsEqual(className, "Audio")) {
+        if (TextIsEqual(signature, "init()"))
+            return audioInit;
+        if (TextIsEqual(signature, "close()"))
+            return audioClose;
+        if (TextIsEqual(signature, "volume"))
+            return audioGetVolume;
+        if (TextIsEqual(signature, "volume=(_)"))
+            return audioSetVolume;
+    } else if (TextIsEqual(className, "Sound")) {
+        if (TextIsEqual(signature, "init new(_)"))
+            return soundNew;
+        if (TextIsEqual(signature, "play()"))
+            return soundPlay;
+        if (TextIsEqual(signature, "stop()"))
+            return soundStop;
+        if (TextIsEqual(signature, "pause()"))
+            return soundPause;
+        if (TextIsEqual(signature, "resume()"))
+            return soundResume;
+        if (TextIsEqual(signature, "playing"))
+            return soundGetPlaying;
+        if (TextIsEqual(signature, "volume=(_)"))
+            return soundSetVolume;
+        if (TextIsEqual(signature, "pitch=(_)"))
+            return soundSetPitch;
+        if (TextIsEqual(signature, "pan=(_)"))
+            return soundSetPan;
+    } else if (TextIsEqual(className, "Window")) {
         if (TextIsEqual(signature, "init(_,_,_)"))
             return windowInit;
         if (TextIsEqual(signature, "close()"))
@@ -143,6 +186,9 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
     } else if (TextIsEqual(className, "Texture")) {
         methods.allocate = textureAllocate;
         methods.finalize = textureFinalize;
+    } else if (TextIsEqual(className, "Sound")) {
+        methods.allocate = soundAllocate;
+        methods.finalize = soundFinalize;
     }
 
     return methods;

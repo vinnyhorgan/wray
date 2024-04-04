@@ -3,6 +3,23 @@
 
 #include "lib/wren/wren.h"
 
+void audioInit(WrenVM* vm);
+void audioClose(WrenVM* vm);
+void audioGetVolume(WrenVM* vm);
+void audioSetVolume(WrenVM* vm);
+
+void soundAllocate(WrenVM* vm);
+void soundFinalize(void* data);
+void soundNew(WrenVM* vm);
+void soundPlay(WrenVM* vm);
+void soundStop(WrenVM* vm);
+void soundPause(WrenVM* vm);
+void soundResume(WrenVM* vm);
+void soundGetPlaying(WrenVM* vm);
+void soundSetVolume(WrenVM* vm);
+void soundSetPitch(WrenVM* vm);
+void soundSetPan(WrenVM* vm);
+
 void windowInit(WrenVM* vm);
 void windowClose(WrenVM* vm);
 void windowGetClosed(WrenVM* vm);

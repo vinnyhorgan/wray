@@ -18,6 +18,137 @@
         return;                                                           \
     }
 
+void audioInit(WrenVM* vm)
+{
+    InitAudioDevice();
+    if (!IsAudioDeviceReady()) {
+        VM_ABORT(vm, "Failed to initialize audio.");
+        return;
+    }
+}
+
+void audioClose(WrenVM* vm)
+{
+    CloseAudioDevice();
+}
+
+void audioGetVolume(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetMasterVolume());
+}
+
+void audioSetVolume(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "volume");
+
+    float volume = (float)wrenGetSlotDouble(vm, 1);
+
+    if (volume < 0.0f || volume > 1.0f) {
+        VM_ABORT(vm, "Volume must be between 0.0 and 1.0.");
+        return;
+    }
+
+    SetMasterVolume(volume);
+}
+
+void soundAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Texture));
+}
+
+void soundFinalize(void* data)
+{
+    Sound* sound = (Sound*)data;
+
+    if (IsAudioDeviceReady())
+        UnloadSound(*sound);
+}
+
+void soundNew(WrenVM* vm)
+{
+    Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+
+    const char* path = wrenGetSlotString(vm, 1);
+
+    if (!IsAudioDeviceReady()) {
+        VM_ABORT(vm, "Cannot load sound before audio initialization.");
+        return;
+    }
+
+    *sound = LoadSound(path);
+    if (!IsSoundReady(*sound)) {
+        VM_ABORT(vm, "Failed to load sound.");
+        return;
+    }
+}
+
+void soundPlay(WrenVM* vm)
+{
+    Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
+    PlaySound(*sound);
+}
+
+void soundStop(WrenVM* vm)
+{
+    Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
+    StopSound(*sound);
+}
+
+void soundPause(WrenVM* vm)
+{
+    Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
+    PauseSound(*sound);
+}
+
+void soundResume(WrenVM* vm)
+{
+    Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
+    ResumeSound(*sound);
+}
+
+void soundGetPlaying(WrenVM* vm)
+{
+    Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotBool(vm, 0, IsSoundPlaying(*sound));
+}
+
+void soundSetVolume(WrenVM* vm)
+{
+    Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "volume");
+
+    float volume = (float)wrenGetSlotDouble(vm, 1);
+
+    SetSoundVolume(*sound, volume);
+}
+
+void soundSetPitch(WrenVM* vm)
+{
+    Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "pitch");
+
+    float pitch = (float)wrenGetSlotDouble(vm, 1);
+
+    SetSoundPitch(*sound, pitch);
+}
+
+void soundSetPan(WrenVM* vm)
+{
+    Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "pan");
+
+    float pan = (float)wrenGetSlotDouble(vm, 1);
+
+    SetSoundPan(*sound, pan);
+}
+
 void windowInit(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
@@ -247,7 +378,9 @@ void textureAllocate(WrenVM* vm)
 void textureFinalize(void* data)
 {
     Texture* texture = (Texture*)data;
-    UnloadTexture(*texture);
+
+    if (IsWindowReady())
+        UnloadTexture(*texture);
 }
 
 void textureNew(WrenVM* vm)
@@ -264,7 +397,6 @@ void textureNew(WrenVM* vm)
     }
 
     *texture = LoadTexture(path);
-
     if (!IsTextureReady(*texture)) {
         VM_ABORT(vm, "Failed to load texture.");
         return;
