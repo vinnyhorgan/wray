@@ -493,6 +493,86 @@ void textureNew(WrenVM* vm)
     }
 }
 
+void textureDraw(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "sx");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "sy");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 8, FOREIGN, "color");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float r = (float)wrenGetSlotDouble(vm, 3);
+    float sx = (float)wrenGetSlotDouble(vm, 4);
+    float sy = (float)wrenGetSlotDouble(vm, 5);
+    int ox = (int)wrenGetSlotDouble(vm, 6);
+    int oy = (int)wrenGetSlotDouble(vm, 7);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 8);
+
+    Rectangle source = { 0, 0, (float)texture->width, (float)texture->height };
+
+    if (sx < 0)
+        source.width = -source.width;
+
+    if (sy < 0)
+        source.height = -source.height;
+
+    float absSx = sx < 0 ? -sx : sx;
+    float absSy = sy < 0 ? -sy : sy;
+
+    DrawTexturePro(*texture, source, (Rectangle) { (float)x, (float)y, (float)texture->width * absSx, (float)texture->height * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
+}
+
+void textureDrawRect(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "srcX");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "srcY");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "srcWidth");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "srcHeight");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "dstX");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "dstY");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 8, NUM, "sx");
+    ASSERT_SLOT_TYPE(vm, 9, NUM, "sy");
+    ASSERT_SLOT_TYPE(vm, 10, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 11, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 12, FOREIGN, "color");
+
+    int srcX = (int)wrenGetSlotDouble(vm, 1);
+    int srcY = (int)wrenGetSlotDouble(vm, 2);
+    int srcWidth = (int)wrenGetSlotDouble(vm, 3);
+    int srcHeight = (int)wrenGetSlotDouble(vm, 4);
+    int dstX = (int)wrenGetSlotDouble(vm, 5);
+    int dstY = (int)wrenGetSlotDouble(vm, 6);
+    float r = (float)wrenGetSlotDouble(vm, 7);
+    float sx = (float)wrenGetSlotDouble(vm, 8);
+    float sy = (float)wrenGetSlotDouble(vm, 9);
+    int ox = (int)wrenGetSlotDouble(vm, 10);
+    int oy = (int)wrenGetSlotDouble(vm, 11);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 12);
+
+    Rectangle source = { (float)srcX, (float)srcY, (float)srcWidth, (float)srcHeight };
+
+    if (sx < 0)
+        source.width = -source.width;
+
+    if (sy < 0)
+        source.height = -source.height;
+
+    float absSx = sx < 0 ? -sx : sx;
+    float absSy = sy < 0 ? -sy : sy;
+
+    DrawTexturePro(*texture, source, (Rectangle) { (float)dstX, (float)dstY, (float)srcWidth * absSx, (float)srcHeight * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
+}
+
 void textureGetWidth(WrenVM* vm)
 {
     Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
@@ -505,17 +585,34 @@ void textureGetHeight(WrenVM* vm)
     wrenSetSlotDouble(vm, 0, texture->height);
 }
 
-void textureDraw(WrenVM* vm)
+void textureSetFilter(WrenVM* vm)
 {
     Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
 
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, FOREIGN, "color");
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "filter");
 
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 3);
+    const char* filter = wrenGetSlotString(vm, 1);
 
-    DrawTexture(*texture, x, y, *color);
+    if (TextIsEqual(filter, "nearest"))
+        SetTextureFilter(*texture, TEXTURE_FILTER_POINT);
+    else if (TextIsEqual(filter, "linear"))
+        SetTextureFilter(*texture, TEXTURE_FILTER_BILINEAR);
+    else
+        VM_ABORT(vm, "Invalid texture filter. (\"nearest\" or \"linear\")");
+}
+
+void textureSetWrap(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "wrap");
+
+    const char* wrap = wrenGetSlotString(vm, 1);
+
+    if (TextIsEqual(wrap, "repeat"))
+        SetTextureWrap(*texture, TEXTURE_WRAP_REPEAT);
+    else if (TextIsEqual(wrap, "clamp"))
+        SetTextureWrap(*texture, TEXTURE_WRAP_CLAMP);
+    else
+        VM_ABORT(vm, "Invalid texture wrap. (\"repeat\" or \"clamp\")");
 }

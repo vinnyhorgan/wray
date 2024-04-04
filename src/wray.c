@@ -175,12 +175,18 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
     } else if (TextIsEqual(className, "Texture")) {
         if (TextIsEqual(signature, "init new(_)"))
             return textureNew;
+        if (TextIsEqual(signature, "draw(_,_,_,_,_,_,_,_)"))
+            return textureDraw;
+        if (TextIsEqual(signature, "drawRect(_,_,_,_,_,_,_,_,_,_,_,_)"))
+            return textureDrawRect;
         if (TextIsEqual(signature, "width"))
             return textureGetWidth;
         if (TextIsEqual(signature, "height"))
             return textureGetHeight;
-        if (TextIsEqual(signature, "draw(_,_,_)"))
-            return textureDraw;
+        if (TextIsEqual(signature, "filter=(_)"))
+            return textureSetFilter;
+        if (TextIsEqual(signature, "wrap=(_)"))
+            return textureSetWrap;
     }
 
     return NULL;

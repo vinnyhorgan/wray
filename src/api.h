@@ -55,8 +55,11 @@ void colorSetIndex(WrenVM* vm);
 void textureAllocate(WrenVM* vm);
 void textureFinalize(void* data);
 void textureNew(WrenVM* vm);
+void textureDraw(WrenVM* vm);
+void textureDrawRect(WrenVM* vm);
 void textureGetWidth(WrenVM* vm);
 void textureGetHeight(WrenVM* vm);
-void textureDraw(WrenVM* vm);
+void textureSetFilter(WrenVM* vm);
+void textureSetWrap(WrenVM* vm);
 
 #endif
