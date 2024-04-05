@@ -386,10 +386,117 @@ void windowClose(WrenVM* vm)
     CloseWindow();
 }
 
+void windowToggleFullscreen(WrenVM* vm)
+{
+    ToggleFullscreen();
+}
+
+void windowMaximize(WrenVM* vm)
+{
+    MaximizeWindow();
+}
+
+void windowMinimize(WrenVM* vm)
+{
+    MinimizeWindow();
+}
+
+void windowRestore(WrenVM* vm)
+{
+    RestoreWindow();
+}
+
+void windowSetPosition(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    SetWindowPosition(x, y);
+}
+
+void windowSetMinSize(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
+
+    int width = (int)wrenGetSlotDouble(vm, 1);
+    int height = (int)wrenGetSlotDouble(vm, 2);
+    SetWindowMinSize(width, height);
+}
+
+void windowSetMaxSize(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
+
+    int width = (int)wrenGetSlotDouble(vm, 1);
+    int height = (int)wrenGetSlotDouble(vm, 2);
+    SetWindowMaxSize(width, height);
+}
+
+void windowSetSize(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
+
+    int width = (int)wrenGetSlotDouble(vm, 1);
+    int height = (int)wrenGetSlotDouble(vm, 2);
+    SetWindowSize(width, height);
+}
+
+void windowFocus(WrenVM* vm)
+{
+    SetWindowFocused();
+}
+
 void windowGetClosed(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
     wrenSetSlotBool(vm, 0, WindowShouldClose());
+}
+
+void windowGetFullscreen(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsWindowFullscreen());
+}
+
+void windowGetHidden(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsWindowHidden());
+}
+
+void windowGetMinimized(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsWindowMinimized());
+}
+
+void windowGetMaximized(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsWindowMaximized());
+}
+
+void windowGetFocused(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsWindowFocused());
+}
+
+void windowGetResized(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsWindowResized());
+}
+
+void windowSetTitle(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "title");
+    SetWindowTitle(wrenGetSlotString(vm, 1));
 }
 
 void windowGetWidth(WrenVM* vm)
@@ -404,10 +511,72 @@ void windowGetHeight(WrenVM* vm)
     wrenSetSlotDouble(vm, 0, GetScreenHeight());
 }
 
-void windowGetFps(WrenVM* vm)
+void windowGetX(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
-    wrenSetSlotDouble(vm, 0, GetFPS());
+    wrenSetSlotDouble(vm, 0, GetWindowPosition().x);
+}
+
+void windowGetY(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetWindowPosition().y);
+}
+
+void windowGetDpi(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetWindowScaleDPI().x);
+}
+
+void windowGetClipboard(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotString(vm, 0, GetClipboardText());
+}
+
+void windowSetClipboard(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    SetClipboardText(wrenGetSlotString(vm, 1));
+}
+
+void windowGetResizable(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsWindowState(FLAG_WINDOW_RESIZABLE));
+}
+
+void windowSetResizable(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, BOOL, "resizable");
+
+    bool resizable = wrenGetSlotBool(vm, 1);
+
+    if (resizable) {
+        SetWindowState(FLAG_WINDOW_RESIZABLE);
+    } else {
+        ClearWindowState(FLAG_WINDOW_RESIZABLE);
+    }
+}
+
+void windowGetVSync(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsWindowState(FLAG_VSYNC_HINT));
+}
+
+void windowSetVSync(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, BOOL, "vsync");
+
+    bool vsync = wrenGetSlotBool(vm, 1);
+
+    if (vsync) {
+        SetWindowState(FLAG_VSYNC_HINT);
+    } else {
+        ClearWindowState(FLAG_VSYNC_HINT);
+    }
 }
 
 void windowSetTargetFps(WrenVM* vm)
@@ -416,12 +585,22 @@ void windowSetTargetFps(WrenVM* vm)
     SetTargetFPS((int)wrenGetSlotDouble(vm, 1));
 }
 
-void windowSetResizable(WrenVM* vm)
+void windowGetDt(WrenVM* vm)
 {
-    ASSERT_SLOT_TYPE(vm, 1, BOOL, "resizable");
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetFrameTime());
+}
 
-    bool resizable = wrenGetSlotBool(vm, 1);
-    SetWindowState(resizable ? FLAG_WINDOW_RESIZABLE : 0);
+void windowGetTime(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetTime());
+}
+
+void windowGetFps(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetFPS());
 }
 
 void graphicsBegin(WrenVM* vm)
@@ -504,6 +683,13 @@ void graphicsPrint(WrenVM* vm)
     Color* color = (Color*)wrenGetSlotForeign(vm, 5);
 
     DrawText(text, x, y, size, *color);
+}
+
+void graphicsTakeScreenshot(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    const char* path = wrenGetSlotString(vm, 1);
+    TakeScreenshot(path);
 }
 
 void graphicsPixel(WrenVM* vm)
@@ -840,6 +1026,42 @@ void mouseSetCursor(WrenVM* vm)
         SetMouseCursor(MOUSE_CURSOR_NOT_ALLOWED);
     else
         VM_ABORT(vm, "Invalid cursor. (\"arrow\", \"ibeam\"...)");
+}
+
+void mouseGetHidden(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsCursorHidden());
+}
+
+void mouseSetHidden(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, BOOL, "hidden");
+
+    bool hidden = wrenGetSlotBool(vm, 1);
+
+    if (hidden)
+        HideCursor();
+    else
+        ShowCursor();
+}
+
+void mouseSetEnabled(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, BOOL, "enabled");
+
+    bool enabled = wrenGetSlotBool(vm, 1);
+
+    if (enabled)
+        EnableCursor();
+    else
+        DisableCursor();
+}
+
+void mouseGetOnScreen(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsCursorOnScreen());
 }
 
 void keyboardDown(WrenVM* vm)

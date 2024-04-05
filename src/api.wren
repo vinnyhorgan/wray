@@ -37,13 +37,41 @@ foreign class Font {
 class Window {
     foreign static init(width, height, title)
     foreign static close()
+    foreign static toggleFullscreen()
+    foreign static maximize()
+    foreign static minimize()
+    foreign static restore()
+    foreign static setPosition(x, y)
+    foreign static setMinSize(width, height)
+    foreign static setMaxSize(width, height)
+    foreign static setSize(width, height)
+    foreign static focus()
 
     foreign static closed
+    foreign static fullscreen
+    foreign static hidden
+    foreign static minimized
+    foreign static maximized
+    foreign static focused
+    foreign static resized
+    foreign static title=(v)
     foreign static width
     foreign static height
-    foreign static fps
-    foreign static targetFps=(v)
+    foreign static x
+    foreign static y
+    foreign static dpi
+    foreign static clipboard
+    foreign static clipboard=(v)
+
+    foreign static resizable
     foreign static resizable=(v)
+    foreign static vsync
+    foreign static vsync=(v)
+
+    foreign static targetFps=(v)
+    foreign static dt
+    foreign static time
+    foreign static fps
 }
 
 class Graphics {
@@ -55,6 +83,7 @@ class Graphics {
     foreign static endScissor()
     foreign static clear(color)
     foreign static print(text, x, y, size, color)
+    foreign static takeScreenshot(path)
 
     foreign static pixel(x, y, color)
     foreign static line(x1, y1, x2, y2, thick, color)
@@ -115,6 +144,10 @@ class Mouse {
     foreign static dy
     foreign static wheel
     foreign static cursor=(v)
+    foreign static hidden
+    foreign static hidden=(v)
+    foreign static enabled=(v)
+    foreign static onScreen
 }
 
 class Keyboard {
