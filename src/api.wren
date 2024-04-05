@@ -193,6 +193,38 @@ foreign class Texture {
     foreign wrap=(v)
 }
 
+foreign class RenderTexture {
+    foreign construct new(width, height)
+
+    foreign begin()
+    foreign end()
+
+    foreign draw(x, y, r, sx, sy, ox, oy, color)
+
+    draw(x, y) {
+        draw(x, y, 0, 1, 1, 0, 0, Color.white)
+    }
+
+    draw(x, y, color) {
+        draw(x, y, 0, 1, 1, 0, 0, color)
+    }
+
+    foreign drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, r, sx, sy, ox, oy, color)
+
+    drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY) {
+        drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, 0, 1, 1, 0, 0, Color.white)
+    }
+
+    drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, color) {
+        drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, 0, 1, 1, 0, 0, color)
+    }
+
+    foreign width
+    foreign height
+    foreign filter=(v)
+    foreign wrap=(v)
+}
+
 foreign class Camera {
     foreign construct new(x, y)
 

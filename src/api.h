@@ -92,6 +92,18 @@ void textureGetHeight(WrenVM* vm);
 void textureSetFilter(WrenVM* vm);
 void textureSetWrap(WrenVM* vm);
 
+void renderTextureAllocate(WrenVM* vm);
+void renderTextureFinalize(void* data);
+void renderTextureNew(WrenVM* vm);
+void renderTextureBegin(WrenVM* vm);
+void renderTextureEnd(WrenVM* vm);
+void renderTextureDraw(WrenVM* vm);
+void renderTextureDrawRect(WrenVM* vm);
+void renderTextureGetWidth(WrenVM* vm);
+void renderTextureGetHeight(WrenVM* vm);
+void renderTextureSetFilter(WrenVM* vm);
+void renderTextureSetWrap(WrenVM* vm);
+
 typedef struct {
     int id;
 } Gamepad;

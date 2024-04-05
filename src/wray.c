@@ -246,6 +246,25 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return textureSetFilter;
         if (TextIsEqual(signature, "wrap=(_)"))
             return textureSetWrap;
+    } else if (TextIsEqual(className, "RenderTexture")) {
+        if (TextIsEqual(signature, "init new(_,_)"))
+            return renderTextureNew;
+        if (TextIsEqual(signature, "begin()"))
+            return renderTextureBegin;
+        if (TextIsEqual(signature, "end()"))
+            return renderTextureEnd;
+        if (TextIsEqual(signature, "draw(_,_,_,_,_,_,_,_)"))
+            return renderTextureDraw;
+        if (TextIsEqual(signature, "drawRect(_,_,_,_,_,_,_,_,_,_,_,_)"))
+            return renderTextureDrawRect;
+        if (TextIsEqual(signature, "width"))
+            return renderTextureGetWidth;
+        if (TextIsEqual(signature, "height"))
+            return renderTextureGetHeight;
+        if (TextIsEqual(signature, "filter=(_)"))
+            return renderTextureSetFilter;
+        if (TextIsEqual(signature, "wrap=(_)"))
+            return renderTextureSetWrap;
     } else if (TextIsEqual(className, "Gamepad")) {
         if (TextIsEqual(signature, "init new(_)"))
             return gamepadNew;
@@ -321,6 +340,9 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
     } else if (TextIsEqual(className, "Texture")) {
         methods.allocate = textureAllocate;
         methods.finalize = textureFinalize;
+    } else if (TextIsEqual(className, "RenderTexture")) {
+        methods.allocate = renderTextureAllocate;
+        methods.finalize = renderTextureFinalize;
     } else if (TextIsEqual(className, "Sound")) {
         methods.allocate = soundAllocate;
         methods.finalize = soundFinalize;
