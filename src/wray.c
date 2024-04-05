@@ -143,6 +143,8 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return windowGetFps;
         if (TextIsEqual(signature, "targetFps=(_)"))
             return windowSetTargetFps;
+        if (TextIsEqual(signature, "resizable=(_)"))
+            return windowSetResizable;
     } else if (TextIsEqual(className, "Graphics")) {
         if (TextIsEqual(signature, "begin()"))
             return graphicsBegin;
@@ -150,10 +152,32 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return graphicsEnd;
         if (TextIsEqual(signature, "clear(_)"))
             return graphicsClear;
-        if (TextIsEqual(signature, "rect(_,_,_,_,_)"))
-            return graphicsRect;
-        if (TextIsEqual(signature, "text(_,_,_,_,_)"))
-            return graphicsText;
+        if (TextIsEqual(signature, "print(_,_,_,_,_)"))
+            return graphicsPrint;
+        if (TextIsEqual(signature, "pixel(_,_,_)"))
+            return graphicsPixel;
+        if (TextIsEqual(signature, "line(_,_,_,_,_,_)"))
+            return graphicsLine;
+        if (TextIsEqual(signature, "circle(_,_,_,_)"))
+            return graphicsCircle;
+        if (TextIsEqual(signature, "circleLine(_,_,_,_)"))
+            return graphicsCircleLine;
+        if (TextIsEqual(signature, "ellipse(_,_,_,_,_)"))
+            return graphicsEllipse;
+        if (TextIsEqual(signature, "ellipseLine(_,_,_,_,_)"))
+            return graphicsEllipseLine;
+        if (TextIsEqual(signature, "rectangle(_,_,_,_,_,_,_,_)"))
+            return graphicsRectangle;
+        if (TextIsEqual(signature, "rectangleLine(_,_,_,_,_,_)"))
+            return graphicsRectangleLine;
+        if (TextIsEqual(signature, "triangle(_,_,_,_,_,_,_)"))
+            return graphicsTriangle;
+        if (TextIsEqual(signature, "triangleLine(_,_,_,_,_,_,_)"))
+            return graphicsTriangleLine;
+        if (TextIsEqual(signature, "polygon(_,_,_,_,_,_)"))
+            return graphicsPolygon;
+        if (TextIsEqual(signature, "polygonLine(_,_,_,_,_,_,_)"))
+            return graphicsPolygonLine;
     } else if (TextIsEqual(className, "Mouse")) {
         if (TextIsEqual(signature, "pressed(_)"))
             return mousePressed;

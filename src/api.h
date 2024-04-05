@@ -34,12 +34,24 @@ void windowGetWidth(WrenVM* vm);
 void windowGetHeight(WrenVM* vm);
 void windowGetFps(WrenVM* vm);
 void windowSetTargetFps(WrenVM* vm);
+void windowSetResizable(WrenVM* vm);
 
 void graphicsBegin(WrenVM* vm);
 void graphicsEnd(WrenVM* vm);
 void graphicsClear(WrenVM* vm);
-void graphicsRect(WrenVM* vm);
-void graphicsText(WrenVM* vm);
+void graphicsPrint(WrenVM* vm);
+void graphicsPixel(WrenVM* vm);
+void graphicsLine(WrenVM* vm);
+void graphicsCircle(WrenVM* vm);
+void graphicsCircleLine(WrenVM* vm);
+void graphicsEllipse(WrenVM* vm);
+void graphicsEllipseLine(WrenVM* vm);
+void graphicsRectangle(WrenVM* vm);
+void graphicsRectangleLine(WrenVM* vm);
+void graphicsTriangle(WrenVM* vm);
+void graphicsTriangleLine(WrenVM* vm);
+void graphicsPolygon(WrenVM* vm);
+void graphicsPolygonLine(WrenVM* vm);
 
 void mousePressed(WrenVM* vm);
 void mouseDown(WrenVM* vm);

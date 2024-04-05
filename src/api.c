@@ -301,6 +301,14 @@ void windowSetTargetFps(WrenVM* vm)
     SetTargetFPS((int)wrenGetSlotDouble(vm, 1));
 }
 
+void windowSetResizable(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, BOOL, "resizable");
+
+    bool resizable = wrenGetSlotBool(vm, 1);
+    SetWindowState(resizable ? FLAG_WINDOW_RESIZABLE : 0);
+}
+
 void graphicsBegin(WrenVM* vm)
 {
     BeginDrawing();
@@ -319,24 +327,7 @@ void graphicsClear(WrenVM* vm)
     ClearBackground(*color);
 }
 
-void graphicsRect(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
-    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    int width = (int)wrenGetSlotDouble(vm, 3);
-    int height = (int)wrenGetSlotDouble(vm, 4);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 5);
-
-    DrawRectangle(x, y, width, height, *color);
-}
-
-void graphicsText(WrenVM* vm)
+void graphicsPrint(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "x");
@@ -351,6 +342,226 @@ void graphicsText(WrenVM* vm)
     Color* color = (Color*)wrenGetSlotForeign(vm, 5);
 
     DrawText(text, x, y, size, *color);
+}
+
+void graphicsPixel(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, FOREIGN, "color");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 3);
+
+    DrawPixel(x, y, *color);
+}
+
+void graphicsLine(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "x2");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "y2");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "thick");
+    ASSERT_SLOT_TYPE(vm, 6, FOREIGN, "color");
+
+    int x1 = (int)wrenGetSlotDouble(vm, 1);
+    int y1 = (int)wrenGetSlotDouble(vm, 2);
+    int x2 = (int)wrenGetSlotDouble(vm, 3);
+    int y2 = (int)wrenGetSlotDouble(vm, 4);
+    float thick = (float)wrenGetSlotDouble(vm, 5);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 6);
+
+    DrawLineEx((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, thick, *color);
+}
+
+void graphicsCircle(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "radius");
+    ASSERT_SLOT_TYPE(vm, 4, FOREIGN, "color");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float radius = (float)wrenGetSlotDouble(vm, 3);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 4);
+
+    DrawCircle(x, y, radius, *color);
+}
+
+void graphicsCircleLine(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "radius");
+    ASSERT_SLOT_TYPE(vm, 4, FOREIGN, "color");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float radius = (float)wrenGetSlotDouble(vm, 3);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 4);
+
+    DrawCircleLines(x, y, radius, *color);
+}
+
+void graphicsEllipse(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "rx");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "ry");
+    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "color");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float rx = (float)wrenGetSlotDouble(vm, 3);
+    float ry = (float)wrenGetSlotDouble(vm, 4);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 5);
+
+    DrawEllipse(x, y, rx, ry, *color);
+}
+
+void graphicsEllipseLine(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "rx");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "ry");
+    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "color");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float rx = (float)wrenGetSlotDouble(vm, 3);
+    float ry = (float)wrenGetSlotDouble(vm, 4);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 5);
+
+    DrawEllipseLines(x, y, rx, ry, *color);
+}
+
+void graphicsRectangle(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 8, FOREIGN, "color");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int width = (int)wrenGetSlotDouble(vm, 3);
+    int height = (int)wrenGetSlotDouble(vm, 4);
+    int ox = (int)wrenGetSlotDouble(vm, 5);
+    int oy = (int)wrenGetSlotDouble(vm, 6);
+    float r = (float)wrenGetSlotDouble(vm, 7);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 8);
+
+    DrawRectanglePro((Rectangle) { (float)x, (float)y, (float)width, (float)height }, (Vector2) { (float)ox, (float)oy }, r, *color);
+}
+
+void graphicsRectangleLine(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "thick");
+    ASSERT_SLOT_TYPE(vm, 6, FOREIGN, "color");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int width = (int)wrenGetSlotDouble(vm, 3);
+    int height = (int)wrenGetSlotDouble(vm, 4);
+    float thick = (float)wrenGetSlotDouble(vm, 5);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 6);
+
+    DrawRectangleLinesEx((Rectangle) { (float)x, (float)y, (float)width, (float)height }, thick, *color);
+}
+
+void graphicsTriangle(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "x2");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "y2");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "x3");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "y3");
+    ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
+
+    int x1 = (int)wrenGetSlotDouble(vm, 1);
+    int y1 = (int)wrenGetSlotDouble(vm, 2);
+    int x2 = (int)wrenGetSlotDouble(vm, 3);
+    int y2 = (int)wrenGetSlotDouble(vm, 4);
+    int x3 = (int)wrenGetSlotDouble(vm, 5);
+    int y3 = (int)wrenGetSlotDouble(vm, 6);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 7);
+
+    DrawTriangle((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, (Vector2) { (float)x3, (float)y3 }, *color);
+}
+
+void graphicsTriangleLine(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "x2");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "y2");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "x3");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "y3");
+    ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
+
+    int x1 = (int)wrenGetSlotDouble(vm, 1);
+    int y1 = (int)wrenGetSlotDouble(vm, 2);
+    int x2 = (int)wrenGetSlotDouble(vm, 3);
+    int y2 = (int)wrenGetSlotDouble(vm, 4);
+    int x3 = (int)wrenGetSlotDouble(vm, 5);
+    int y3 = (int)wrenGetSlotDouble(vm, 6);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 7);
+
+    DrawTriangleLines((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, (Vector2) { (float)x3, (float)y3 }, *color);
+}
+
+void graphicsPolygon(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "sides");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "radius");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 6, FOREIGN, "color");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int sides = (int)wrenGetSlotDouble(vm, 3);
+    float radius = (float)wrenGetSlotDouble(vm, 4);
+    float r = (float)wrenGetSlotDouble(vm, 5);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 6);
+
+    DrawPoly((Vector2) { (float)x, (float)y }, sides, radius, r, *color);
+}
+
+void graphicsPolygonLine(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "sides");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "radius");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "thick");
+    ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int sides = (int)wrenGetSlotDouble(vm, 3);
+    float radius = (float)wrenGetSlotDouble(vm, 4);
+    float r = (float)wrenGetSlotDouble(vm, 5);
+    float thick = (float)wrenGetSlotDouble(vm, 6);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 7);
+
+    DrawPolyLinesEx((Vector2) { (float)x, (float)y }, sides, radius, r, thick, *color);
 }
 
 void mousePressed(WrenVM* vm)

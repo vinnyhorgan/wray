@@ -42,15 +42,44 @@ class Window {
     foreign static width
     foreign static height
     foreign static fps
-    foreign static targetFps=(fps)
+    foreign static targetFps=(v)
+    foreign static resizable=(v)
 }
 
 class Graphics {
     foreign static begin()
     foreign static end()
     foreign static clear(color)
-    foreign static rect(x, y, width, height, color)
-    foreign static text(text, x, y, size, color)
+    foreign static print(text, x, y, size, color)
+
+    foreign static pixel(x, y, color)
+    foreign static line(x1, y1, x2, y2, thick, color)
+    foreign static circle(x, y, radius, color)
+    foreign static circleLine(x, y, radius, color)
+    foreign static ellipse(x, y, rx, ry, color)
+    foreign static ellipseLine(x, y, rx, ry, color)
+    foreign static rectangle(x, y, width, height, ox, oy, r, color)
+    foreign static rectangleLine(x, y, width, height, thick, color)
+    foreign static triangle(x1, y1, x2, y2, x3, y3, color)
+    foreign static triangleLine(x1, y1, x2, y2, x3, y3, color)
+    foreign static polygon(x, y, sides, radius, r, color)
+    foreign static polygonLine(x, y, sides, radius, r, thick, color)
+
+    static line(x1, y1, x2, y2, color) {
+        line(x1, y1, x2, y2, 1, color)
+    }
+
+    static rectangle(x, y, width, height, color) {
+        rectangle(x, y, width, height, 0, 0, 0, color)
+    }
+
+    static rectangleLine(x, y, width, height, color) {
+        rectangleLine(x, y, width, height, 1, color)
+    }
+
+    static polygonLine(x, y, sides, radius, r, color) {
+        polygonLine(x, y, sides, radius, r, 1, color)
+    }
 }
 
 class Mouse {
