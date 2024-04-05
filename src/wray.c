@@ -179,14 +179,30 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         if (TextIsEqual(signature, "polygonLine(_,_,_,_,_,_,_)"))
             return graphicsPolygonLine;
     } else if (TextIsEqual(className, "Mouse")) {
-        if (TextIsEqual(signature, "pressed(_)"))
-            return mousePressed;
         if (TextIsEqual(signature, "down(_)"))
             return mouseDown;
+        if (TextIsEqual(signature, "pressed(_)"))
+            return mousePressed;
+        if (TextIsEqual(signature, "released(_)"))
+            return mouseReleased;
+        if (TextIsEqual(signature, "setPosition(_,_)"))
+            return mouseSetPosition;
+        if (TextIsEqual(signature, "setOffset(_,_)"))
+            return mouseSetOffset;
+        if (TextIsEqual(signature, "setScale(_,_)"))
+            return mouseSetScale;
         if (TextIsEqual(signature, "x"))
             return mouseGetX;
         if (TextIsEqual(signature, "y"))
             return mouseGetY;
+        if (TextIsEqual(signature, "dx"))
+            return mouseGetDx;
+        if (TextIsEqual(signature, "dy"))
+            return mouseGetDy;
+        if (TextIsEqual(signature, "wheel"))
+            return mouseGetWheel;
+        if (TextIsEqual(signature, "cursor=(_)"))
+            return mouseSetCursor;
     } else if (TextIsEqual(className, "Color")) {
         if (TextIsEqual(signature, "init new(_,_,_,_)"))
             return colorNew;
@@ -211,6 +227,25 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return textureSetFilter;
         if (TextIsEqual(signature, "wrap=(_)"))
             return textureSetWrap;
+    } else if (TextIsEqual(className, "Gamepad")) {
+        if (TextIsEqual(signature, "init new(_)"))
+            return gamepadNew;
+        if (TextIsEqual(signature, "available(_)"))
+            return gamepadAvailable;
+        if (TextIsEqual(signature, "down(_)"))
+            return gamepadDown;
+        if (TextIsEqual(signature, "pressed(_)"))
+            return gamepadPressed;
+        if (TextIsEqual(signature, "released(_)"))
+            return gamepadReleased;
+        if (TextIsEqual(signature, "axis(_)"))
+            return gamepadAxis;
+        if (TextIsEqual(signature, "id"))
+            return gamepadGetId;
+        if (TextIsEqual(signature, "name"))
+            return gamepadGetName;
+        if (TextIsEqual(signature, "axisCount"))
+            return gamepadGetAxisCount;
     }
 
     return NULL;
@@ -231,6 +266,8 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
     } else if (TextIsEqual(className, "Font")) {
         methods.allocate = fontAllocate;
         methods.finalize = fontFinalize;
+    } else if (TextIsEqual(className, "Gamepad")) {
+        methods.allocate = gamepadAllocate;
     }
 
     return methods;

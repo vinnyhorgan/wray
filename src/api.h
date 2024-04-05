@@ -53,10 +53,18 @@ void graphicsTriangleLine(WrenVM* vm);
 void graphicsPolygon(WrenVM* vm);
 void graphicsPolygonLine(WrenVM* vm);
 
-void mousePressed(WrenVM* vm);
 void mouseDown(WrenVM* vm);
+void mousePressed(WrenVM* vm);
+void mouseReleased(WrenVM* vm);
+void mouseSetPosition(WrenVM* vm);
+void mouseSetOffset(WrenVM* vm);
+void mouseSetScale(WrenVM* vm);
 void mouseGetX(WrenVM* vm);
 void mouseGetY(WrenVM* vm);
+void mouseGetDx(WrenVM* vm);
+void mouseGetDy(WrenVM* vm);
+void mouseGetWheel(WrenVM* vm);
+void mouseSetCursor(WrenVM* vm);
 
 void colorAllocate(WrenVM* vm);
 void colorNew(WrenVM* vm);
@@ -73,5 +81,20 @@ void textureGetWidth(WrenVM* vm);
 void textureGetHeight(WrenVM* vm);
 void textureSetFilter(WrenVM* vm);
 void textureSetWrap(WrenVM* vm);
+
+typedef struct {
+    int id;
+} Gamepad;
+
+void gamepadAllocate(WrenVM* vm);
+void gamepadNew(WrenVM* vm);
+void gamepadAvailable(WrenVM* vm);
+void gamepadDown(WrenVM* vm);
+void gamepadPressed(WrenVM* vm);
+void gamepadReleased(WrenVM* vm);
+void gamepadAxis(WrenVM* vm);
+void gamepadGetId(WrenVM* vm);
+void gamepadGetName(WrenVM* vm);
+void gamepadGetAxisCount(WrenVM* vm);
 
 #endif

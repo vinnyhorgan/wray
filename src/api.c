@@ -264,6 +264,7 @@ void windowInit(WrenVM* vm)
     };
 
     SetWindowIcon(icon);
+    SetExitKey(KEY_NULL);
 }
 
 void windowClose(WrenVM* vm)
@@ -564,6 +565,14 @@ void graphicsPolygonLine(WrenVM* vm)
     DrawPolyLinesEx((Vector2) { (float)x, (float)y }, sides, radius, r, thick, *color);
 }
 
+void mouseDown(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
+
+    int button = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsMouseButtonDown(button));
+}
+
 void mousePressed(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
@@ -572,12 +581,42 @@ void mousePressed(WrenVM* vm)
     wrenSetSlotBool(vm, 0, IsMouseButtonPressed(button));
 }
 
-void mouseDown(WrenVM* vm)
+void mouseReleased(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
 
     int button = (int)wrenGetSlotDouble(vm, 1);
-    wrenSetSlotBool(vm, 0, IsMouseButtonDown(button));
+    wrenSetSlotBool(vm, 0, IsMouseButtonReleased(button));
+}
+
+void mouseSetPosition(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    SetMousePosition(x, y);
+}
+
+void mouseSetOffset(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    SetMouseOffset(x, y);
+}
+
+void mouseSetScale(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+
+    float x = (float)wrenGetSlotDouble(vm, 1);
+    float y = (float)wrenGetSlotDouble(vm, 2);
+    SetMouseScale(x, y);
 }
 
 void mouseGetX(WrenVM* vm)
@@ -590,6 +629,56 @@ void mouseGetY(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
     wrenSetSlotDouble(vm, 0, GetMouseY());
+}
+
+void mouseGetDx(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetMouseDelta().x);
+}
+
+void mouseGetDy(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetMouseDelta().y);
+}
+
+void mouseGetWheel(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetMouseWheelMove());
+}
+
+void mouseSetCursor(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "cursor");
+
+    const char* cursor = wrenGetSlotString(vm, 1);
+
+    if (TextIsEqual(cursor, "default"))
+        SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+    else if (TextIsEqual(cursor, "arrow"))
+        SetMouseCursor(MOUSE_CURSOR_ARROW);
+    else if (TextIsEqual(cursor, "ibeam"))
+        SetMouseCursor(MOUSE_CURSOR_IBEAM);
+    else if (TextIsEqual(cursor, "crosshair"))
+        SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
+    else if (TextIsEqual(cursor, "pointingHand"))
+        SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
+    else if (TextIsEqual(cursor, "resizeEW"))
+        SetMouseCursor(MOUSE_CURSOR_RESIZE_EW);
+    else if (TextIsEqual(cursor, "resizeNS"))
+        SetMouseCursor(MOUSE_CURSOR_RESIZE_NS);
+    else if (TextIsEqual(cursor, "resizeNWSE"))
+        SetMouseCursor(MOUSE_CURSOR_RESIZE_NWSE);
+    else if (TextIsEqual(cursor, "resizeNESW"))
+        SetMouseCursor(MOUSE_CURSOR_RESIZE_NESW);
+    else if (TextIsEqual(cursor, "resizeAll"))
+        SetMouseCursor(MOUSE_CURSOR_RESIZE_ALL);
+    else if (TextIsEqual(cursor, "notAllowed"))
+        SetMouseCursor(MOUSE_CURSOR_NOT_ALLOWED);
+    else
+        VM_ABORT(vm, "Invalid cursor. (\"arrow\", \"ibeam\"...)");
 }
 
 void colorAllocate(WrenVM* vm)
@@ -826,4 +915,92 @@ void textureSetWrap(WrenVM* vm)
         SetTextureWrap(*texture, TEXTURE_WRAP_CLAMP);
     else
         VM_ABORT(vm, "Invalid texture wrap. (\"repeat\" or \"clamp\")");
+}
+
+void gamepadAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Gamepad));
+}
+
+void gamepadNew(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "id");
+
+    int id = (int)wrenGetSlotDouble(vm, 1);
+
+    if (!IsGamepadAvailable(id)) {
+        VM_ABORT(vm, "Gamepad not available.");
+        return;
+    }
+
+    gamepad->id = id;
+}
+
+void gamepadAvailable(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "id");
+
+    int id = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsGamepadAvailable(id));
+}
+
+void gamepadDown(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
+
+    int button = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsGamepadButtonDown(gamepad->id, button));
+}
+
+void gamepadPressed(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
+
+    int button = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsGamepadButtonPressed(gamepad->id, button));
+}
+
+void gamepadReleased(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
+
+    int button = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsGamepadButtonReleased(gamepad->id, button));
+}
+
+void gamepadAxis(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "axis");
+
+    int axis = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetGamepadAxisMovement(gamepad->id, axis));
+}
+
+void gamepadGetId(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, gamepad->id);
+}
+
+void gamepadGetName(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotString(vm, 0, GetGamepadName(gamepad->id));
+}
+
+void gamepadGetAxisCount(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, GetGamepadAxisCount(gamepad->id));
 }

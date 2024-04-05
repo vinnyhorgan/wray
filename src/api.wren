@@ -82,12 +82,35 @@ class Graphics {
     }
 }
 
+foreign class Gamepad {
+    foreign static available(id)
+
+    foreign construct new(id)
+
+    foreign down(button)
+    foreign pressed(button)
+    foreign released(button)
+    foreign axis(axis)
+
+    foreign id
+    foreign name
+    foreign axisCount
+}
+
 class Mouse {
-    foreign static pressed(button)
     foreign static down(button)
+    foreign static pressed(button)
+    foreign static released(button)
+    foreign static setPosition(x, y)
+    foreign static setOffset(x, y)
+    foreign static setScale(x, y)
 
     foreign static x
     foreign static y
+    foreign static dx
+    foreign static dy
+    foreign static wheel
+    foreign static cursor=(v)
 }
 
 foreign class Color {
