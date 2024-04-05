@@ -38,6 +38,10 @@ void windowSetResizable(WrenVM* vm);
 
 void graphicsBegin(WrenVM* vm);
 void graphicsEnd(WrenVM* vm);
+void graphicsBeginBlend(WrenVM* vm);
+void graphicsEndBlend(WrenVM* vm);
+void graphicsBeginScissor(WrenVM* vm);
+void graphicsEndScissor(WrenVM* vm);
 void graphicsClear(WrenVM* vm);
 void graphicsPrint(WrenVM* vm);
 void graphicsPixel(WrenVM* vm);
@@ -102,5 +106,30 @@ void gamepadAxis(WrenVM* vm);
 void gamepadGetId(WrenVM* vm);
 void gamepadGetName(WrenVM* vm);
 void gamepadGetAxisCount(WrenVM* vm);
+
+void cameraAllocate(WrenVM* vm);
+void cameraNew(WrenVM* vm);
+void cameraBegin(WrenVM* vm);
+void cameraEnd(WrenVM* vm);
+void cameraGetX(WrenVM* vm);
+void cameraGetY(WrenVM* vm);
+void cameraGetOffsetX(WrenVM* vm);
+void cameraGetOffsetY(WrenVM* vm);
+void cameraGetRotation(WrenVM* vm);
+void cameraGetZoom(WrenVM* vm);
+void cameraSetX(WrenVM* vm);
+void cameraSetY(WrenVM* vm);
+void cameraSetOffsetX(WrenVM* vm);
+void cameraSetOffsetY(WrenVM* vm);
+void cameraSetRotation(WrenVM* vm);
+void cameraSetZoom(WrenVM* vm);
+
+void shaderAllocate(WrenVM* vm);
+void shaderFinalize(void* data);
+void shaderNew(WrenVM* vm);
+void shaderNew2(WrenVM* vm);
+void shaderBegin(WrenVM* vm);
+void shaderEnd(WrenVM* vm);
+void shaderSet(WrenVM* vm);
 
 #endif

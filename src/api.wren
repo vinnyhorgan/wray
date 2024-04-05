@@ -49,6 +49,10 @@ class Window {
 class Graphics {
     foreign static begin()
     foreign static end()
+    foreign static beginBlend(mode)
+    foreign static endBlend()
+    foreign static beginScissor(x, y, width, height)
+    foreign static endScissor()
     foreign static clear(color)
     foreign static print(text, x, y, size, color)
 
@@ -187,4 +191,33 @@ foreign class Texture {
     foreign height
     foreign filter=(v)
     foreign wrap=(v)
+}
+
+foreign class Camera {
+    foreign construct new(x, y)
+
+    foreign begin()
+    foreign end()
+
+    foreign x
+    foreign x=(v)
+    foreign y
+    foreign y=(v)
+    foreign ox
+    foreign ox=(v)
+    foreign oy
+    foreign oy=(v)
+    foreign r
+    foreign r=(v)
+    foreign zoom
+    foreign zoom=(v)
+}
+
+foreign class Shader {
+    foreign construct new(vs, fs)
+    foreign construct new(fs)
+
+    foreign begin()
+    foreign end()
+    foreign set(name, value)
 }

@@ -150,6 +150,14 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return graphicsBegin;
         if (TextIsEqual(signature, "end()"))
             return graphicsEnd;
+        if (TextIsEqual(signature, "beginBlend(_)"))
+            return graphicsBeginBlend;
+        if (TextIsEqual(signature, "endBlend()"))
+            return graphicsEndBlend;
+        if (TextIsEqual(signature, "beginScissor(_,_,_,_)"))
+            return graphicsBeginScissor;
+        if (TextIsEqual(signature, "endScissor()"))
+            return graphicsEndScissor;
         if (TextIsEqual(signature, "clear(_)"))
             return graphicsClear;
         if (TextIsEqual(signature, "print(_,_,_,_,_)"))
@@ -257,6 +265,48 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return gamepadGetName;
         if (TextIsEqual(signature, "axisCount"))
             return gamepadGetAxisCount;
+    } else if (TextIsEqual(className, "Camera")) {
+        if (TextIsEqual(signature, "init new(_,_)"))
+            return cameraNew;
+        if (TextIsEqual(signature, "begin()"))
+            return cameraBegin;
+        if (TextIsEqual(signature, "end()"))
+            return cameraEnd;
+        if (TextIsEqual(signature, "x"))
+            return cameraGetX;
+        if (TextIsEqual(signature, "y"))
+            return cameraGetY;
+        if (TextIsEqual(signature, "ox"))
+            return cameraGetOffsetX;
+        if (TextIsEqual(signature, "oy"))
+            return cameraGetOffsetY;
+        if (TextIsEqual(signature, "r"))
+            return cameraGetRotation;
+        if (TextIsEqual(signature, "zoom"))
+            return cameraGetZoom;
+        if (TextIsEqual(signature, "x=(_)"))
+            return cameraSetX;
+        if (TextIsEqual(signature, "y=(_)"))
+            return cameraSetY;
+        if (TextIsEqual(signature, "ox=(_)"))
+            return cameraSetOffsetX;
+        if (TextIsEqual(signature, "oy=(_)"))
+            return cameraSetOffsetY;
+        if (TextIsEqual(signature, "r=(_)"))
+            return cameraSetRotation;
+        if (TextIsEqual(signature, "zoom=(_)"))
+            return cameraSetZoom;
+    } else if (TextIsEqual(className, "Shader")) {
+        if (TextIsEqual(signature, "init new(_)"))
+            return shaderNew;
+        if (TextIsEqual(signature, "init new(_,_)"))
+            return shaderNew2;
+        if (TextIsEqual(signature, "begin()"))
+            return shaderBegin;
+        if (TextIsEqual(signature, "end()"))
+            return shaderEnd;
+        if (TextIsEqual(signature, "set(_,_)"))
+            return shaderSet;
     }
 
     return NULL;
@@ -279,6 +329,11 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
         methods.finalize = fontFinalize;
     } else if (TextIsEqual(className, "Gamepad")) {
         methods.allocate = gamepadAllocate;
+    } else if (TextIsEqual(className, "Camera")) {
+        methods.allocate = cameraAllocate;
+    } else if (TextIsEqual(className, "Shader")) {
+        methods.allocate = shaderAllocate;
+        methods.finalize = shaderFinalize;
     }
 
     return methods;

@@ -434,6 +434,53 @@ void graphicsEnd(WrenVM* vm)
     EndDrawing();
 }
 
+void graphicsBeginBlend(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "mode");
+
+    const char* mode = wrenGetSlotString(vm, 1);
+
+    if (TextIsEqual(mode, "alpha"))
+        BeginBlendMode(BLEND_ALPHA);
+    else if (TextIsEqual(mode, "additive"))
+        BeginBlendMode(BLEND_ADDITIVE);
+    else if (TextIsEqual(mode, "multiplied"))
+        BeginBlendMode(BLEND_MULTIPLIED);
+    else if (TextIsEqual(mode, "addColors"))
+        BeginBlendMode(BLEND_ADD_COLORS);
+    else if (TextIsEqual(mode, "subtractColors"))
+        BeginBlendMode(BLEND_SUBTRACT_COLORS);
+    else if (TextIsEqual(mode, "alphaPremultiply"))
+        BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
+    else
+        VM_ABORT(vm, "Invalid blend mode. (\"alpha\", \"additive\"...)");
+}
+
+void graphicsEndBlend(WrenVM* vm)
+{
+    EndBlendMode();
+}
+
+void graphicsBeginScissor(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int width = (int)wrenGetSlotDouble(vm, 3);
+    int height = (int)wrenGetSlotDouble(vm, 4);
+
+    BeginScissorMode(x, y, width, height);
+}
+
+void graphicsEndScissor(WrenVM* vm)
+{
+    EndScissorMode();
+}
+
 void graphicsClear(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "color");
@@ -1195,4 +1242,218 @@ void gamepadGetAxisCount(WrenVM* vm)
 {
     Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
     wrenSetSlotDouble(vm, 0, GetGamepadAxisCount(gamepad->id));
+}
+
+void cameraAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Camera2D));
+}
+
+void cameraNew(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+
+    camera->target = (Vector2) { (float)x, (float)y };
+    camera->offset = (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
+    camera->rotation = 0.0f;
+    camera->zoom = 1.0f;
+}
+
+void cameraBegin(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    BeginMode2D(*camera);
+}
+
+void cameraEnd(WrenVM* vm)
+{
+    EndMode2D();
+}
+
+void cameraGetX(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->target.x);
+}
+
+void cameraGetY(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->target.y);
+}
+
+void cameraGetOffsetX(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->offset.x);
+}
+
+void cameraGetOffsetY(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->offset.y);
+}
+
+void cameraGetRotation(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->rotation);
+}
+
+void cameraGetZoom(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->zoom);
+}
+
+void cameraSetX(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    camera->target.x = (float)x;
+}
+
+void cameraSetY(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "y");
+
+    int y = (int)wrenGetSlotDouble(vm, 1);
+    camera->target.y = (float)y;
+}
+
+void cameraSetOffsetX(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "ox");
+
+    int ox = (int)wrenGetSlotDouble(vm, 1);
+    camera->offset.x = (float)ox;
+}
+
+void cameraSetOffsetY(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "oy");
+
+    int oy = (int)wrenGetSlotDouble(vm, 1);
+    camera->offset.y = (float)oy;
+}
+
+void cameraSetRotation(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "r");
+
+    float r = (float)wrenGetSlotDouble(vm, 1);
+    camera->rotation = r;
+}
+
+void cameraSetZoom(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "zoom");
+
+    float z = (float)wrenGetSlotDouble(vm, 1);
+    camera->zoom = z;
+}
+
+void shaderAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Shader));
+}
+
+void shaderFinalize(void* data)
+{
+    Shader* shader = (Shader*)data;
+
+    if (IsWindowReady()) {
+        UnloadShader(*shader);
+    }
+}
+
+void shaderNew(WrenVM* vm)
+{
+    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "vs");
+    ASSERT_SLOT_TYPE(vm, 2, STRING, "fs");
+
+    const char* vs = wrenGetSlotString(vm, 1);
+    const char* fs = wrenGetSlotString(vm, 2);
+
+    if (!IsWindowReady()) {
+        VM_ABORT(vm, "Cannot load shader before window initialization.");
+        return;
+    }
+
+    *shader = LoadShader(vs, fs);
+    if (!IsShaderReady(*shader)) {
+        VM_ABORT(vm, "Failed to load shader.");
+        return;
+    }
+}
+
+void shaderNew2(WrenVM* vm)
+{
+    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "fs");
+
+    const char* fs = wrenGetSlotString(vm, 1);
+
+    if (!IsWindowReady()) {
+        VM_ABORT(vm, "Cannot load shader before window initialization.");
+        return;
+    }
+
+    *shader = LoadShader(NULL, fs);
+    if (!IsShaderReady(*shader)) {
+        VM_ABORT(vm, "Failed to load shader.");
+        return;
+    }
+}
+
+void shaderBegin(WrenVM* vm)
+{
+    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
+    BeginShaderMode(*shader);
+}
+
+void shaderEnd(WrenVM* vm)
+{
+    EndShaderMode();
+}
+
+void shaderSet(WrenVM* vm)
+{
+    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "name");
+
+    const char* name = wrenGetSlotString(vm, 1);
+
+    if (wrenGetSlotType(vm, 2) == WREN_TYPE_NUM) {
+        float value = (float)wrenGetSlotDouble(vm, 2);
+        SetShaderValue(*shader, GetShaderLocation(*shader, name), &value, SHADER_UNIFORM_FLOAT);
+    } else if (wrenGetSlotType(vm, 2) == WREN_TYPE_FOREIGN) {
+        Texture* texture = (Texture*)wrenGetSlotForeign(vm, 2);
+        SetShaderValueTexture(*shader, GetShaderLocation(*shader, name), *texture);
+    }
 }
