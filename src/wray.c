@@ -203,6 +203,17 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return mouseGetWheel;
         if (TextIsEqual(signature, "cursor=(_)"))
             return mouseSetCursor;
+    } else if (TextIsEqual(className, "Keyboard")) {
+        if (TextIsEqual(signature, "down(_)"))
+            return keyboardDown;
+        if (TextIsEqual(signature, "pressed(_)"))
+            return keyboardPressed;
+        if (TextIsEqual(signature, "pressedRepeat(_)"))
+            return keyboardPressedRepeat;
+        if (TextIsEqual(signature, "released(_)"))
+            return keyboardReleased;
+        if (TextIsEqual(signature, "keyPressed"))
+            return keyboardGetKeyPressed;
     } else if (TextIsEqual(className, "Color")) {
         if (TextIsEqual(signature, "init new(_,_,_,_)"))
             return colorNew;

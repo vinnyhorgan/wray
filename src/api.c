@@ -4,6 +4,8 @@
 
 #include <raylib.h>
 
+#include "lib/map/map.h"
+
 #include "icon.h"
 
 #define VM_ABORT(vm, error)              \
@@ -17,6 +19,8 @@
         VM_ABORT(vm, "Expected " #fieldName " to be of type " #type "."); \
         return;                                                           \
     }
+
+static map_int_t keys;
 
 void audioInit(WrenVM* vm)
 {
@@ -265,10 +269,120 @@ void windowInit(WrenVM* vm)
 
     SetWindowIcon(icon);
     SetExitKey(KEY_NULL);
+
+    map_init(&keys);
+
+    map_set(&keys, "apostrophe", KEY_APOSTROPHE);
+    map_set(&keys, "comma", KEY_COMMA);
+    map_set(&keys, "minus", KEY_MINUS);
+    map_set(&keys, "period", KEY_PERIOD);
+    map_set(&keys, "slash", KEY_SLASH);
+    map_set(&keys, "zero", KEY_ZERO);
+    map_set(&keys, "one", KEY_ONE);
+    map_set(&keys, "two", KEY_TWO);
+    map_set(&keys, "three", KEY_THREE);
+    map_set(&keys, "four", KEY_FOUR);
+    map_set(&keys, "five", KEY_FIVE);
+    map_set(&keys, "six", KEY_SIX);
+    map_set(&keys, "seven", KEY_SEVEN);
+    map_set(&keys, "eight", KEY_EIGHT);
+    map_set(&keys, "nine", KEY_NINE);
+    map_set(&keys, "semicolon", KEY_SEMICOLON);
+    map_set(&keys, "equal", KEY_EQUAL);
+    map_set(&keys, "a", KEY_A);
+    map_set(&keys, "b", KEY_B);
+    map_set(&keys, "c", KEY_C);
+    map_set(&keys, "d", KEY_D);
+    map_set(&keys, "e", KEY_E);
+    map_set(&keys, "f", KEY_F);
+    map_set(&keys, "g", KEY_G);
+    map_set(&keys, "h", KEY_H);
+    map_set(&keys, "i", KEY_I);
+    map_set(&keys, "j", KEY_J);
+    map_set(&keys, "k", KEY_K);
+    map_set(&keys, "l", KEY_L);
+    map_set(&keys, "m", KEY_M);
+    map_set(&keys, "n", KEY_N);
+    map_set(&keys, "o", KEY_O);
+    map_set(&keys, "p", KEY_P);
+    map_set(&keys, "q", KEY_Q);
+    map_set(&keys, "r", KEY_R);
+    map_set(&keys, "s", KEY_S);
+    map_set(&keys, "t", KEY_T);
+    map_set(&keys, "u", KEY_U);
+    map_set(&keys, "v", KEY_V);
+    map_set(&keys, "w", KEY_W);
+    map_set(&keys, "x", KEY_X);
+    map_set(&keys, "y", KEY_Y);
+    map_set(&keys, "z", KEY_Z);
+    map_set(&keys, "leftBracket", KEY_LEFT_BRACKET);
+    map_set(&keys, "backslash", KEY_BACKSLASH);
+    map_set(&keys, "rightBracket", KEY_RIGHT_BRACKET);
+    map_set(&keys, "grave", KEY_GRAVE);
+    map_set(&keys, "space", KEY_SPACE);
+    map_set(&keys, "escape", KEY_ESCAPE);
+    map_set(&keys, "enter", KEY_ENTER);
+    map_set(&keys, "tab", KEY_TAB);
+    map_set(&keys, "backspace", KEY_BACKSPACE);
+    map_set(&keys, "insert", KEY_INSERT);
+    map_set(&keys, "delete", KEY_DELETE);
+    map_set(&keys, "right", KEY_RIGHT);
+    map_set(&keys, "left", KEY_LEFT);
+    map_set(&keys, "down", KEY_DOWN);
+    map_set(&keys, "up", KEY_UP);
+    map_set(&keys, "pageUp", KEY_PAGE_UP);
+    map_set(&keys, "pageDown", KEY_PAGE_DOWN);
+    map_set(&keys, "home", KEY_HOME);
+    map_set(&keys, "end", KEY_END);
+    map_set(&keys, "capsLock", KEY_CAPS_LOCK);
+    map_set(&keys, "scrollLock", KEY_SCROLL_LOCK);
+    map_set(&keys, "numLock", KEY_NUM_LOCK);
+    map_set(&keys, "printScreen", KEY_PRINT_SCREEN);
+    map_set(&keys, "pause", KEY_PAUSE);
+    map_set(&keys, "f1", KEY_F1);
+    map_set(&keys, "f2", KEY_F2);
+    map_set(&keys, "f3", KEY_F3);
+    map_set(&keys, "f4", KEY_F4);
+    map_set(&keys, "f5", KEY_F5);
+    map_set(&keys, "f6", KEY_F6);
+    map_set(&keys, "f7", KEY_F7);
+    map_set(&keys, "f8", KEY_F8);
+    map_set(&keys, "f9", KEY_F9);
+    map_set(&keys, "f10", KEY_F10);
+    map_set(&keys, "f11", KEY_F11);
+    map_set(&keys, "f12", KEY_F12);
+    map_set(&keys, "leftShift", KEY_LEFT_SHIFT);
+    map_set(&keys, "leftControl", KEY_LEFT_CONTROL);
+    map_set(&keys, "leftAlt", KEY_LEFT_ALT);
+    map_set(&keys, "leftSuper", KEY_LEFT_SUPER);
+    map_set(&keys, "rightShift", KEY_RIGHT_SHIFT);
+    map_set(&keys, "rightControl", KEY_RIGHT_CONTROL);
+    map_set(&keys, "rightAlt", KEY_RIGHT_ALT);
+    map_set(&keys, "rightSuper", KEY_RIGHT_SUPER);
+    map_set(&keys, "kbMenu", KEY_KB_MENU);
+    map_set(&keys, "kp0", KEY_KP_0);
+    map_set(&keys, "kp1", KEY_KP_1);
+    map_set(&keys, "kp2", KEY_KP_2);
+    map_set(&keys, "kp3", KEY_KP_3);
+    map_set(&keys, "kp4", KEY_KP_4);
+    map_set(&keys, "kp5", KEY_KP_5);
+    map_set(&keys, "kp6", KEY_KP_6);
+    map_set(&keys, "kp7", KEY_KP_7);
+    map_set(&keys, "kp8", KEY_KP_8);
+    map_set(&keys, "kp9", KEY_KP_9);
+    map_set(&keys, "kpDecimal", KEY_KP_DECIMAL);
+    map_set(&keys, "kpDivide", KEY_KP_DIVIDE);
+    map_set(&keys, "kpMultiply", KEY_KP_MULTIPLY);
+    map_set(&keys, "kpSubtract", KEY_KP_SUBTRACT);
+    map_set(&keys, "kpAdd", KEY_KP_ADD);
+    map_set(&keys, "kpEnter", KEY_KP_ENTER);
+    map_set(&keys, "kpEqual", KEY_KP_EQUAL);
 }
 
 void windowClose(WrenVM* vm)
 {
+    map_deinit(&keys);
+
     CloseWindow();
 }
 
@@ -679,6 +793,84 @@ void mouseSetCursor(WrenVM* vm)
         SetMouseCursor(MOUSE_CURSOR_NOT_ALLOWED);
     else
         VM_ABORT(vm, "Invalid cursor. (\"arrow\", \"ibeam\"...)");
+}
+
+void keyboardDown(WrenVM* vm)
+{
+    if (!IsWindowReady())
+        return;
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
+
+    const char* key = wrenGetSlotString(vm, 1);
+    KeyboardKey k = *map_get(&keys, key);
+
+    if (k == KEY_NULL) {
+        VM_ABORT(vm, "Invalid key. (\"space\", \"enter\"...)");
+        return;
+    }
+
+    wrenSetSlotBool(vm, 0, IsKeyDown(k));
+}
+
+void keyboardPressed(WrenVM* vm)
+{
+    if (!IsWindowReady())
+        return;
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
+
+    const char* key = wrenGetSlotString(vm, 1);
+    KeyboardKey k = *map_get(&keys, key);
+
+    if (k == KEY_NULL) {
+        VM_ABORT(vm, "Invalid key. (\"space\", \"enter\"...)");
+        return;
+    }
+
+    wrenSetSlotBool(vm, 0, IsKeyPressed(k));
+}
+
+void keyboardPressedRepeat(WrenVM* vm)
+{
+    if (!IsWindowReady())
+        return;
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
+
+    const char* key = wrenGetSlotString(vm, 1);
+    KeyboardKey k = *map_get(&keys, key);
+
+    if (k == KEY_NULL) {
+        VM_ABORT(vm, "Invalid key. (\"space\", \"enter\"...)");
+        return;
+    }
+
+    wrenSetSlotBool(vm, 0, IsKeyPressedRepeat(k));
+}
+
+void keyboardReleased(WrenVM* vm)
+{
+    if (!IsWindowReady())
+        return;
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
+
+    const char* key = wrenGetSlotString(vm, 1);
+    KeyboardKey k = *map_get(&keys, key);
+
+    if (k == KEY_NULL) {
+        VM_ABORT(vm, "Invalid key. (\"space\", \"enter\"...)");
+        return;
+    }
+
+    wrenSetSlotBool(vm, 0, IsKeyReleased(k));
+}
+
+void keyboardGetKeyPressed(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetKeyPressed());
 }
 
 void colorAllocate(WrenVM* vm)

@@ -113,6 +113,15 @@ class Mouse {
     foreign static cursor=(v)
 }
 
+class Keyboard {
+    foreign static down(key)
+    foreign static pressed(key)
+    foreign static pressedRepeat(key)
+    foreign static released(key)
+
+    foreign static keyPressed
+}
+
 foreign class Color {
     foreign construct new(r, g, b, a)
     foreign construct new(r, g, b)

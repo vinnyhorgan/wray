@@ -66,6 +66,12 @@ void mouseGetDy(WrenVM* vm);
 void mouseGetWheel(WrenVM* vm);
 void mouseSetCursor(WrenVM* vm);
 
+void keyboardDown(WrenVM* vm);
+void keyboardPressed(WrenVM* vm);
+void keyboardPressedRepeat(WrenVM* vm);
+void keyboardReleased(WrenVM* vm);
+void keyboardGetKeyPressed(WrenVM* vm);
+
 void colorAllocate(WrenVM* vm);
 void colorNew(WrenVM* vm);
 void colorNew2(WrenVM* vm);
