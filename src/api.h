@@ -3,6 +3,8 @@
 
 #include "lib/wren/wren.h"
 
+void setArgs(int argc, char** argv);
+
 void audioInit(WrenVM* vm);
 void audioClose(WrenVM* vm);
 void audioGetVolume(WrenVM* vm);
@@ -51,8 +53,6 @@ void windowGetHeight(WrenVM* vm);
 void windowGetX(WrenVM* vm);
 void windowGetY(WrenVM* vm);
 void windowGetDpi(WrenVM* vm);
-void windowGetClipboard(WrenVM* vm);
-void windowSetClipboard(WrenVM* vm);
 void windowGetResizable(WrenVM* vm);
 void windowSetResizable(WrenVM* vm);
 void windowGetVSync(WrenVM* vm);
@@ -174,5 +174,20 @@ void shaderNew2(WrenVM* vm);
 void shaderBegin(WrenVM* vm);
 void shaderEnd(WrenVM* vm);
 void shaderSet(WrenVM* vm);
+
+void osOpenUrl(WrenVM* vm);
+void osReadLine(WrenVM* vm);
+void osGetArgs(WrenVM* vm);
+void osGetName(WrenVM* vm);
+void osGetClipboard(WrenVM* vm);
+void osSetClipboard(WrenVM* vm);
+
+void directoryExists(WrenVM* vm);
+void directoryList(WrenVM* vm);
+
+void fileExists(WrenVM* vm);
+void fileWrite(WrenVM* vm);
+void fileRead(WrenVM* vm);
+void fileSize(WrenVM* vm);
 
 #endif

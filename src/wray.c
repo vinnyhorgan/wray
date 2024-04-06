@@ -177,10 +177,6 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return windowGetY;
         if (TextIsEqual(signature, "dpi"))
             return windowGetDpi;
-        if (TextIsEqual(signature, "clipboard"))
-            return windowGetClipboard;
-        if (TextIsEqual(signature, "clipboard=(_)"))
-            return windowSetClipboard;
         if (TextIsEqual(signature, "resizable"))
             return windowGetResizable;
         if (TextIsEqual(signature, "resizable=(_)"))
@@ -388,6 +384,33 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return shaderEnd;
         if (TextIsEqual(signature, "set(_,_)"))
             return shaderSet;
+    } else if (TextIsEqual(className, "OS")) {
+        if (TextIsEqual(signature, "openUrl(_)"))
+            return osOpenUrl;
+        if (TextIsEqual(signature, "readLine()"))
+            return osReadLine;
+        if (TextIsEqual(signature, "args"))
+            return osGetArgs;
+        if (TextIsEqual(signature, "name"))
+            return osGetName;
+        if (TextIsEqual(signature, "clipboard"))
+            return osGetClipboard;
+        if (TextIsEqual(signature, "clipboard=(_)"))
+            return osSetClipboard;
+    } else if (TextIsEqual(className, "Directory")) {
+        if (TextIsEqual(signature, "exists(_)"))
+            return directoryExists;
+        if (TextIsEqual(signature, "list(_)"))
+            return directoryList;
+    } else if (TextIsEqual(className, "File")) {
+        if (TextIsEqual(signature, "exists(_)"))
+            return fileExists;
+        if (TextIsEqual(signature, "write(_,_)"))
+            return fileWrite;
+        if (TextIsEqual(signature, "read(_)"))
+            return fileRead;
+        if (TextIsEqual(signature, "size(_)"))
+            return fileSize;
     }
 
     return NULL;
@@ -642,6 +665,8 @@ int main(int argc, char** argv)
     if (command) {
         return command->fn(argc, argv);
     }
+
+    setArgs(argc, argv);
 
     if (DirectoryExists(argv[0])) {
         ChangeDirectory(argv[0]);

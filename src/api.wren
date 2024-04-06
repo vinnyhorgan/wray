@@ -60,8 +60,6 @@ class Window {
     foreign static x
     foreign static y
     foreign static dpi
-    foreign static clipboard
-    foreign static clipboard=(v)
 
     foreign static resizable
     foreign static resizable=(v)
@@ -285,4 +283,26 @@ foreign class Shader {
     foreign begin()
     foreign end()
     foreign set(name, value)
+}
+
+class OS {
+    foreign static openUrl(url)
+    foreign static readLine()
+
+    foreign static args
+    foreign static name
+    foreign static clipboard
+    foreign static clipboard=(v)
+}
+
+class Directory {
+    foreign static exists(path)
+    foreign static list(path)
+}
+
+class File {
+    foreign static exists(path)
+    foreign static write(path, data)
+    foreign static read(path)
+    foreign static size(path)
 }

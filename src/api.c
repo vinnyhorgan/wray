@@ -21,6 +21,14 @@
     }
 
 static map_int_t keys;
+static int argCount;
+static char** args;
+
+void setArgs(int argc, char** argv)
+{
+    argCount = argc;
+    args = argv;
+}
 
 void audioInit(WrenVM* vm)
 {
@@ -527,18 +535,6 @@ void windowGetDpi(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
     wrenSetSlotDouble(vm, 0, GetWindowScaleDPI().x);
-}
-
-void windowGetClipboard(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotString(vm, 0, GetClipboardText());
-}
-
-void windowSetClipboard(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
-    SetClipboardText(wrenGetSlotString(vm, 1));
 }
 
 void windowGetResizable(WrenVM* vm)
@@ -1853,4 +1849,132 @@ void shaderSet(WrenVM* vm)
         Texture* texture = (Texture*)wrenGetSlotForeign(vm, 2);
         SetShaderValueTexture(*shader, GetShaderLocation(*shader, name), *texture);
     }
+}
+
+void osOpenUrl(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "url");
+    OpenURL(wrenGetSlotString(vm, 1));
+}
+
+static char* readLine()
+{
+    int bufferSize = 10;
+    char* buffer = (char*)malloc(bufferSize);
+    if (buffer == NULL)
+        return NULL;
+
+    int index = 0;
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF) {
+        buffer[index++] = c;
+
+        if (index >= bufferSize) {
+            bufferSize *= 2;
+            buffer = realloc(buffer, bufferSize);
+            if (buffer == NULL)
+                return NULL;
+        }
+    }
+
+    buffer[index] = '\0';
+
+    return buffer;
+}
+
+void osReadLine(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+
+    char* result = readLine();
+    if (result == NULL) {
+        VM_ABORT(vm, "Failed to read line.");
+        return;
+    }
+
+    wrenSetSlotString(vm, 0, result);
+}
+
+void osGetArgs(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 2);
+    wrenSetSlotNewList(vm, 0);
+
+    for (int i = 0; i < argCount; i++) {
+        wrenSetSlotString(vm, 1, args[i]);
+        wrenInsertInList(vm, 0, i, 1);
+    }
+}
+
+void osGetName(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+
+#ifdef _WIN32
+    wrenSetSlotString(vm, 0, "windows");
+#else
+    wrenSetSlotString(vm, 0, "linux");
+#endif
+}
+
+void osGetClipboard(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotString(vm, 0, GetClipboardText());
+}
+
+void osSetClipboard(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    SetClipboardText(wrenGetSlotString(vm, 1));
+}
+
+void directoryExists(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    wrenSetSlotBool(vm, 0, DirectoryExists(wrenGetSlotString(vm, 1)));
+}
+
+void directoryList(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+
+    const char* path = wrenGetSlotString(vm, 1);
+
+    FilePathList list = LoadDirectoryFiles(path);
+
+    wrenEnsureSlots(vm, 2);
+    wrenSetSlotNewList(vm, 0);
+
+    for (int i = 0; i < (int)list.count; i++) {
+        wrenSetSlotString(vm, 1, list.paths[i]);
+        wrenInsertInList(vm, 0, i, 1);
+    }
+
+    UnloadDirectoryFiles(list);
+}
+
+void fileExists(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    wrenSetSlotBool(vm, 0, FileExists(wrenGetSlotString(vm, 1)));
+}
+
+void fileWrite(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    ASSERT_SLOT_TYPE(vm, 2, STRING, "data");
+    SaveFileText(wrenGetSlotString(vm, 1), wrenGetSlotString(vm, 2));
+}
+
+void fileRead(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    wrenSetSlotString(vm, 0, LoadFileText(wrenGetSlotString(vm, 1)));
+}
+
+void fileSize(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    wrenSetSlotDouble(vm, 0, GetFileLength(wrenGetSlotString(vm, 1)));
 }
