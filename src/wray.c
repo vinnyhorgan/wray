@@ -236,6 +236,10 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return graphicsPolygon;
         if (TextIsEqual(signature, "polygonLine(_,_,_,_,_,_,_)"))
             return graphicsPolygonLine;
+        if (TextIsEqual(signature, "noise(_,_,_,_)"))
+            return graphicsNoise;
+        if (TextIsEqual(signature, "noiseSeed=(_)"))
+            return graphicsSetNoiseSeed;
     } else if (TextIsEqual(className, "Mouse")) {
         if (TextIsEqual(signature, "down(_)"))
             return mouseDown;
@@ -342,6 +346,17 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return gamepadGetName;
         if (TextIsEqual(signature, "axisCount"))
             return gamepadGetAxisCount;
+    } else if (TextIsEqual(className, "Request")) {
+        if (TextIsEqual(signature, "init new(_)"))
+            return requestNew;
+        if (TextIsEqual(signature, "make()"))
+            return requestMake;
+        if (TextIsEqual(signature, "complete"))
+            return requestGetComplete;
+        if (TextIsEqual(signature, "status"))
+            return requestGetStatus;
+        if (TextIsEqual(signature, "body"))
+            return requestGetBody;
     } else if (TextIsEqual(className, "Camera")) {
         if (TextIsEqual(signature, "init new(_,_)"))
             return cameraNew;
@@ -441,6 +456,9 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
     } else if (TextIsEqual(className, "Shader")) {
         methods.allocate = shaderAllocate;
         methods.finalize = shaderFinalize;
+    } else if (TextIsEqual(className, "Request")) {
+        methods.allocate = requestAllocate;
+        methods.finalize = requestFinalize;
     }
 
     return methods;

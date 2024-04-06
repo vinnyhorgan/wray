@@ -111,6 +111,9 @@ class Graphics {
     static polygonLine(x, y, sides, radius, r, color) {
         polygonLine(x, y, sides, radius, r, 1, color)
     }
+
+    foreign static noise(x, y, freq, depth)
+    foreign static noiseSeed=(v)
 }
 
 foreign class Gamepad {
@@ -126,6 +129,16 @@ foreign class Gamepad {
     foreign id
     foreign name
     foreign axisCount
+}
+
+foreign class Request {
+    foreign construct new(url)
+
+    foreign make()
+
+    foreign complete
+    foreign status
+    foreign body
 }
 
 class Mouse {

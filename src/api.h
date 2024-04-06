@@ -1,6 +1,7 @@
 #ifndef API_H
 #define API_H
 
+#include "lib/naett/naett.h"
 #include "lib/wren/wren.h"
 
 void setArgs(int argc, char** argv);
@@ -83,6 +84,8 @@ void graphicsTriangle(WrenVM* vm);
 void graphicsTriangleLine(WrenVM* vm);
 void graphicsPolygon(WrenVM* vm);
 void graphicsPolygonLine(WrenVM* vm);
+void graphicsNoise(WrenVM* vm);
+void graphicsSetNoiseSeed(WrenVM* vm);
 
 void mouseDown(WrenVM* vm);
 void mousePressed(WrenVM* vm);
@@ -149,6 +152,19 @@ void gamepadAxis(WrenVM* vm);
 void gamepadGetId(WrenVM* vm);
 void gamepadGetName(WrenVM* vm);
 void gamepadGetAxisCount(WrenVM* vm);
+
+typedef struct {
+    naettReq* req;
+    naettRes* res;
+} Request;
+
+void requestAllocate(WrenVM* vm);
+void requestFinalize(void* data);
+void requestNew(WrenVM* vm);
+void requestMake(WrenVM* vm);
+void requestGetComplete(WrenVM* vm);
+void requestGetStatus(WrenVM* vm);
+void requestGetBody(WrenVM* vm);
 
 void cameraAllocate(WrenVM* vm);
 void cameraNew(WrenVM* vm);
