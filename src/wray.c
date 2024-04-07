@@ -21,6 +21,7 @@
 #define mkdir(path) mkdir(path, 0777)
 #endif
 
+static char selfPath[256];
 static struct zip_t* egg = NULL;
 
 static unsigned char* zipLoadFileData(const char* path, int* size)
@@ -608,6 +609,62 @@ static int nestCommand(int argc, const char** argv)
     return 0;
 }
 
+static unsigned char* checkFused(const char* selfPath, int* size)
+{
+    FILE* self = fopen(selfPath, "rb");
+    if (self == NULL) {
+        printf("Failed to open self.\n");
+        return NULL;
+    }
+
+    int s;
+    char magic[5];
+
+    fseek(self, -8, SEEK_END);
+
+    fread(&s, sizeof(int), 1, self);
+    fread(magic, sizeof(char), 4, self);
+    magic[4] = '\0';
+
+    if (TextIsEqual(magic, "WRAY")) {
+        unsigned char* buffer = (unsigned char*)malloc(s);
+        if (buffer == NULL) {
+            printf("Failed to allocate buffer.\n");
+            fclose(self);
+            return NULL;
+        }
+
+        fseek(self, -8 - s, SEEK_END);
+        fread(buffer, s, 1, self);
+
+        fclose(self);
+
+        *size = s;
+
+        return buffer;
+    }
+
+    return NULL;
+}
+
+static void fuse(const char* selfPath, const char* eggPath)
+{
+    int selfSize;
+    unsigned char* self = LoadFileData(selfPath, &selfSize);
+
+    int eggSize;
+    unsigned char* egg = LoadFileData(eggPath, &eggSize);
+
+    unsigned char* output = (unsigned char*)malloc(selfSize + eggSize + 8);
+    memcpy(output, self, selfSize);
+    memcpy(output + selfSize, egg, eggSize);
+
+    memcpy(output + selfSize + eggSize, &eggSize, sizeof(int));
+    memcpy(output + selfSize + eggSize + 4, "WRAY", 4);
+
+    SaveFileData(TextFormat("%s.exe", GetFileNameWithoutExt(eggPath)), output, selfSize + eggSize + 8);
+}
+
 static int fuseCommand(int argc, const char** argv)
 {
     struct argparse_option options[] = {
@@ -630,7 +687,14 @@ static int fuseCommand(int argc, const char** argv)
         return 1;
     }
 
-    printf("Not implemented yet.\n");
+    if (!FileExists(argv[0])) {
+        printf("File %s does not exist.\n", argv[0]);
+        return 1;
+    }
+
+    fuse(selfPath, argv[0]);
+
+    printf("Created %s.\n", TextFormat("%s.exe", GetFileNameWithoutExt(argv[0])));
 
     return 0;
 }
@@ -650,6 +714,23 @@ static int versionCallback(struct argparse* self, const struct argparse_option* 
 int main(int argc, char** argv)
 {
     SetTraceLogLevel(LOG_NONE);
+
+    int size;
+    unsigned char* data = checkFused(argv[0], &size);
+    if (data != NULL) {
+        egg = zip_stream_open(data, size, 0, 'r');
+
+        SetLoadFileDataCallback(zipLoadFileData);
+        SetLoadFileTextCallback(zipLoadFileText);
+
+        runWren("main.wren", "main");
+
+        zip_close(egg);
+
+        return 0;
+    }
+
+    TextCopy(selfPath, argv[0]);
 
     struct argparse_option options[] = {
         OPT_HELP(),
