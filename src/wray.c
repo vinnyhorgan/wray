@@ -389,6 +389,10 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return cameraSetRotation;
         if (TextIsEqual(signature, "zoom=(_)"))
             return cameraSetZoom;
+        if (TextIsEqual(signature, "screenToWorld(_,_)"))
+            return cameraScreenToWorld;
+        if (TextIsEqual(signature, "worldToScreen(_,_)"))
+            return cameraWorldToScreen;
     } else if (TextIsEqual(className, "Shader")) {
         if (TextIsEqual(signature, "init new(_)"))
             return shaderNew;

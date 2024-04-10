@@ -276,6 +276,8 @@ static const char* apiModuleSource =
 "\n"
 "    foreign begin()\n"
 "    foreign end()\n"
+"    foreign screenToWorld(x, y)\n"
+"    foreign worldToScreen(x, y)\n"
 "\n"
 "    foreign x\n"
 "    foreign x=(v)\n"

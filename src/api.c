@@ -1917,6 +1917,52 @@ void cameraSetZoom(WrenVM* vm)
     camera->zoom = z;
 }
 
+void cameraScreenToWorld(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+
+    Vector2 result = GetScreenToWorld2D((Vector2) { (float)x, (float)y }, *camera);
+
+    wrenSetSlotNewMap(vm, 0);
+
+    wrenSetSlotString(vm, 1, "x");
+    wrenSetSlotDouble(vm, 2, result.x);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "y");
+    wrenSetSlotDouble(vm, 2, result.y);
+    wrenSetMapValue(vm, 0, 1, 2);
+}
+
+void cameraWorldToScreen(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+
+    Vector2 result = GetWorldToScreen2D((Vector2) { (float)x, (float)y }, *camera);
+
+    wrenSetSlotNewMap(vm, 0);
+
+    wrenSetSlotString(vm, 1, "x");
+    wrenSetSlotDouble(vm, 2, result.x);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "y");
+    wrenSetSlotDouble(vm, 2, result.y);
+    wrenSetMapValue(vm, 0, 1, 2);
+}
+
 void shaderAllocate(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);

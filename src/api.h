@@ -182,6 +182,8 @@ void cameraSetOffsetX(WrenVM* vm);
 void cameraSetOffsetY(WrenVM* vm);
 void cameraSetRotation(WrenVM* vm);
 void cameraSetZoom(WrenVM* vm);
+void cameraScreenToWorld(WrenVM* vm);
+void cameraWorldToScreen(WrenVM* vm);
 
 void shaderAllocate(WrenVM* vm);
 void shaderFinalize(void* data);

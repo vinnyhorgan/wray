@@ -274,6 +274,8 @@ foreign class Camera {
 
     foreign begin()
     foreign end()
+    foreign screenToWorld(x, y)
+    foreign worldToScreen(x, y)
 
     foreign x
     foreign x=(v)
