@@ -1,76 +1,32 @@
-class Audio {
-    foreign static init()
-    foreign static close()
+//------------------------------
+// Audio
+//------------------------------
 
-    foreign static volume
-    foreign static volume=(v)
+class Audio {
+    foreign static init()        // Initialize audio device
+    foreign static close()       // Close audio device
+
+    foreign static volume        // Get master volume
+    foreign static volume=(v)    // Set master volume
 }
 
 foreign class Sound {
-    foreign construct new(path)
+    foreign construct new(path)    // Load sound from file (WAV, OGG, MP3, FLAC)
 
-    foreign play()
-    foreign stop()
-    foreign pause()
-    foreign resume()
+    foreign play()                 // Play sound
+    foreign stop()                 // Stop playing sound
+    foreign pause()                // Pause sound
+    foreign resume()               // Resume paused sound
 
-    foreign playing
-    foreign volume=(v)
-    foreign pitch=(v)
-    foreign pan=(v)
+    foreign playing                // Check if sound is playing
+    foreign volume=(v)             // Set sound volume (1.0 = max volume)
+    foreign pitch=(v)              // Set sound pitch (1.0 = normal)
+    foreign pan=(v)                // Set sound pan (0.5 = middle)
 }
 
-foreign class Font {
-    foreign construct new(path, size)
-
-    foreign print(text, x, y, r, ox, oy, color)
-
-    print(text, x, y, color) {
-        print(text, x, y, 0, 0, 0, color)
-    }
-
-    foreign measure(text)
-
-    foreign size
-}
-
-class Window {
-    foreign static init(width, height, title)
-    foreign static close()
-    foreign static toggleFullscreen()
-    foreign static maximize()
-    foreign static minimize()
-    foreign static restore()
-    foreign static setPosition(x, y)
-    foreign static setMinSize(width, height)
-    foreign static setMaxSize(width, height)
-    foreign static setSize(width, height)
-    foreign static focus()
-
-    foreign static closed
-    foreign static fullscreen
-    foreign static hidden
-    foreign static minimized
-    foreign static maximized
-    foreign static focused
-    foreign static resized
-    foreign static title=(v)
-    foreign static width
-    foreign static height
-    foreign static x
-    foreign static y
-    foreign static dpi
-
-    foreign static resizable
-    foreign static resizable=(v)
-    foreign static vsync
-    foreign static vsync=(v)
-
-    foreign static targetFps=(v)
-    foreign static dt
-    foreign static time
-    foreign static fps
-}
+//------------------------------
+// Graphics
+//------------------------------
 
 class Graphics {
     foreign static begin()
@@ -115,98 +71,6 @@ class Graphics {
 
     foreign static noise(x, y, freq, depth)
     foreign static noiseSeed=(v)
-}
-
-foreign class Gamepad {
-    foreign static available(id)
-
-    foreign construct new(id)
-
-    foreign down(button)
-    foreign pressed(button)
-    foreign released(button)
-    foreign axis(axis)
-
-    foreign id
-    foreign name
-    foreign axisCount
-}
-
-foreign class Request {
-    foreign construct new(url)
-
-    foreign make()
-
-    foreign complete
-    foreign status
-    foreign body
-}
-
-class Mouse {
-    foreign static down(button)
-    foreign static pressed(button)
-    foreign static released(button)
-    foreign static setPosition(x, y)
-    foreign static setOffset(x, y)
-    foreign static setScale(x, y)
-
-    foreign static x
-    foreign static y
-    foreign static dx
-    foreign static dy
-    foreign static wheel
-    foreign static cursor=(v)
-    foreign static hidden
-    foreign static hidden=(v)
-    foreign static enabled=(v)
-    foreign static onScreen
-}
-
-class Keyboard {
-    foreign static down(key)
-    foreign static pressed(key)
-    foreign static pressedRepeat(key)
-    foreign static released(key)
-
-    foreign static keyPressed
-}
-
-foreign class Color {
-    foreign construct new(r, g, b, a)
-    foreign construct new(r, g, b)
-
-    foreign [index]
-    foreign [index]=(v)
-
-    r { this[0] }
-    g { this[1] }
-    b { this[2] }
-    a { this[3] }
-
-    r=(v) { this[0] = v }
-    g=(v) { this[0] = v }
-    b=(v) { this[0] = v }
-    a=(v) { this[0] = v }
-
-    toString { "Color (r: %(r), g: %(g), b: %(b), a: %(a))" }
-
-    static none { new(0, 0, 0, 0) }
-    static black { new(0, 0, 0) }
-    static darkBlue { new(29, 43, 83) }
-    static darkPurple { new(126, 37, 83) }
-    static darkGreen { new(0, 135, 81) }
-    static brown { new(171, 82, 54) }
-    static darkGray { new(95, 87, 79) }
-    static lightGray { new(194, 195, 199) }
-    static white { new(255, 241, 232) }
-    static red { new(255, 0, 77) }
-    static orange { new(255, 163, 0) }
-    static yellow { new(255, 236, 39) }
-    static green { new(0, 228, 54) }
-    static blue { new(41, 173, 255) }
-    static indigo { new(131, 118, 156) }
-    static pink { new(255, 119, 168) }
-    static peach { new(255, 204, 170) }
 }
 
 foreign class Texture {
@@ -292,6 +156,44 @@ foreign class Camera {
     foreign zoom=(v)
 }
 
+foreign class Color {
+    foreign construct new(r, g, b, a)
+    foreign construct new(r, g, b)
+
+    foreign [index]
+    foreign [index]=(v)
+
+    r { this[0] }
+    g { this[1] }
+    b { this[2] }
+    a { this[3] }
+
+    r=(v) { this[0] = v }
+    g=(v) { this[0] = v }
+    b=(v) { this[0] = v }
+    a=(v) { this[0] = v }
+
+    toString { "Color (r: %(r), g: %(g), b: %(b), a: %(a))" }
+
+    static none { new(0, 0, 0, 0) }
+    static black { new(0, 0, 0) }
+    static darkBlue { new(29, 43, 83) }
+    static darkPurple { new(126, 37, 83) }
+    static darkGreen { new(0, 135, 81) }
+    static brown { new(171, 82, 54) }
+    static darkGray { new(95, 87, 79) }
+    static lightGray { new(194, 195, 199) }
+    static white { new(255, 241, 232) }
+    static red { new(255, 0, 77) }
+    static orange { new(255, 163, 0) }
+    static yellow { new(255, 236, 39) }
+    static green { new(0, 228, 54) }
+    static blue { new(41, 173, 255) }
+    static indigo { new(131, 118, 156) }
+    static pink { new(255, 119, 168) }
+    static peach { new(255, 204, 170) }
+}
+
 foreign class Shader {
     foreign construct new(vs, fs)
     foreign construct new(fs)
@@ -299,6 +201,120 @@ foreign class Shader {
     foreign begin()
     foreign end()
     foreign set(name, value)
+}
+
+foreign class Font {
+    foreign construct new(path, size)
+
+    foreign print(text, x, y, r, ox, oy, color)
+
+    print(text, x, y, color) {
+        print(text, x, y, 0, 0, 0, color)
+    }
+
+    foreign measure(text)
+
+    foreign size
+}
+
+//------------------------------
+// Input
+//------------------------------
+
+class Mouse {
+    foreign static down(button)
+    foreign static pressed(button)
+    foreign static released(button)
+    foreign static setPosition(x, y)
+    foreign static setOffset(x, y)
+    foreign static setScale(x, y)
+
+    foreign static x
+    foreign static y
+    foreign static dx
+    foreign static dy
+    foreign static wheel
+    foreign static cursor=(v)
+    foreign static hidden
+    foreign static hidden=(v)
+    foreign static enabled=(v)
+    foreign static onScreen
+}
+
+class Keyboard {
+    foreign static down(key)
+    foreign static pressed(key)
+    foreign static pressedRepeat(key)
+    foreign static released(key)
+
+    foreign static keyPressed
+}
+
+foreign class Gamepad {
+    foreign static available(id)
+
+    foreign construct new(id)
+
+    foreign down(button)
+    foreign pressed(button)
+    foreign released(button)
+    foreign axis(axis)
+
+    foreign id
+    foreign name
+    foreign axisCount
+}
+
+//------------------------------
+// System
+//------------------------------
+
+class Window {
+    foreign static init(width, height, title)
+    foreign static close()
+    foreign static toggleFullscreen()
+    foreign static maximize()
+    foreign static minimize()
+    foreign static restore()
+    foreign static setPosition(x, y)
+    foreign static setMinSize(width, height)
+    foreign static setMaxSize(width, height)
+    foreign static setSize(width, height)
+    foreign static focus()
+
+    foreign static closed
+    foreign static fullscreen
+    foreign static hidden
+    foreign static minimized
+    foreign static maximized
+    foreign static focused
+    foreign static resized
+    foreign static title=(v)
+    foreign static width
+    foreign static height
+    foreign static x
+    foreign static y
+    foreign static dpi
+
+    foreign static resizable
+    foreign static resizable=(v)
+    foreign static vsync
+    foreign static vsync=(v)
+
+    foreign static targetFps=(v)
+    foreign static dt
+    foreign static time
+    foreign static fps
+}
+
+foreign class Request {
+    foreign construct new(url)
+
+    foreign make()
+
+    foreign complete
+    foreign status
+    foreign body
 }
 
 class OS {
