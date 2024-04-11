@@ -1,15 +1,5 @@
 import "wray" for Color, Graphics, Mouse, RenderTexture, Texture, Window
 
-class Math {
-    static min(a, b) {
-        if (a < b) {
-            return a
-        } else {
-            return b
-        }
-    }
-}
-
 Window.init(640, 480, "Letterbox")
 Window.resizable = true
 Window.targetFps = 60
@@ -22,7 +12,7 @@ var screen = RenderTexture.new(gameWidth, gameHeight)
 var bunny = Texture.new("bunny.png")
 
 while (!Window.closed) {
-    var scale = Math.min(Window.width / gameWidth, Window.height / gameHeight)
+    var scale = (Window.width / gameWidth).min(Window.height / gameHeight)
     Mouse.setOffset(-(Window.width - gameWidth * scale) / 2, -(Window.height - gameHeight * scale) / 2)
     Mouse.setScale(1 / scale, 1 / scale)
 

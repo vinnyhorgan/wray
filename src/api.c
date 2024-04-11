@@ -908,6 +908,17 @@ void graphicsPolygonLine(WrenVM* vm)
     DrawPolyLinesEx((Vector2) { (float)x, (float)y }, sides, radius, r, thick, *color);
 }
 
+void graphicsMeasure(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "size");
+
+    const char* text = wrenGetSlotString(vm, 1);
+    int size = (int)wrenGetSlotDouble(vm, 2);
+
+    wrenSetSlotDouble(vm, 0, MeasureText(text, size));
+}
+
 // BEGIN GIST CODE
 
 static int SEED = 2004;

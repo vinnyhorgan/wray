@@ -84,6 +84,7 @@ static const char* apiModuleSource =
 "    foreign static clear(color)\n"
 "    foreign static print(text, x, y, size, color)\n"
 "    foreign static takeScreenshot(path)\n"
+"    foreign static measure(text, size)\n"
 "\n"
 "    foreign static pixel(x, y, color)\n"
 "    foreign static line(x1, y1, x2, y2, thick, color)\n"

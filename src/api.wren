@@ -82,6 +82,7 @@ class Graphics {
     foreign static clear(color)
     foreign static print(text, x, y, size, color)
     foreign static takeScreenshot(path)
+    foreign static measure(text, size)
 
     foreign static pixel(x, y, color)
     foreign static line(x1, y1, x2, y2, thick, color)

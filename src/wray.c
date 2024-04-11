@@ -237,6 +237,8 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return graphicsPolygon;
         if (TextIsEqual(signature, "polygonLine(_,_,_,_,_,_,_)"))
             return graphicsPolygonLine;
+        if (TextIsEqual(signature, "measure(_,_)"))
+            return graphicsMeasure;
         if (TextIsEqual(signature, "noise(_,_,_,_)"))
             return graphicsNoise;
         if (TextIsEqual(signature, "noiseSeed=(_)"))

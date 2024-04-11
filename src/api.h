@@ -86,6 +86,7 @@ void graphicsPolygon(WrenVM* vm);
 void graphicsPolygonLine(WrenVM* vm);
 void graphicsNoise(WrenVM* vm);
 void graphicsSetNoiseSeed(WrenVM* vm);
+void graphicsMeasure(WrenVM* vm);
 
 void mouseDown(WrenVM* vm);
 void mousePressed(WrenVM* vm);
