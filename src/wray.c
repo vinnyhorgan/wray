@@ -194,6 +194,12 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return windowGetTime;
         if (TextIsEqual(signature, "fps"))
             return windowGetFps;
+        if (TextIsEqual(signature, "listDropped()"))
+            return windowListDropped;
+        if (TextIsEqual(signature, "fileDropped"))
+            return windowGetFileDropped;
+        if (TextIsEqual(signature, "icon=(_)"))
+            return windowSetIcon;
     } else if (TextIsEqual(className, "Graphics")) {
         if (TextIsEqual(signature, "begin()"))
             return graphicsBegin;
@@ -211,38 +217,40 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return graphicsClear;
         if (TextIsEqual(signature, "print(_,_,_,_,_)"))
             return graphicsPrint;
-        if (TextIsEqual(signature, "takeScreenshot(_)"))
-            return graphicsTakeScreenshot;
+        if (TextIsEqual(signature, "screenshot(_)"))
+            return graphicsScreenshot;
         if (TextIsEqual(signature, "pixel(_,_,_)"))
             return graphicsPixel;
         if (TextIsEqual(signature, "line(_,_,_,_,_,_)"))
-            return graphicsLine;
+            return graphicsLines;
         if (TextIsEqual(signature, "circle(_,_,_,_)"))
             return graphicsCircle;
-        if (TextIsEqual(signature, "circleLine(_,_,_,_)"))
-            return graphicsCircleLine;
+        if (TextIsEqual(signature, "circleLines(_,_,_,_)"))
+            return graphicsCircleLines;
         if (TextIsEqual(signature, "ellipse(_,_,_,_,_)"))
             return graphicsEllipse;
-        if (TextIsEqual(signature, "ellipseLine(_,_,_,_,_)"))
-            return graphicsEllipseLine;
+        if (TextIsEqual(signature, "ellipseLines(_,_,_,_,_)"))
+            return graphicsEllipseLines;
         if (TextIsEqual(signature, "rectangle(_,_,_,_,_,_,_,_)"))
             return graphicsRectangle;
-        if (TextIsEqual(signature, "rectangleLine(_,_,_,_,_,_)"))
-            return graphicsRectangleLine;
+        if (TextIsEqual(signature, "rectangleLines(_,_,_,_,_,_)"))
+            return graphicsRectangleLines;
         if (TextIsEqual(signature, "triangle(_,_,_,_,_,_,_)"))
             return graphicsTriangle;
-        if (TextIsEqual(signature, "triangleLine(_,_,_,_,_,_,_)"))
-            return graphicsTriangleLine;
+        if (TextIsEqual(signature, "triangleLines(_,_,_,_,_,_,_)"))
+            return graphicsTriangleLines;
         if (TextIsEqual(signature, "polygon(_,_,_,_,_,_)"))
             return graphicsPolygon;
-        if (TextIsEqual(signature, "polygonLine(_,_,_,_,_,_,_)"))
-            return graphicsPolygonLine;
+        if (TextIsEqual(signature, "polygonLines(_,_,_,_,_,_,_)"))
+            return graphicsPolygonLines;
         if (TextIsEqual(signature, "measure(_,_)"))
             return graphicsMeasure;
         if (TextIsEqual(signature, "noise(_,_,_,_)"))
             return graphicsNoise;
         if (TextIsEqual(signature, "noiseSeed=(_)"))
             return graphicsSetNoiseSeed;
+        if (TextIsEqual(signature, "lineSpacing=(_)"))
+            return graphicsSetLineSpacing;
     } else if (TextIsEqual(className, "Mouse")) {
         if (TextIsEqual(signature, "down(_)"))
             return mouseDown;
@@ -301,8 +309,8 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return textureNew;
         if (TextIsEqual(signature, "draw(_,_,_,_,_,_,_,_)"))
             return textureDraw;
-        if (TextIsEqual(signature, "drawRect(_,_,_,_,_,_,_,_,_,_,_,_)"))
-            return textureDrawRect;
+        if (TextIsEqual(signature, "drawRec(_,_,_,_,_,_,_,_,_,_,_,_)"))
+            return textureDrawRec;
         if (TextIsEqual(signature, "width"))
             return textureGetWidth;
         if (TextIsEqual(signature, "height"))
@@ -320,8 +328,8 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return renderTextureEnd;
         if (TextIsEqual(signature, "draw(_,_,_,_,_,_,_,_)"))
             return renderTextureDraw;
-        if (TextIsEqual(signature, "drawRect(_,_,_,_,_,_,_,_,_,_,_,_)"))
-            return renderTextureDrawRect;
+        if (TextIsEqual(signature, "drawRec(_,_,_,_,_,_,_,_,_,_,_,_)"))
+            return renderTextureDrawRec;
         if (TextIsEqual(signature, "width"))
             return renderTextureGetWidth;
         if (TextIsEqual(signature, "height"))

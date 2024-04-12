@@ -599,6 +599,39 @@ void windowGetFps(WrenVM* vm)
     wrenSetSlotDouble(vm, 0, GetFPS());
 }
 
+void windowListDropped(WrenVM* vm)
+{
+    FilePathList list = LoadDroppedFiles();
+
+    wrenEnsureSlots(vm, 2);
+    wrenSetSlotNewList(vm, 0);
+
+    for (int i = 0; i < (int)list.count; i++) {
+        wrenSetSlotString(vm, 1, list.paths[i]);
+        wrenInsertInList(vm, 0, i, 1);
+    }
+
+    UnloadDroppedFiles(list);
+}
+
+void windowGetFileDropped(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsFileDropped());
+}
+
+void windowSetIcon(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "icon");
+
+    Texture* icon = (Texture*)wrenGetSlotForeign(vm, 1);
+
+    Image image = LoadImageFromTexture(*icon);
+    ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+    SetWindowIcon(image);
+    UnloadImage(image);
+}
+
 void graphicsBegin(WrenVM* vm)
 {
     BeginDrawing();
@@ -681,7 +714,7 @@ void graphicsPrint(WrenVM* vm)
     DrawText(text, x, y, size, *color);
 }
 
-void graphicsTakeScreenshot(WrenVM* vm)
+void graphicsScreenshot(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
     const char* path = wrenGetSlotString(vm, 1);
@@ -701,7 +734,7 @@ void graphicsPixel(WrenVM* vm)
     DrawPixel(x, y, *color);
 }
 
-void graphicsLine(WrenVM* vm)
+void graphicsLines(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
@@ -735,7 +768,7 @@ void graphicsCircle(WrenVM* vm)
     DrawCircle(x, y, radius, *color);
 }
 
-void graphicsCircleLine(WrenVM* vm)
+void graphicsCircleLines(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
@@ -767,7 +800,7 @@ void graphicsEllipse(WrenVM* vm)
     DrawEllipse(x, y, rx, ry, *color);
 }
 
-void graphicsEllipseLine(WrenVM* vm)
+void graphicsEllipseLines(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
@@ -790,9 +823,9 @@ void graphicsRectangle(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
     ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
     ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "ox");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "oy");
-    ASSERT_SLOT_TYPE(vm, 7, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "oy");
     ASSERT_SLOT_TYPE(vm, 8, FOREIGN, "color");
 
     int x = (int)wrenGetSlotDouble(vm, 1);
@@ -807,7 +840,7 @@ void graphicsRectangle(WrenVM* vm)
     DrawRectanglePro((Rectangle) { (float)x, (float)y, (float)width, (float)height }, (Vector2) { (float)ox, (float)oy }, r, *color);
 }
 
-void graphicsRectangleLine(WrenVM* vm)
+void graphicsRectangleLines(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
@@ -847,7 +880,7 @@ void graphicsTriangle(WrenVM* vm)
     DrawTriangle((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, (Vector2) { (float)x3, (float)y3 }, *color);
 }
 
-void graphicsTriangleLine(WrenVM* vm)
+void graphicsTriangleLines(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
@@ -887,7 +920,7 @@ void graphicsPolygon(WrenVM* vm)
     DrawPoly((Vector2) { (float)x, (float)y }, sides, radius, r, *color);
 }
 
-void graphicsPolygonLine(WrenVM* vm)
+void graphicsPolygonLines(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
@@ -999,7 +1032,7 @@ void graphicsNoise(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "freq");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "frequency");
     ASSERT_SLOT_TYPE(vm, 4, NUM, "depth");
 
     int x = (int)wrenGetSlotDouble(vm, 1);
@@ -1013,6 +1046,13 @@ void graphicsSetNoiseSeed(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "seed");
     SEED = (int)wrenGetSlotDouble(vm, 1);
+}
+
+void graphicsSetLineSpacing(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "spacing");
+    int spacing = (int)wrenGetSlotDouble(vm, 1);
+    SetTextLineSpacing(spacing);
 }
 
 void mouseDown(WrenVM* vm)
@@ -1393,7 +1433,7 @@ void textureDraw(WrenVM* vm)
     DrawTexturePro(*texture, source, (Rectangle) { (float)x, (float)y, (float)texture->width * absSx, (float)texture->height * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
 }
 
-void textureDrawRect(WrenVM* vm)
+void textureDrawRec(WrenVM* vm)
 {
     Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
 
@@ -1566,7 +1606,7 @@ void renderTextureDraw(WrenVM* vm)
     DrawTexturePro(texture->texture, source, (Rectangle) { (float)x, (float)y, (float)texture->texture.width * absSx, (float)texture->texture.height * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
 }
 
-void renderTextureDrawRect(WrenVM* vm)
+void renderTextureDrawRec(WrenVM* vm)
 {
     RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
 
