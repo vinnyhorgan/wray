@@ -29,29 +29,30 @@ foreign class Sound {
 //------------------------------
 
 class Graphics {
-    foreign static begin()
-    foreign static end()
-    foreign static beginBlend(mode)
-    foreign static endBlend()
-    foreign static beginScissor(x, y, width, height)
-    foreign static endScissor()
-    foreign static clear(color)
-    foreign static print(text, x, y, size, color)
-    foreign static takeScreenshot(path)
-    foreign static measure(text, size)
+    foreign static begin()                                               // Begin rendering to screen
+    foreign static end()                                                 // End rendering to screen
+    foreign static beginBlend(mode)                                      // Begin blending mode ("alpha", "additive", "multiplied", "addColors", "subtractColors", "alphaPremultiply")
+    foreign static endBlend()                                            // End blending mode (returns to "alpha")
+    foreign static beginScissor(x, y, width, height)                     // Begin scissor mode
+    foreign static endScissor()                                          // End scissor mode
+    foreign static screenshot(path)                                      // Save screenshot to file
+    foreign static measure(text, size)                                   // Measure text width using default font
+    foreign static noise(x, y, frequency, depth)                         // Get perlin noise value
 
-    foreign static pixel(x, y, color)
-    foreign static line(x1, y1, x2, y2, thick, color)
-    foreign static circle(x, y, radius, color)
-    foreign static circleLine(x, y, radius, color)
-    foreign static ellipse(x, y, rx, ry, color)
-    foreign static ellipseLine(x, y, rx, ry, color)
-    foreign static rectangle(x, y, width, height, ox, oy, r, color)
-    foreign static rectangleLine(x, y, width, height, thick, color)
-    foreign static triangle(x1, y1, x2, y2, x3, y3, color)
-    foreign static triangleLine(x1, y1, x2, y2, x3, y3, color)
-    foreign static polygon(x, y, sides, radius, r, color)
-    foreign static polygonLine(x, y, sides, radius, r, thick, color)
+    foreign static clear(color)                                          // Clear the screen
+    foreign static print(text, x, y, size, color)                        // Draw text
+    foreign static pixel(x, y, color)                                    // Draw pixel
+    foreign static line(x1, y1, x2, y2, thick, color)                    // Draw line
+    foreign static circle(x, y, radius, color)                           // Draw circle
+    foreign static circleLines(x, y, radius, color)                      // Draw circle outline
+    foreign static ellipse(x, y, rx, ry, color)                          // Draw ellipse
+    foreign static ellipseLines(x, y, rx, ry, color)                     // Draw ellipse outline
+    foreign static rectangle(x, y, width, height, r, ox, oy, color)      // Draw rectangle
+    foreign static rectangleLines(x, y, width, height, thick, color)     // Draw rectangle outline
+    foreign static triangle(x1, y1, x2, y2, x3, y3, color)               // Draw triangle
+    foreign static triangleLines(x1, y1, x2, y2, x3, y3, color)          // Draw triangle outline
+    foreign static polygon(x, y, sides, radius, r, color)                // Draw polygon
+    foreign static polygonLines(x, y, sides, radius, r, thick, color)    // Draw polygon outline
 
     static line(x1, y1, x2, y2, color) {
         line(x1, y1, x2, y2, 1, color)
@@ -69,113 +70,30 @@ class Graphics {
         polygonLine(x, y, sides, radius, r, 1, color)
     }
 
-    foreign static noise(x, y, freq, depth)
-    foreign static noiseSeed=(v)
-}
-
-foreign class Texture {
-    foreign construct new(path)
-
-    foreign draw(x, y, r, sx, sy, ox, oy, color)
-
-    draw(x, y) {
-        draw(x, y, 0, 1, 1, 0, 0, Color.white)
-    }
-
-    draw(x, y, color) {
-        draw(x, y, 0, 1, 1, 0, 0, color)
-    }
-
-    foreign drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, r, sx, sy, ox, oy, color)
-
-    drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY) {
-        drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, 0, 1, 1, 0, 0, Color.white)
-    }
-
-    drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, color) {
-        drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, 0, 1, 1, 0, 0, color)
-    }
-
-    foreign width
-    foreign height
-    foreign filter=(v)
-    foreign wrap=(v)
-}
-
-foreign class RenderTexture {
-    foreign construct new(width, height)
-
-    foreign begin()
-    foreign end()
-
-    foreign draw(x, y, r, sx, sy, ox, oy, color)
-
-    draw(x, y) {
-        draw(x, y, 0, 1, 1, 0, 0, Color.white)
-    }
-
-    draw(x, y, color) {
-        draw(x, y, 0, 1, 1, 0, 0, color)
-    }
-
-    foreign drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, r, sx, sy, ox, oy, color)
-
-    drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY) {
-        drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, 0, 1, 1, 0, 0, Color.white)
-    }
-
-    drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, color) {
-        drawRect(srcX, srcY, srcWidth, srcHeight, dstX, dstY, 0, 1, 1, 0, 0, color)
-    }
-
-    foreign width
-    foreign height
-    foreign filter=(v)
-    foreign wrap=(v)
-}
-
-foreign class Camera {
-    foreign construct new(x, y)
-
-    foreign begin()
-    foreign end()
-    foreign screenToWorld(x, y)
-    foreign worldToScreen(x, y)
-
-    foreign x
-    foreign x=(v)
-    foreign y
-    foreign y=(v)
-    foreign ox
-    foreign ox=(v)
-    foreign oy
-    foreign oy=(v)
-    foreign r
-    foreign r=(v)
-    foreign zoom
-    foreign zoom=(v)
+    foreign static noiseSeed=(v)                                         // Set noise seed
+    foreign static lineSpacing=(v)                                       // Set vertical line spacing for text
 }
 
 foreign class Color {
-    foreign construct new(r, g, b, a)
-    foreign construct new(r, g, b)
+    foreign construct new(r, g, b, a)                            // New color from RGBA
+    foreign construct new(r, g, b)                               // New color from RGB
 
     foreign [index]
     foreign [index]=(v)
 
-    r { this[0] }
-    g { this[1] }
-    b { this[2] }
-    a { this[3] }
+    r { this[0] }                                                // Get R value
+    g { this[1] }                                                // Get G value
+    b { this[2] }                                                // Get B value
+    a { this[3] }                                                // Get A value
 
-    r=(v) { this[0] = v }
-    g=(v) { this[0] = v }
-    b=(v) { this[0] = v }
-    a=(v) { this[0] = v }
+    r=(v) { this[0] = v }                                        // Set R value
+    g=(v) { this[1] = v }                                        // Set G value
+    b=(v) { this[2] = v }                                        // Set B value
+    a=(v) { this[3] = v }                                        // Set A value
 
-    toString { "Color (r: %(r), g: %(g), b: %(b), a: %(a))" }
+    toString { "Color (r: %(r), g: %(g), b: %(b), a: %(a))" }    // Get string representation
 
-    static none { new(0, 0, 0, 0) }
+    static none { new(0, 0, 0, 0) }                              // Default color palette
     static black { new(0, 0, 0) }
     static darkBlue { new(29, 43, 83) }
     static darkPurple { new(126, 37, 83) }
@@ -194,27 +112,107 @@ foreign class Color {
     static peach { new(255, 204, 170) }
 }
 
-foreign class Shader {
-    foreign construct new(vs, fs)
-    foreign construct new(fs)
+foreign class Texture {
+    foreign construct new(path)                                                               // Load texture from file (PNG, BMP, JPG)
 
-    foreign begin()
-    foreign end()
-    foreign set(name, value)
+    foreign draw(x, y, r, sx, sy, ox, oy, color)                                              // Draw texture
+    foreign drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, r, sx, sy, ox, oy, color)    // Draw part of texture
+
+    draw(x, y) {
+        draw(x, y, 0, 1, 1, 0, 0, Color.white)
+    }
+
+    draw(x, y, color) {
+        draw(x, y, 0, 1, 1, 0, 0, color)
+    }
+
+    drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY) {
+        drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, 0, 1, 1, 0, 0, Color.white)
+    }
+
+    drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, color) {
+        drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, 0, 1, 1, 0, 0, color)
+    }
+
+    foreign width                                                                             // Get texture width
+    foreign height                                                                            // Get texture height
+    foreign filter=(v)                                                                        // Set texture filter ("point", "bilinear")
+    foreign wrap=(v)                                                                          // Set texture wrap ("repeat", "clamp")
+}
+
+foreign class RenderTexture {
+    foreign construct new(width, height)                                                      // New render texture
+
+    foreign begin()                                                                           // Begin rendering to texture
+    foreign end()                                                                             // End rendering to texture
+    foreign draw(x, y, r, sx, sy, ox, oy, color)                                              // Draw texture
+    foreign drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, r, sx, sy, ox, oy, color)    // Draw part of texture
+
+    draw(x, y) {
+        draw(x, y, 0, 1, 1, 0, 0, Color.white)
+    }
+
+    draw(x, y, color) {
+        draw(x, y, 0, 1, 1, 0, 0, color)
+    }
+
+    drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY) {
+        drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, 0, 1, 1, 0, 0, Color.white)
+    }
+
+    drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, color) {
+        drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, 0, 1, 1, 0, 0, color)
+    }
+
+    foreign width                                                                             // Get texture width
+    foreign height                                                                            // Get texture height
+    foreign filter=(v)                                                                        // Set texture filter ("point", "bilinear")
+    foreign wrap=(v)                                                                          // Set texture wrap ("repeat", "clamp")
 }
 
 foreign class Font {
-    foreign construct new(path, size)
+    foreign construct new(path, size)              // Load font from file (FNT, TTF, OTF)
 
-    foreign print(text, x, y, r, ox, oy, color)
+    foreign print(text, x, y, r, ox, oy, color)    // Draw text
+    foreign measure(text)                          // Measure text width
 
     print(text, x, y, color) {
         print(text, x, y, 0, 0, 0, color)
     }
 
-    foreign measure(text)
+    foreign size                                   // Get font height
+}
 
-    foreign size
+foreign class Camera {
+    foreign construct new(x, y)    // New camera
+
+    foreign begin()                // Begin camera mode
+    foreign end()                  // End camera mode
+    foreign screenToWorld(x, y)    // Get world space position from screen space (returns map with "x" and "y")
+    foreign worldToScreen(x, y)    // Get screen space position from world space (returns map with "x" and "y")
+
+    foreign x                      // Get target x
+    foreign y                      // Get target y
+    foreign ox                     // Get offset x
+    foreign oy                     // Get offset y
+    foreign r                      // Get rotation
+    foreign zoom                   // Get zoom
+
+    foreign x=(v)                  // Set target x
+    foreign y=(v)                  // Set target y
+    foreign ox=(v)                 // Set offset x
+    foreign oy=(v)                 // Set offset y
+    foreign r=(v)                  // Set rotation
+    foreign zoom=(v)               // Set zoom
+}
+
+foreign class Shader {
+    foreign construct new(vs, fs)    // Load shader from vertex and fragment files
+    foreign construct new(fs)        // Load shader from fragment file (uses default vertex shader)
+
+    foreign begin()                  // Begin shader mode
+    foreign end()                    // End shader mode
+    foreign set(name, value)         // Set uniform value
 }
 
 //------------------------------
