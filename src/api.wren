@@ -219,48 +219,48 @@ foreign class Shader {
 // Input
 //------------------------------
 
-class Mouse {
-    foreign static down(button)
-    foreign static pressed(button)
-    foreign static released(button)
-    foreign static setPosition(x, y)
-    foreign static setOffset(x, y)
-    foreign static setScale(x, y)
+class Keyboard {
+    foreign static pressed(key)          // Check if key is pressed once
+    foreign static pressedRepeat(key)    // Check if key is pressed again
+    foreign static down(key)             // Check if key is being pressed
+    foreign static released(key)         // Check if key is released once
 
-    foreign static x
-    foreign static y
-    foreign static dx
-    foreign static dy
-    foreign static wheel
-    foreign static cursor=(v)
-    foreign static hidden
-    foreign static hidden=(v)
-    foreign static enabled=(v)
-    foreign static onScreen
+    foreign static keyPressed            // Get latest key pressed
 }
 
-class Keyboard {
-    foreign static down(key)
-    foreign static pressed(key)
-    foreign static pressedRepeat(key)
-    foreign static released(key)
+class Mouse {
+    foreign static pressed(button)      // Check if mouse button is pressed once
+    foreign static down(button)         // Check if mouse button is being pressed
+    foreign static released(button)     // Check if mouse button is released once
+    foreign static setPosition(x, y)    // Set mouse position
+    foreign static setOffset(x, y)      // Set mouse offset
+    foreign static setScale(x, y)       // Set mouse scale
 
-    foreign static keyPressed
+    foreign static x                    // Get mouse position x
+    foreign static y                    // Get mouse position y
+    foreign static dx                   // Get mouse delta x since last frame
+    foreign static dy                   // Get mouse delta y since last frame
+    foreign static wheel                // Get mouse wheel delta
+    foreign static cursor=(v)           // Set mouse cursor ("default", "arrow", "ibeam", "crosshair", "pointingHand", "resizeEW", "resizeNS", "resizeNWSE", "resizeNESW", "resizeAll", "notAllowed")
+    foreign static hidden               // Check if mouse cursor is not visible
+    foreign static hidden=(v)           // Set mouse cursor visibility
+    foreign static enabled=(v)          // Lock or unlock mouse cursor
+    foreign static onScreen             // Check if mouse is on screen
 }
 
 foreign class Gamepad {
-    foreign static available(id)
+    foreign static available(id)    // Check if gamepad is available
 
-    foreign construct new(id)
+    foreign construct new(id)       // New gamepad
 
-    foreign down(button)
-    foreign pressed(button)
-    foreign released(button)
-    foreign axis(axis)
+    foreign pressed(button)         // Check if gamepad button is pressed once
+    foreign down(button)            // Check if gamepad button is being pressed
+    foreign released(button)        // Check if gamepad button is released once
+    foreign axis(axis)              // Get axis value
 
-    foreign id
-    foreign name
-    foreign axisCount
+    foreign id                      // Get gamepad id
+    foreign name                    // Get gamepad name
+    foreign axisCount               // Get gamepad axis count
 }
 
 //------------------------------
@@ -268,71 +268,74 @@ foreign class Gamepad {
 //------------------------------
 
 class Window {
-    foreign static init(width, height, title)
-    foreign static close()
-    foreign static toggleFullscreen()
-    foreign static maximize()
-    foreign static minimize()
-    foreign static restore()
-    foreign static setPosition(x, y)
-    foreign static setMinSize(width, height)
-    foreign static setMaxSize(width, height)
-    foreign static setSize(width, height)
-    foreign static focus()
+    foreign static init(width, height, title)    // Initialize window
+    foreign static close()                       // Close window
+    foreign static toggleFullscreen()            // Toggle fullscreen mode
+    foreign static maximize()                    // Maximize window
+    foreign static minimize()                    // Minimize window
+    foreign static restore()                     // Restore window from minimized or maximized state
+    foreign static setPosition(x, y)             // Set window position
+    foreign static setMinSize(width, height)     // Set minimum window dimensions
+    foreign static setMaxSize(width, height)     // Set maximum window dimensions
+    foreign static setSize(width, height)        // Set window dimensions
+    foreign static focus()                       // Set window focus
+    foreign static listDropped()                 // Get list of dropped files (check with fileDropped if any)
 
-    foreign static closed
-    foreign static fullscreen
-    foreign static hidden
-    foreign static minimized
-    foreign static maximized
-    foreign static focused
-    foreign static resized
-    foreign static title=(v)
-    foreign static width
-    foreign static height
-    foreign static x
-    foreign static y
-    foreign static dpi
+    foreign static closed                        // Check if window should be closed
+    foreign static fullscreen                    // Check if window is fullscreen
+    foreign static hidden                        // Check if window is hidden
+    foreign static minimized                     // Check if window is minimized
+    foreign static maximized                     // Check if window is maximized
+    foreign static focused                       // Check if window is focused
+    foreign static resized                       // Check if window is resized last frame
+    foreign static width                         // Get window width
+    foreign static height                        // Get window height
+    foreign static x                             // Get window position x
+    foreign static y                             // Get window position y
+    foreign static dpi                           // Get window dpi
+    foreign static fileDropped                   // Check if any file has been dropped
+    foreign static title=(v)                     // Set window title
+    foreign static icon=(v)                      // Set window icon from texture
+    foreign static targetFps=(v)                 // Set target FPS
 
-    foreign static resizable
-    foreign static resizable=(v)
-    foreign static vsync
-    foreign static vsync=(v)
+    foreign static resizable                     // Check if window is resizable
+    foreign static resizable=(v)                 // Set window resizable
+    foreign static vsync                         // Check if vsync is enabled
+    foreign static vsync=(v)                     // Enable or disable vsync
 
-    foreign static targetFps=(v)
-    foreign static dt
-    foreign static time
-    foreign static fps
-}
-
-foreign class Request {
-    foreign construct new(url)
-
-    foreign make()
-
-    foreign complete
-    foreign status
-    foreign body
+    foreign static dt                            // Get delta time between frames
+    foreign static time                          // Get time since window has opened
+    foreign static fps                           // Get current FPS
 }
 
 class OS {
-    foreign static openUrl(url)
-    foreign static readLine()
+    foreign static readLine()       // Read line from console
+    foreign static openUrl(url)     // Open URL in default browser
 
-    foreign static args
-    foreign static name
-    foreign static clipboard
-    foreign static clipboard=(v)
+    foreign static args             // Get command line arguments list
+    foreign static name             // Get operating system name ("windows", "macos", "linux")
+    foreign static clipboard        // Get clipboard text
+    foreign static clipboard=(v)    // Set clipboard text
 }
 
 class Directory {
-    foreign static exists(path)
-    foreign static list(path)
+    foreign static exists(path)    // Check if directory exists
+    foreign static list(path)      // Get list of directory items
 }
 
 class File {
-    foreign static exists(path)
-    foreign static write(path, data)
-    foreign static read(path)
-    foreign static size(path)
+    foreign static exists(path)         // Check if file exists
+    foreign static size(path)           // Get file size
+    foreign static read(path)           // Read data from file
+    foreign static write(path, data)    // Write data to file
+}
+
+foreign class Request {
+    foreign construct new(url)    // New http request
+
+    foreign make()                // Make request (this method is async)
+
+    foreign complete              // Check if request is complete
+    foreign status                // Get request status
+    foreign body                  // Get request body
 }
