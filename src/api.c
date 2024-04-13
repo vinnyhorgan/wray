@@ -734,7 +734,7 @@ void graphicsPixel(WrenVM* vm)
     DrawPixel(x, y, *color);
 }
 
-void graphicsLines(WrenVM* vm)
+void graphicsLine(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
@@ -1121,13 +1121,13 @@ void mouseGetY(WrenVM* vm)
     wrenSetSlotDouble(vm, 0, GetMouseY());
 }
 
-void mouseGetDx(WrenVM* vm)
+void mouseGetDeltaX(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
     wrenSetSlotDouble(vm, 0, GetMouseDelta().x);
 }
 
-void mouseGetDy(WrenVM* vm)
+void mouseGetDeltaY(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
     wrenSetSlotDouble(vm, 0, GetMouseDelta().y);
@@ -1497,9 +1497,9 @@ void textureSetFilter(WrenVM* vm)
 
     const char* filter = wrenGetSlotString(vm, 1);
 
-    if (TextIsEqual(filter, "nearest"))
+    if (TextIsEqual(filter, "point"))
         SetTextureFilter(*texture, TEXTURE_FILTER_POINT);
-    else if (TextIsEqual(filter, "linear"))
+    else if (TextIsEqual(filter, "bilinear"))
         SetTextureFilter(*texture, TEXTURE_FILTER_BILINEAR);
     else
         VM_ABORT(vm, "Invalid texture filter. (\"nearest\" or \"linear\")");
@@ -1672,9 +1672,9 @@ void renderTextureSetFilter(WrenVM* vm)
 
     const char* filter = wrenGetSlotString(vm, 1);
 
-    if (TextIsEqual(filter, "nearest"))
+    if (TextIsEqual(filter, "point"))
         SetTextureFilter(texture->texture, TEXTURE_FILTER_POINT);
-    else if (TextIsEqual(filter, "linear"))
+    else if (TextIsEqual(filter, "bilinear"))
         SetTextureFilter(texture->texture, TEXTURE_FILTER_BILINEAR);
     else
         VM_ABORT(vm, "Invalid texture filter. (\"nearest\" or \"linear\")");

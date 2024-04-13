@@ -120,86 +120,6 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return soundSetPitch;
         if (TextIsEqual(signature, "pan=(_)"))
             return soundSetPan;
-    } else if (TextIsEqual(className, "Font")) {
-        if (TextIsEqual(signature, "init new(_,_)"))
-            return fontNew;
-        if (TextIsEqual(signature, "print(_,_,_,_,_,_,_)"))
-            return fontPrint;
-        if (TextIsEqual(signature, "measure(_)"))
-            return fontMeasure;
-        if (TextIsEqual(signature, "size"))
-            return fontGetSize;
-    } else if (TextIsEqual(className, "Window")) {
-        if (TextIsEqual(signature, "init(_,_,_)"))
-            return windowInit;
-        if (TextIsEqual(signature, "close()"))
-            return windowClose;
-        if (TextIsEqual(signature, "toggleFullscreen()"))
-            return windowToggleFullscreen;
-        if (TextIsEqual(signature, "maximize()"))
-            return windowMaximize;
-        if (TextIsEqual(signature, "minimize()"))
-            return windowMinimize;
-        if (TextIsEqual(signature, "restore()"))
-            return windowRestore;
-        if (TextIsEqual(signature, "setPosition(_,_)"))
-            return windowSetPosition;
-        if (TextIsEqual(signature, "setMinSize(_,_)"))
-            return windowSetMinSize;
-        if (TextIsEqual(signature, "setMaxSize(_,_)"))
-            return windowSetMaxSize;
-        if (TextIsEqual(signature, "setSize(_,_)"))
-            return windowSetSize;
-        if (TextIsEqual(signature, "focus()"))
-            return windowFocus;
-        if (TextIsEqual(signature, "closed"))
-            return windowGetClosed;
-        if (TextIsEqual(signature, "fullscreen"))
-            return windowGetFullscreen;
-        if (TextIsEqual(signature, "hidden"))
-            return windowGetHidden;
-        if (TextIsEqual(signature, "minimized"))
-            return windowGetMinimized;
-        if (TextIsEqual(signature, "maximized"))
-            return windowGetMaximized;
-        if (TextIsEqual(signature, "focused"))
-            return windowGetFocused;
-        if (TextIsEqual(signature, "resized"))
-            return windowGetResized;
-        if (TextIsEqual(signature, "title=(_)"))
-            return windowSetTitle;
-        if (TextIsEqual(signature, "width"))
-            return windowGetWidth;
-        if (TextIsEqual(signature, "height"))
-            return windowGetHeight;
-        if (TextIsEqual(signature, "x"))
-            return windowGetX;
-        if (TextIsEqual(signature, "y"))
-            return windowGetY;
-        if (TextIsEqual(signature, "dpi"))
-            return windowGetDpi;
-        if (TextIsEqual(signature, "resizable"))
-            return windowGetResizable;
-        if (TextIsEqual(signature, "resizable=(_)"))
-            return windowSetResizable;
-        if (TextIsEqual(signature, "vsync"))
-            return windowGetVSync;
-        if (TextIsEqual(signature, "vsync=(_)"))
-            return windowSetVSync;
-        if (TextIsEqual(signature, "targetFps=(_)"))
-            return windowSetTargetFps;
-        if (TextIsEqual(signature, "dt"))
-            return windowGetDt;
-        if (TextIsEqual(signature, "time"))
-            return windowGetTime;
-        if (TextIsEqual(signature, "fps"))
-            return windowGetFps;
-        if (TextIsEqual(signature, "listDropped()"))
-            return windowListDropped;
-        if (TextIsEqual(signature, "fileDropped"))
-            return windowGetFileDropped;
-        if (TextIsEqual(signature, "icon=(_)"))
-            return windowSetIcon;
     } else if (TextIsEqual(className, "Graphics")) {
         if (TextIsEqual(signature, "begin()"))
             return graphicsBegin;
@@ -213,16 +133,20 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return graphicsBeginScissor;
         if (TextIsEqual(signature, "endScissor()"))
             return graphicsEndScissor;
+        if (TextIsEqual(signature, "screenshot(_)"))
+            return graphicsScreenshot;
+        if (TextIsEqual(signature, "measure(_,_)"))
+            return graphicsMeasure;
+        if (TextIsEqual(signature, "noise(_,_,_,_)"))
+            return graphicsNoise;
         if (TextIsEqual(signature, "clear(_)"))
             return graphicsClear;
         if (TextIsEqual(signature, "print(_,_,_,_,_)"))
             return graphicsPrint;
-        if (TextIsEqual(signature, "screenshot(_)"))
-            return graphicsScreenshot;
         if (TextIsEqual(signature, "pixel(_,_,_)"))
             return graphicsPixel;
         if (TextIsEqual(signature, "line(_,_,_,_,_,_)"))
-            return graphicsLines;
+            return graphicsLine;
         if (TextIsEqual(signature, "circle(_,_,_,_)"))
             return graphicsCircle;
         if (TextIsEqual(signature, "circleLines(_,_,_,_)"))
@@ -243,58 +167,10 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return graphicsPolygon;
         if (TextIsEqual(signature, "polygonLines(_,_,_,_,_,_,_)"))
             return graphicsPolygonLines;
-        if (TextIsEqual(signature, "measure(_,_)"))
-            return graphicsMeasure;
-        if (TextIsEqual(signature, "noise(_,_,_,_)"))
-            return graphicsNoise;
         if (TextIsEqual(signature, "noiseSeed=(_)"))
             return graphicsSetNoiseSeed;
         if (TextIsEqual(signature, "lineSpacing=(_)"))
             return graphicsSetLineSpacing;
-    } else if (TextIsEqual(className, "Mouse")) {
-        if (TextIsEqual(signature, "down(_)"))
-            return mouseDown;
-        if (TextIsEqual(signature, "pressed(_)"))
-            return mousePressed;
-        if (TextIsEqual(signature, "released(_)"))
-            return mouseReleased;
-        if (TextIsEqual(signature, "setPosition(_,_)"))
-            return mouseSetPosition;
-        if (TextIsEqual(signature, "setOffset(_,_)"))
-            return mouseSetOffset;
-        if (TextIsEqual(signature, "setScale(_,_)"))
-            return mouseSetScale;
-        if (TextIsEqual(signature, "x"))
-            return mouseGetX;
-        if (TextIsEqual(signature, "y"))
-            return mouseGetY;
-        if (TextIsEqual(signature, "dx"))
-            return mouseGetDx;
-        if (TextIsEqual(signature, "dy"))
-            return mouseGetDy;
-        if (TextIsEqual(signature, "wheel"))
-            return mouseGetWheel;
-        if (TextIsEqual(signature, "cursor=(_)"))
-            return mouseSetCursor;
-        if (TextIsEqual(signature, "hidden"))
-            return mouseGetHidden;
-        if (TextIsEqual(signature, "hidden=(_)"))
-            return mouseSetHidden;
-        if (TextIsEqual(signature, "enabled=(_)"))
-            return mouseSetEnabled;
-        if (TextIsEqual(signature, "onScreen"))
-            return mouseGetOnScreen;
-    } else if (TextIsEqual(className, "Keyboard")) {
-        if (TextIsEqual(signature, "down(_)"))
-            return keyboardDown;
-        if (TextIsEqual(signature, "pressed(_)"))
-            return keyboardPressed;
-        if (TextIsEqual(signature, "pressedRepeat(_)"))
-            return keyboardPressedRepeat;
-        if (TextIsEqual(signature, "released(_)"))
-            return keyboardReleased;
-        if (TextIsEqual(signature, "keyPressed"))
-            return keyboardGetKeyPressed;
     } else if (TextIsEqual(className, "Color")) {
         if (TextIsEqual(signature, "init new(_,_,_,_)"))
             return colorNew;
@@ -338,36 +214,15 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return renderTextureSetFilter;
         if (TextIsEqual(signature, "wrap=(_)"))
             return renderTextureSetWrap;
-    } else if (TextIsEqual(className, "Gamepad")) {
-        if (TextIsEqual(signature, "init new(_)"))
-            return gamepadNew;
-        if (TextIsEqual(signature, "available(_)"))
-            return gamepadAvailable;
-        if (TextIsEqual(signature, "down(_)"))
-            return gamepadDown;
-        if (TextIsEqual(signature, "pressed(_)"))
-            return gamepadPressed;
-        if (TextIsEqual(signature, "released(_)"))
-            return gamepadReleased;
-        if (TextIsEqual(signature, "axis(_)"))
-            return gamepadAxis;
-        if (TextIsEqual(signature, "id"))
-            return gamepadGetId;
-        if (TextIsEqual(signature, "name"))
-            return gamepadGetName;
-        if (TextIsEqual(signature, "axisCount"))
-            return gamepadGetAxisCount;
-    } else if (TextIsEqual(className, "Request")) {
-        if (TextIsEqual(signature, "init new(_)"))
-            return requestNew;
-        if (TextIsEqual(signature, "make()"))
-            return requestMake;
-        if (TextIsEqual(signature, "complete"))
-            return requestGetComplete;
-        if (TextIsEqual(signature, "status"))
-            return requestGetStatus;
-        if (TextIsEqual(signature, "body"))
-            return requestGetBody;
+    } else if (TextIsEqual(className, "Font")) {
+        if (TextIsEqual(signature, "init new(_,_)"))
+            return fontNew;
+        if (TextIsEqual(signature, "print(_,_,_,_,_,_,_)"))
+            return fontPrint;
+        if (TextIsEqual(signature, "measure(_)"))
+            return fontMeasure;
+        if (TextIsEqual(signature, "size"))
+            return fontGetSize;
     } else if (TextIsEqual(className, "Camera")) {
         if (TextIsEqual(signature, "init new(_,_)"))
             return cameraNew;
@@ -375,6 +230,10 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return cameraBegin;
         if (TextIsEqual(signature, "end()"))
             return cameraEnd;
+        if (TextIsEqual(signature, "screenToWorld(_,_)"))
+            return cameraScreenToWorld;
+        if (TextIsEqual(signature, "worldToScreen(_,_)"))
+            return cameraWorldToScreen;
         if (TextIsEqual(signature, "x"))
             return cameraGetX;
         if (TextIsEqual(signature, "y"))
@@ -399,10 +258,6 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return cameraSetRotation;
         if (TextIsEqual(signature, "zoom=(_)"))
             return cameraSetZoom;
-        if (TextIsEqual(signature, "screenToWorld(_,_)"))
-            return cameraScreenToWorld;
-        if (TextIsEqual(signature, "worldToScreen(_,_)"))
-            return cameraWorldToScreen;
     } else if (TextIsEqual(className, "Shader")) {
         if (TextIsEqual(signature, "init new(_)"))
             return shaderNew;
@@ -414,11 +269,145 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return shaderEnd;
         if (TextIsEqual(signature, "set(_,_)"))
             return shaderSet;
+    } else if (TextIsEqual(className, "Keyboard")) {
+        if (TextIsEqual(signature, "pressed(_)"))
+            return keyboardPressed;
+        if (TextIsEqual(signature, "pressedRepeat(_)"))
+            return keyboardPressedRepeat;
+        if (TextIsEqual(signature, "down(_)"))
+            return keyboardDown;
+        if (TextIsEqual(signature, "released(_)"))
+            return keyboardReleased;
+        if (TextIsEqual(signature, "keyPressed"))
+            return keyboardGetKeyPressed;
+    } else if (TextIsEqual(className, "Mouse")) {
+        if (TextIsEqual(signature, "pressed(_)"))
+            return mousePressed;
+        if (TextIsEqual(signature, "down(_)"))
+            return mouseDown;
+        if (TextIsEqual(signature, "released(_)"))
+            return mouseReleased;
+        if (TextIsEqual(signature, "setPosition(_,_)"))
+            return mouseSetPosition;
+        if (TextIsEqual(signature, "setOffset(_,_)"))
+            return mouseSetOffset;
+        if (TextIsEqual(signature, "setScale(_,_)"))
+            return mouseSetScale;
+        if (TextIsEqual(signature, "x"))
+            return mouseGetX;
+        if (TextIsEqual(signature, "y"))
+            return mouseGetY;
+        if (TextIsEqual(signature, "dx"))
+            return mouseGetDeltaX;
+        if (TextIsEqual(signature, "dy"))
+            return mouseGetDeltaY;
+        if (TextIsEqual(signature, "wheel"))
+            return mouseGetWheel;
+        if (TextIsEqual(signature, "cursor=(_)"))
+            return mouseSetCursor;
+        if (TextIsEqual(signature, "hidden"))
+            return mouseGetHidden;
+        if (TextIsEqual(signature, "hidden=(_)"))
+            return mouseSetHidden;
+        if (TextIsEqual(signature, "enabled=(_)"))
+            return mouseSetEnabled;
+        if (TextIsEqual(signature, "onScreen"))
+            return mouseGetOnScreen;
+    } else if (TextIsEqual(className, "Gamepad")) {
+        if (TextIsEqual(signature, "available(_)"))
+            return gamepadAvailable;
+        if (TextIsEqual(signature, "init new(_)"))
+            return gamepadNew;
+        if (TextIsEqual(signature, "pressed(_)"))
+            return gamepadPressed;
+        if (TextIsEqual(signature, "down(_)"))
+            return gamepadDown;
+        if (TextIsEqual(signature, "released(_)"))
+            return gamepadReleased;
+        if (TextIsEqual(signature, "axis(_)"))
+            return gamepadAxis;
+        if (TextIsEqual(signature, "id"))
+            return gamepadGetId;
+        if (TextIsEqual(signature, "name"))
+            return gamepadGetName;
+        if (TextIsEqual(signature, "axisCount"))
+            return gamepadGetAxisCount;
+    } else if (TextIsEqual(className, "Window")) {
+        if (TextIsEqual(signature, "init(_,_,_)"))
+            return windowInit;
+        if (TextIsEqual(signature, "close()"))
+            return windowClose;
+        if (TextIsEqual(signature, "toggleFullscreen()"))
+            return windowToggleFullscreen;
+        if (TextIsEqual(signature, "maximize()"))
+            return windowMaximize;
+        if (TextIsEqual(signature, "minimize()"))
+            return windowMinimize;
+        if (TextIsEqual(signature, "restore()"))
+            return windowRestore;
+        if (TextIsEqual(signature, "setPosition(_,_)"))
+            return windowSetPosition;
+        if (TextIsEqual(signature, "setMinSize(_,_)"))
+            return windowSetMinSize;
+        if (TextIsEqual(signature, "setMaxSize(_,_)"))
+            return windowSetMaxSize;
+        if (TextIsEqual(signature, "setSize(_,_)"))
+            return windowSetSize;
+        if (TextIsEqual(signature, "focus()"))
+            return windowFocus;
+        if (TextIsEqual(signature, "listDropped()"))
+            return windowListDropped;
+        if (TextIsEqual(signature, "closed"))
+            return windowGetClosed;
+        if (TextIsEqual(signature, "fullscreen"))
+            return windowGetFullscreen;
+        if (TextIsEqual(signature, "hidden"))
+            return windowGetHidden;
+        if (TextIsEqual(signature, "minimized"))
+            return windowGetMinimized;
+        if (TextIsEqual(signature, "maximized"))
+            return windowGetMaximized;
+        if (TextIsEqual(signature, "focused"))
+            return windowGetFocused;
+        if (TextIsEqual(signature, "resized"))
+            return windowGetResized;
+        if (TextIsEqual(signature, "width"))
+            return windowGetWidth;
+        if (TextIsEqual(signature, "height"))
+            return windowGetHeight;
+        if (TextIsEqual(signature, "x"))
+            return windowGetX;
+        if (TextIsEqual(signature, "y"))
+            return windowGetY;
+        if (TextIsEqual(signature, "dpi"))
+            return windowGetDpi;
+        if (TextIsEqual(signature, "fileDropped"))
+            return windowGetFileDropped;
+        if (TextIsEqual(signature, "title=(_)"))
+            return windowSetTitle;
+        if (TextIsEqual(signature, "icon=(_)"))
+            return windowSetIcon;
+        if (TextIsEqual(signature, "targetFps=(_)"))
+            return windowSetTargetFps;
+        if (TextIsEqual(signature, "resizable"))
+            return windowGetResizable;
+        if (TextIsEqual(signature, "resizable=(_)"))
+            return windowSetResizable;
+        if (TextIsEqual(signature, "vsync"))
+            return windowGetVSync;
+        if (TextIsEqual(signature, "vsync=(_)"))
+            return windowSetVSync;
+        if (TextIsEqual(signature, "dt"))
+            return windowGetDt;
+        if (TextIsEqual(signature, "time"))
+            return windowGetTime;
+        if (TextIsEqual(signature, "fps"))
+            return windowGetFps;
     } else if (TextIsEqual(className, "OS")) {
-        if (TextIsEqual(signature, "openUrl(_)"))
-            return osOpenUrl;
         if (TextIsEqual(signature, "readLine()"))
             return osReadLine;
+        if (TextIsEqual(signature, "openUrl(_)"))
+            return osOpenUrl;
         if (TextIsEqual(signature, "args"))
             return osGetArgs;
         if (TextIsEqual(signature, "name"))
@@ -435,12 +424,23 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
     } else if (TextIsEqual(className, "File")) {
         if (TextIsEqual(signature, "exists(_)"))
             return fileExists;
-        if (TextIsEqual(signature, "write(_,_)"))
-            return fileWrite;
-        if (TextIsEqual(signature, "read(_)"))
-            return fileRead;
         if (TextIsEqual(signature, "size(_)"))
             return fileSize;
+        if (TextIsEqual(signature, "read(_)"))
+            return fileRead;
+        if (TextIsEqual(signature, "write(_,_)"))
+            return fileWrite;
+    } else if (TextIsEqual(className, "Request")) {
+        if (TextIsEqual(signature, "init new(_)"))
+            return requestNew;
+        if (TextIsEqual(signature, "make()"))
+            return requestMake;
+        if (TextIsEqual(signature, "complete"))
+            return requestGetComplete;
+        if (TextIsEqual(signature, "status"))
+            return requestGetStatus;
+        if (TextIsEqual(signature, "body"))
+            return requestGetBody;
     }
 
     return NULL;
@@ -450,7 +450,10 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
 {
     WrenForeignClassMethods methods = { 0 };
 
-    if (TextIsEqual(className, "Color")) {
+    if (TextIsEqual(className, "Sound")) {
+        methods.allocate = soundAllocate;
+        methods.finalize = soundFinalize;
+    } else if (TextIsEqual(className, "Color")) {
         methods.allocate = colorAllocate;
     } else if (TextIsEqual(className, "Texture")) {
         methods.allocate = textureAllocate;
@@ -458,19 +461,16 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
     } else if (TextIsEqual(className, "RenderTexture")) {
         methods.allocate = renderTextureAllocate;
         methods.finalize = renderTextureFinalize;
-    } else if (TextIsEqual(className, "Sound")) {
-        methods.allocate = soundAllocate;
-        methods.finalize = soundFinalize;
     } else if (TextIsEqual(className, "Font")) {
         methods.allocate = fontAllocate;
         methods.finalize = fontFinalize;
-    } else if (TextIsEqual(className, "Gamepad")) {
-        methods.allocate = gamepadAllocate;
     } else if (TextIsEqual(className, "Camera")) {
         methods.allocate = cameraAllocate;
     } else if (TextIsEqual(className, "Shader")) {
         methods.allocate = shaderAllocate;
         methods.finalize = shaderFinalize;
+    } else if (TextIsEqual(className, "Gamepad")) {
+        methods.allocate = gamepadAllocate;
     } else if (TextIsEqual(className, "Request")) {
         methods.allocate = requestAllocate;
         methods.finalize = requestFinalize;
