@@ -721,7 +721,7 @@ static Command commands[] = {
 
 static int versionCallback(struct argparse* self, const struct argparse_option* option)
 {
-    printf("wray version %s\n", WRAY_VERSION);
+    printf("Wray %s\nWren %s\n", WRAY_VERSION, WREN_VERSION_STRING);
     exit(0);
 }
 
@@ -732,6 +732,8 @@ int main(int argc, char** argv)
     int size;
     unsigned char* data = checkFused(argv[0], &size);
     if (data != NULL) {
+        setArgs(argc, argv);
+
         egg = zip_stream_open(data, size, 0, 'r');
 
         SetLoadFileDataCallback(zipLoadFileData);

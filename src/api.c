@@ -23,12 +23,110 @@
 static map_int_t keys;
 static int argCount;
 static char** args;
+static int SEED = 2004;
+
+static const unsigned char HASH[] = {
+    208, 34, 231, 213, 32, 248, 233, 56, 161, 78, 24, 140, 71, 48, 140, 254, 245, 255, 247, 247, 40,
+    185, 248, 251, 245, 28, 124, 204, 204, 76, 36, 1, 107, 28, 234, 163, 202, 224, 245, 128, 167, 204,
+    9, 92, 217, 54, 239, 174, 173, 102, 193, 189, 190, 121, 100, 108, 167, 44, 43, 77, 180, 204, 8, 81,
+    70, 223, 11, 38, 24, 254, 210, 210, 177, 32, 81, 195, 243, 125, 8, 169, 112, 32, 97, 53, 195, 13,
+    203, 9, 47, 104, 125, 117, 114, 124, 165, 203, 181, 235, 193, 206, 70, 180, 174, 0, 167, 181, 41,
+    164, 30, 116, 127, 198, 245, 146, 87, 224, 149, 206, 57, 4, 192, 210, 65, 210, 129, 240, 178, 105,
+    228, 108, 245, 148, 140, 40, 35, 195, 38, 58, 65, 207, 215, 253, 65, 85, 208, 76, 62, 3, 237, 55, 89,
+    232, 50, 217, 64, 244, 157, 199, 121, 252, 90, 17, 212, 203, 149, 152, 140, 187, 234, 177, 73, 174,
+    193, 100, 192, 143, 97, 53, 145, 135, 19, 103, 13, 90, 135, 151, 199, 91, 239, 247, 33, 39, 145,
+    101, 120, 99, 3, 186, 86, 99, 41, 237, 203, 111, 79, 220, 135, 158, 42, 30, 154, 120, 67, 87, 167,
+    135, 176, 183, 191, 253, 115, 184, 21, 233, 58, 129, 233, 142, 39, 128, 211, 118, 137, 139, 255,
+    114, 20, 218, 113, 154, 27, 127, 246, 250, 1, 8, 198, 250, 209, 92, 222, 173, 21, 88, 102, 219
+};
+
+static int noise2(int x, int y)
+{
+    int yindex = (y + SEED) % 256;
+    if (yindex < 0)
+        yindex += 256;
+    int xindex = (HASH[yindex] + x) % 256;
+    if (xindex < 0)
+        xindex += 256;
+    const int result = HASH[xindex];
+    return result;
+}
+
+static double lin_inter(double x, double y, double s)
+{
+    return x + s * (y - x);
+}
+
+static double smooth_inter(double x, double y, double s)
+{
+    return lin_inter(x, y, s * s * (3 - 2 * s));
+}
+
+static double noise2d(double x, double y)
+{
+    const int x_int = (int)floor(x);
+    const int y_int = (int)floor(y);
+    const double x_frac = x - x_int;
+    const double y_frac = y - y_int;
+    const int s = noise2(x_int, y_int);
+    const int t = noise2(x_int + 1, y_int);
+    const int u = noise2(x_int, y_int + 1);
+    const int v = noise2(x_int + 1, y_int + 1);
+    const double low = smooth_inter(s, t, x_frac);
+    const double high = smooth_inter(u, v, x_frac);
+    const double result = smooth_inter(low, high, y_frac);
+    return result;
+}
+
+static double Perlin_Get2d(double x, double y, double freq, int depth)
+{
+    double xa = x * freq;
+    double ya = y * freq;
+    double amp = 1.0;
+    double fin = 0;
+    double div = 0.0;
+    for (int i = 0; i < depth; i++) {
+        div += 256 * amp;
+        fin += noise2d(xa, ya) * amp;
+        amp /= 2;
+        xa *= 2;
+        ya *= 2;
+    }
+    return fin / div;
+}
+
+static char* readLine()
+{
+    int bufferSize = 10;
+    char* buffer = (char*)malloc(bufferSize);
+    if (buffer == NULL)
+        return NULL;
+
+    int index = 0;
+    char c;
+    while ((c = getchar()) != '\n' && c != EOF) {
+        buffer[index++] = c;
+
+        if (index >= bufferSize) {
+            bufferSize *= 2;
+            buffer = realloc(buffer, bufferSize);
+            if (buffer == NULL)
+                return NULL;
+        }
+    }
+
+    buffer[index] = '\0';
+
+    return buffer;
+}
 
 void setArgs(int argc, char** argv)
 {
     argCount = argc;
     args = argv;
 }
+
+// Audio
 
 void audioInit(WrenVM* vm)
 {
@@ -53,7 +151,6 @@ void audioGetVolume(WrenVM* vm)
 void audioSetVolume(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "volume");
-
     float volume = (float)wrenGetSlotDouble(vm, 1);
 
     if (volume < 0.0f || volume > 1.0f) {
@@ -73,7 +170,6 @@ void soundAllocate(WrenVM* vm)
 void soundFinalize(void* data)
 {
     Sound* sound = (Sound*)data;
-
     if (IsAudioDeviceReady())
         UnloadSound(*sound);
 }
@@ -81,9 +177,7 @@ void soundFinalize(void* data)
 void soundNew(WrenVM* vm)
 {
     Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
-
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
-
     const char* path = wrenGetSlotString(vm, 1);
 
     if (!IsAudioDeviceReady()) {
@@ -131,9 +225,7 @@ void soundGetPlaying(WrenVM* vm)
 void soundSetVolume(WrenVM* vm)
 {
     Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
-
     ASSERT_SLOT_TYPE(vm, 1, NUM, "volume");
-
     float volume = (float)wrenGetSlotDouble(vm, 1);
 
     if (volume < 0.0f || volume > 1.0f) {
@@ -147,9 +239,7 @@ void soundSetVolume(WrenVM* vm)
 void soundSetPitch(WrenVM* vm)
 {
     Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
-
     ASSERT_SLOT_TYPE(vm, 1, NUM, "pitch");
-
     float pitch = (float)wrenGetSlotDouble(vm, 1);
 
     if (pitch < 0.0f) {
@@ -163,9 +253,7 @@ void soundSetPitch(WrenVM* vm)
 void soundSetPan(WrenVM* vm)
 {
     Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
-
     ASSERT_SLOT_TYPE(vm, 1, NUM, "pan");
-
     float pan = (float)wrenGetSlotDouble(vm, 1);
 
     if (pan < 0.0f || pan > 1.0f) {
@@ -174,6 +262,701 @@ void soundSetPan(WrenVM* vm)
     }
 
     SetSoundPan(*sound, pan);
+}
+
+// Graphics
+
+void graphicsBegin(WrenVM* vm)
+{
+    BeginDrawing();
+}
+
+void graphicsEnd(WrenVM* vm)
+{
+    EndDrawing();
+}
+
+void graphicsBeginBlend(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "mode");
+    const char* mode = wrenGetSlotString(vm, 1);
+
+    if (TextIsEqual(mode, "alpha"))
+        BeginBlendMode(BLEND_ALPHA);
+    else if (TextIsEqual(mode, "additive"))
+        BeginBlendMode(BLEND_ADDITIVE);
+    else if (TextIsEqual(mode, "multiplied"))
+        BeginBlendMode(BLEND_MULTIPLIED);
+    else if (TextIsEqual(mode, "addColors"))
+        BeginBlendMode(BLEND_ADD_COLORS);
+    else if (TextIsEqual(mode, "subtractColors"))
+        BeginBlendMode(BLEND_SUBTRACT_COLORS);
+    else if (TextIsEqual(mode, "alphaPremultiply"))
+        BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
+    else
+        VM_ABORT(vm, "Invalid blend mode.");
+}
+
+void graphicsEndBlend(WrenVM* vm)
+{
+    EndBlendMode();
+}
+
+void graphicsBeginScissor(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int width = (int)wrenGetSlotDouble(vm, 3);
+    int height = (int)wrenGetSlotDouble(vm, 4);
+    BeginScissorMode(x, y, width, height);
+}
+
+void graphicsEndScissor(WrenVM* vm)
+{
+    EndScissorMode();
+}
+
+void graphicsScreenshot(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    const char* path = wrenGetSlotString(vm, 1);
+    TakeScreenshot(path);
+}
+
+void graphicsMeasure(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "size");
+    const char* text = wrenGetSlotString(vm, 1);
+    int size = (int)wrenGetSlotDouble(vm, 2);
+    wrenSetSlotDouble(vm, 0, MeasureText(text, size));
+}
+
+void graphicsNoise(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "frequency");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "depth");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float frequency = (float)wrenGetSlotDouble(vm, 3);
+    int depth = (int)wrenGetSlotDouble(vm, 4);
+    wrenSetSlotDouble(vm, 0, Perlin_Get2d(x, y, frequency, depth));
+}
+
+void graphicsClear(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "color");
+    Color* color = (Color*)wrenGetSlotForeign(vm, 1);
+    ClearBackground(*color);
+}
+
+void graphicsPrint(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "size");
+    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "color");
+    const char* text = wrenGetSlotString(vm, 1);
+    int x = (int)wrenGetSlotDouble(vm, 2);
+    int y = (int)wrenGetSlotDouble(vm, 3);
+    int size = (int)wrenGetSlotDouble(vm, 4);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 5);
+    DrawText(text, x, y, size, *color);
+}
+
+void graphicsPixel(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 3);
+    DrawPixel(x, y, *color);
+}
+
+void graphicsLine(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "x2");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "y2");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "thick");
+    ASSERT_SLOT_TYPE(vm, 6, FOREIGN, "color");
+    int x1 = (int)wrenGetSlotDouble(vm, 1);
+    int y1 = (int)wrenGetSlotDouble(vm, 2);
+    int x2 = (int)wrenGetSlotDouble(vm, 3);
+    int y2 = (int)wrenGetSlotDouble(vm, 4);
+    float thick = (float)wrenGetSlotDouble(vm, 5);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 6);
+    DrawLineEx((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, thick, *color);
+}
+
+void graphicsCircle(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "radius");
+    ASSERT_SLOT_TYPE(vm, 4, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float radius = (float)wrenGetSlotDouble(vm, 3);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 4);
+    DrawCircle(x, y, radius, *color);
+}
+
+void graphicsCircleLines(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "radius");
+    ASSERT_SLOT_TYPE(vm, 4, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float radius = (float)wrenGetSlotDouble(vm, 3);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 4);
+    DrawCircleLines(x, y, radius, *color);
+}
+
+void graphicsEllipse(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "rx");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "ry");
+    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float rx = (float)wrenGetSlotDouble(vm, 3);
+    float ry = (float)wrenGetSlotDouble(vm, 4);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 5);
+    DrawEllipse(x, y, rx, ry, *color);
+}
+
+void graphicsEllipseLines(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "rx");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "ry");
+    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float rx = (float)wrenGetSlotDouble(vm, 3);
+    float ry = (float)wrenGetSlotDouble(vm, 4);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 5);
+    DrawEllipseLines(x, y, rx, ry, *color);
+}
+
+void graphicsRectangle(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 8, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int width = (int)wrenGetSlotDouble(vm, 3);
+    int height = (int)wrenGetSlotDouble(vm, 4);
+    int ox = (int)wrenGetSlotDouble(vm, 5);
+    int oy = (int)wrenGetSlotDouble(vm, 6);
+    float r = (float)wrenGetSlotDouble(vm, 7);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 8);
+    DrawRectanglePro((Rectangle) { (float)x, (float)y, (float)width, (float)height }, (Vector2) { (float)ox, (float)oy }, r, *color);
+}
+
+void graphicsRectangleLines(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "thick");
+    ASSERT_SLOT_TYPE(vm, 6, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int width = (int)wrenGetSlotDouble(vm, 3);
+    int height = (int)wrenGetSlotDouble(vm, 4);
+    float thick = (float)wrenGetSlotDouble(vm, 5);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 6);
+    DrawRectangleLinesEx((Rectangle) { (float)x, (float)y, (float)width, (float)height }, thick, *color);
+}
+
+void graphicsTriangle(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "x2");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "y2");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "x3");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "y3");
+    ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
+    int x1 = (int)wrenGetSlotDouble(vm, 1);
+    int y1 = (int)wrenGetSlotDouble(vm, 2);
+    int x2 = (int)wrenGetSlotDouble(vm, 3);
+    int y2 = (int)wrenGetSlotDouble(vm, 4);
+    int x3 = (int)wrenGetSlotDouble(vm, 5);
+    int y3 = (int)wrenGetSlotDouble(vm, 6);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 7);
+    DrawTriangle((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, (Vector2) { (float)x3, (float)y3 }, *color);
+}
+
+void graphicsTriangleLines(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "x2");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "y2");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "x3");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "y3");
+    ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
+    int x1 = (int)wrenGetSlotDouble(vm, 1);
+    int y1 = (int)wrenGetSlotDouble(vm, 2);
+    int x2 = (int)wrenGetSlotDouble(vm, 3);
+    int y2 = (int)wrenGetSlotDouble(vm, 4);
+    int x3 = (int)wrenGetSlotDouble(vm, 5);
+    int y3 = (int)wrenGetSlotDouble(vm, 6);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 7);
+    DrawTriangleLines((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, (Vector2) { (float)x3, (float)y3 }, *color);
+}
+
+void graphicsPolygon(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "sides");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "radius");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 6, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int sides = (int)wrenGetSlotDouble(vm, 3);
+    float radius = (float)wrenGetSlotDouble(vm, 4);
+    float r = (float)wrenGetSlotDouble(vm, 5);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 6);
+    DrawPoly((Vector2) { (float)x, (float)y }, sides, radius, r, *color);
+}
+
+void graphicsPolygonLines(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "sides");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "radius");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "thick");
+    ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int sides = (int)wrenGetSlotDouble(vm, 3);
+    float radius = (float)wrenGetSlotDouble(vm, 4);
+    float r = (float)wrenGetSlotDouble(vm, 5);
+    float thick = (float)wrenGetSlotDouble(vm, 6);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 7);
+    DrawPolyLinesEx((Vector2) { (float)x, (float)y }, sides, radius, r, thick, *color);
+}
+
+void graphicsSetNoiseSeed(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "seed");
+    SEED = (int)wrenGetSlotDouble(vm, 1);
+}
+
+void graphicsSetLineSpacing(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "spacing");
+    int spacing = (int)wrenGetSlotDouble(vm, 1);
+    SetTextLineSpacing(spacing);
+}
+
+void colorAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Color));
+}
+
+void colorNew(WrenVM* vm)
+{
+    Color* color = (Color*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "g");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "b");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "a");
+    int r = (int)wrenGetSlotDouble(vm, 1);
+    int g = (int)wrenGetSlotDouble(vm, 2);
+    int b = (int)wrenGetSlotDouble(vm, 3);
+    int a = (int)wrenGetSlotDouble(vm, 4);
+    color->r = r;
+    color->g = g;
+    color->b = b;
+    color->a = a;
+}
+
+void colorNew2(WrenVM* vm)
+{
+    Color* color = (Color*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "g");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "b");
+    int r = (int)wrenGetSlotDouble(vm, 1);
+    int g = (int)wrenGetSlotDouble(vm, 2);
+    int b = (int)wrenGetSlotDouble(vm, 3);
+    color->r = r;
+    color->g = g;
+    color->b = b;
+    color->a = 255;
+}
+
+void colorGetIndex(WrenVM* vm)
+{
+    unsigned char* color = (unsigned char*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "index");
+    int index = (int)wrenGetSlotDouble(vm, 1);
+
+    if (index < 0 || index > 3) {
+        VM_ABORT(vm, "Invalid color index.");
+        return;
+    }
+
+    wrenSetSlotDouble(vm, 0, color[index]);
+}
+
+void colorSetIndex(WrenVM* vm)
+{
+    unsigned char* color = (unsigned char*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "index");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "value");
+    int index = (int)wrenGetSlotDouble(vm, 1);
+    int value = (int)wrenGetSlotDouble(vm, 2);
+
+    if (index < 0 || index > 3) {
+        VM_ABORT(vm, "Invalid color index.");
+        return;
+    }
+
+    color[index] = value;
+}
+
+void textureAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Texture));
+}
+
+void textureFinalize(void* data)
+{
+    Texture* texture = (Texture*)data;
+    if (IsWindowReady())
+        UnloadTexture(*texture);
+}
+
+void textureNew(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    const char* path = wrenGetSlotString(vm, 1);
+
+    if (!IsWindowReady()) {
+        VM_ABORT(vm, "Cannot load texture before window initialization.");
+        return;
+    }
+
+    *texture = LoadTexture(path);
+    if (!IsTextureReady(*texture)) {
+        VM_ABORT(vm, "Failed to load texture.");
+        return;
+    }
+}
+
+void textureDraw(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "sx");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "sy");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 8, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float r = (float)wrenGetSlotDouble(vm, 3);
+    float sx = (float)wrenGetSlotDouble(vm, 4);
+    float sy = (float)wrenGetSlotDouble(vm, 5);
+    int ox = (int)wrenGetSlotDouble(vm, 6);
+    int oy = (int)wrenGetSlotDouble(vm, 7);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 8);
+
+    Rectangle source = { 0, 0, (float)texture->width, (float)texture->height };
+
+    if (sx < 0)
+        source.width = -source.width;
+
+    if (sy < 0)
+        source.height = -source.height;
+
+    float absSx = sx < 0 ? -sx : sx;
+    float absSy = sy < 0 ? -sy : sy;
+
+    DrawTexturePro(*texture, source, (Rectangle) { (float)x, (float)y, (float)texture->width * absSx, (float)texture->height * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
+}
+
+void textureDrawRec(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "srcX");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "srcY");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "srcWidth");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "srcHeight");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "dstX");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "dstY");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 8, NUM, "sx");
+    ASSERT_SLOT_TYPE(vm, 9, NUM, "sy");
+    ASSERT_SLOT_TYPE(vm, 10, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 11, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 12, FOREIGN, "color");
+    int srcX = (int)wrenGetSlotDouble(vm, 1);
+    int srcY = (int)wrenGetSlotDouble(vm, 2);
+    int srcWidth = (int)wrenGetSlotDouble(vm, 3);
+    int srcHeight = (int)wrenGetSlotDouble(vm, 4);
+    int dstX = (int)wrenGetSlotDouble(vm, 5);
+    int dstY = (int)wrenGetSlotDouble(vm, 6);
+    float r = (float)wrenGetSlotDouble(vm, 7);
+    float sx = (float)wrenGetSlotDouble(vm, 8);
+    float sy = (float)wrenGetSlotDouble(vm, 9);
+    int ox = (int)wrenGetSlotDouble(vm, 10);
+    int oy = (int)wrenGetSlotDouble(vm, 11);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 12);
+
+    Rectangle source = { (float)srcX, (float)srcY, (float)srcWidth, (float)srcHeight };
+
+    if (sx < 0)
+        source.width = -source.width;
+
+    if (sy < 0)
+        source.height = -source.height;
+
+    float absSx = sx < 0 ? -sx : sx;
+    float absSy = sy < 0 ? -sy : sy;
+
+    DrawTexturePro(*texture, source, (Rectangle) { (float)dstX, (float)dstY, (float)srcWidth * absSx, (float)srcHeight * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
+}
+
+void textureGetWidth(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, texture->width);
+}
+
+void textureGetHeight(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, texture->height);
+}
+
+void textureSetFilter(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "filter");
+    const char* filter = wrenGetSlotString(vm, 1);
+
+    if (TextIsEqual(filter, "point"))
+        SetTextureFilter(*texture, TEXTURE_FILTER_POINT);
+    else if (TextIsEqual(filter, "bilinear"))
+        SetTextureFilter(*texture, TEXTURE_FILTER_BILINEAR);
+    else
+        VM_ABORT(vm, "Invalid texture filter.");
+}
+
+void textureSetWrap(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "wrap");
+    const char* wrap = wrenGetSlotString(vm, 1);
+
+    if (TextIsEqual(wrap, "repeat"))
+        SetTextureWrap(*texture, TEXTURE_WRAP_REPEAT);
+    else if (TextIsEqual(wrap, "clamp"))
+        SetTextureWrap(*texture, TEXTURE_WRAP_CLAMP);
+    else
+        VM_ABORT(vm, "Invalid texture wrap.");
+}
+
+void renderTextureAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(RenderTexture));
+}
+
+void renderTextureFinalize(void* data)
+{
+    RenderTexture* texture = (RenderTexture*)data;
+    if (IsWindowReady())
+        UnloadRenderTexture(*texture);
+}
+
+void renderTextureNew(WrenVM* vm)
+{
+    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
+    int width = (int)wrenGetSlotDouble(vm, 1);
+    int height = (int)wrenGetSlotDouble(vm, 2);
+
+    if (!IsWindowReady()) {
+        VM_ABORT(vm, "Cannot load texture before window initialization.");
+        return;
+    }
+
+    *texture = LoadRenderTexture(width, height);
+    if (!IsRenderTextureReady(*texture)) {
+        VM_ABORT(vm, "Failed to load texture.");
+        return;
+    }
+}
+
+void renderTextureBegin(WrenVM* vm)
+{
+    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
+    BeginTextureMode(*texture);
+}
+
+void renderTextureEnd(WrenVM* vm)
+{
+    EndTextureMode();
+}
+
+void renderTextureDraw(WrenVM* vm)
+{
+    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "sx");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "sy");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 8, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float r = (float)wrenGetSlotDouble(vm, 3);
+    float sx = (float)wrenGetSlotDouble(vm, 4);
+    float sy = (float)wrenGetSlotDouble(vm, 5);
+    int ox = (int)wrenGetSlotDouble(vm, 6);
+    int oy = (int)wrenGetSlotDouble(vm, 7);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 8);
+
+    Rectangle source = { 0, 0, (float)texture->texture.width, (float)texture->texture.height };
+
+    if (sx < 0)
+        source.width = -source.width;
+
+    if (sy < 0)
+        source.height = -source.height;
+
+    source.height = -source.height;
+
+    float absSx = sx < 0 ? -sx : sx;
+    float absSy = sy < 0 ? -sy : sy;
+
+    DrawTexturePro(texture->texture, source, (Rectangle) { (float)x, (float)y, (float)texture->texture.width * absSx, (float)texture->texture.height * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
+}
+
+void renderTextureDrawRec(WrenVM* vm)
+{
+    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "srcX");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "srcY");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "srcWidth");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "srcHeight");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "dstX");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "dstY");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 8, NUM, "sx");
+    ASSERT_SLOT_TYPE(vm, 9, NUM, "sy");
+    ASSERT_SLOT_TYPE(vm, 10, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 11, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 12, FOREIGN, "color");
+    int srcX = (int)wrenGetSlotDouble(vm, 1);
+    int srcY = (int)wrenGetSlotDouble(vm, 2);
+    int srcWidth = (int)wrenGetSlotDouble(vm, 3);
+    int srcHeight = (int)wrenGetSlotDouble(vm, 4);
+    int dstX = (int)wrenGetSlotDouble(vm, 5);
+    int dstY = (int)wrenGetSlotDouble(vm, 6);
+    float r = (float)wrenGetSlotDouble(vm, 7);
+    float sx = (float)wrenGetSlotDouble(vm, 8);
+    float sy = (float)wrenGetSlotDouble(vm, 9);
+    int ox = (int)wrenGetSlotDouble(vm, 10);
+    int oy = (int)wrenGetSlotDouble(vm, 11);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 12);
+
+    Rectangle source = { (float)srcX, (float)srcY, (float)srcWidth, (float)srcHeight };
+
+    if (sx < 0)
+        source.width = -source.width;
+
+    if (sy < 0)
+        source.height = -source.height;
+
+    source.height = -source.height;
+
+    float absSx = sx < 0 ? -sx : sx;
+    float absSy = sy < 0 ? -sy : sy;
+
+    DrawTexturePro(texture->texture, source, (Rectangle) { (float)dstX, (float)dstY, (float)srcWidth * absSx, (float)srcHeight * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
+}
+
+void renderTextureGetWidth(WrenVM* vm)
+{
+    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, texture->texture.width);
+}
+
+void renderTextureGetHeight(WrenVM* vm)
+{
+    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, texture->texture.height);
+}
+
+void renderTextureSetFilter(WrenVM* vm)
+{
+    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "filter");
+    const char* filter = wrenGetSlotString(vm, 1);
+
+    if (TextIsEqual(filter, "point"))
+        SetTextureFilter(texture->texture, TEXTURE_FILTER_POINT);
+    else if (TextIsEqual(filter, "bilinear"))
+        SetTextureFilter(texture->texture, TEXTURE_FILTER_BILINEAR);
+    else
+        VM_ABORT(vm, "Invalid texture filter.");
+}
+
+void renderTextureSetWrap(WrenVM* vm)
+{
+    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "wrap");
+    const char* wrap = wrenGetSlotString(vm, 1);
+
+    if (TextIsEqual(wrap, "repeat"))
+        SetTextureWrap(texture->texture, TEXTURE_WRAP_REPEAT);
+    else if (TextIsEqual(wrap, "clamp"))
+        SetTextureWrap(texture->texture, TEXTURE_WRAP_CLAMP);
+    else
+        VM_ABORT(vm, "Invalid texture wrap.");
 }
 
 void fontAllocate(WrenVM* vm)
@@ -185,7 +968,6 @@ void fontAllocate(WrenVM* vm)
 void fontFinalize(void* data)
 {
     Font* font = (Font*)data;
-
     if (IsWindowReady())
         UnloadFont(*font);
 }
@@ -193,10 +975,8 @@ void fontFinalize(void* data)
 void fontNew(WrenVM* vm)
 {
     Font* font = (Font*)wrenGetSlotForeign(vm, 0);
-
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "size");
-
     const char* path = wrenGetSlotString(vm, 1);
     int size = (int)wrenGetSlotDouble(vm, 2);
 
@@ -215,7 +995,6 @@ void fontNew(WrenVM* vm)
 void fontPrint(WrenVM* vm)
 {
     Font* font = (Font*)wrenGetSlotForeign(vm, 0);
-
     ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "x");
     ASSERT_SLOT_TYPE(vm, 3, NUM, "y");
@@ -223,7 +1002,6 @@ void fontPrint(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 5, NUM, "ox");
     ASSERT_SLOT_TYPE(vm, 6, NUM, "oy");
     ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
-
     const char* text = wrenGetSlotString(vm, 1);
     int x = (int)wrenGetSlotDouble(vm, 2);
     int y = (int)wrenGetSlotDouble(vm, 3);
@@ -231,16 +1009,13 @@ void fontPrint(WrenVM* vm)
     int ox = (int)wrenGetSlotDouble(vm, 5);
     int oy = (int)wrenGetSlotDouble(vm, 6);
     Color* color = (Color*)wrenGetSlotForeign(vm, 7);
-
     DrawTextPro(*font, text, (Vector2) { (float)x, (float)y }, (Vector2) { (float)ox, (float)oy }, r, (float)font->baseSize, 0, *color);
 }
 
 void fontMeasure(WrenVM* vm)
 {
     Font* font = (Font*)wrenGetSlotForeign(vm, 0);
-
     ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
-
     const char* text = wrenGetSlotString(vm, 1);
     wrenSetSlotDouble(vm, 0, MeasureTextEx(*font, text, (float)font->baseSize, 0).x);
 }
@@ -251,12 +1026,543 @@ void fontGetSize(WrenVM* vm)
     wrenSetSlotDouble(vm, 0, font->baseSize);
 }
 
+void cameraAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Camera2D));
+}
+
+void cameraNew(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    camera->target = (Vector2) { (float)x, (float)y };
+    camera->offset = (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
+    camera->rotation = 0.0f;
+    camera->zoom = 1.0f;
+}
+
+void cameraBegin(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    BeginMode2D(*camera);
+}
+
+void cameraEnd(WrenVM* vm)
+{
+    EndMode2D();
+}
+
+void cameraScreenToWorld(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+
+    Vector2 result = GetScreenToWorld2D((Vector2) { (float)x, (float)y }, *camera);
+
+    wrenSetSlotNewMap(vm, 0);
+
+    wrenSetSlotString(vm, 1, "x");
+    wrenSetSlotDouble(vm, 2, result.x);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "y");
+    wrenSetSlotDouble(vm, 2, result.y);
+    wrenSetMapValue(vm, 0, 1, 2);
+}
+
+void cameraWorldToScreen(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+
+    Vector2 result = GetWorldToScreen2D((Vector2) { (float)x, (float)y }, *camera);
+
+    wrenSetSlotNewMap(vm, 0);
+
+    wrenSetSlotString(vm, 1, "x");
+    wrenSetSlotDouble(vm, 2, result.x);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "y");
+    wrenSetSlotDouble(vm, 2, result.y);
+    wrenSetMapValue(vm, 0, 1, 2);
+}
+
+void cameraGetX(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->target.x);
+}
+
+void cameraGetY(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->target.y);
+}
+
+void cameraGetOffsetX(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->offset.x);
+}
+
+void cameraGetOffsetY(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->offset.y);
+}
+
+void cameraGetRotation(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->rotation);
+}
+
+void cameraGetZoom(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, camera->zoom);
+}
+
+void cameraSetX(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    camera->target.x = (float)x;
+}
+
+void cameraSetY(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "y");
+    int y = (int)wrenGetSlotDouble(vm, 1);
+    camera->target.y = (float)y;
+}
+
+void cameraSetOffsetX(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "ox");
+    int ox = (int)wrenGetSlotDouble(vm, 1);
+    camera->offset.x = (float)ox;
+}
+
+void cameraSetOffsetY(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "oy");
+    int oy = (int)wrenGetSlotDouble(vm, 1);
+    camera->offset.y = (float)oy;
+}
+
+void cameraSetRotation(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "r");
+    float r = (float)wrenGetSlotDouble(vm, 1);
+    camera->rotation = r;
+}
+
+void cameraSetZoom(WrenVM* vm)
+{
+    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "zoom");
+    float zoom = (float)wrenGetSlotDouble(vm, 1);
+    camera->zoom = zoom;
+}
+
+void shaderAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Shader));
+}
+
+void shaderFinalize(void* data)
+{
+    Shader* shader = (Shader*)data;
+    if (IsWindowReady()) {
+        UnloadShader(*shader);
+    }
+}
+
+void shaderNew(WrenVM* vm)
+{
+    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "vs");
+    ASSERT_SLOT_TYPE(vm, 2, STRING, "fs");
+    const char* vs = wrenGetSlotString(vm, 1);
+    const char* fs = wrenGetSlotString(vm, 2);
+
+    if (!IsWindowReady()) {
+        VM_ABORT(vm, "Cannot load shader before window initialization.");
+        return;
+    }
+
+    *shader = LoadShader(vs, fs);
+    if (!IsShaderReady(*shader)) {
+        VM_ABORT(vm, "Failed to load shader.");
+        return;
+    }
+}
+
+void shaderNew2(WrenVM* vm)
+{
+    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "fs");
+    const char* fs = wrenGetSlotString(vm, 1);
+
+    if (!IsWindowReady()) {
+        VM_ABORT(vm, "Cannot load shader before window initialization.");
+        return;
+    }
+
+    *shader = LoadShader(NULL, fs);
+    if (!IsShaderReady(*shader)) {
+        VM_ABORT(vm, "Failed to load shader.");
+        return;
+    }
+}
+
+void shaderBegin(WrenVM* vm)
+{
+    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
+    BeginShaderMode(*shader);
+}
+
+void shaderEnd(WrenVM* vm)
+{
+    EndShaderMode();
+}
+
+void shaderSet(WrenVM* vm)
+{
+    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "name");
+    const char* name = wrenGetSlotString(vm, 1);
+
+    if (wrenGetSlotType(vm, 2) == WREN_TYPE_NUM) {
+        float value = (float)wrenGetSlotDouble(vm, 2);
+        SetShaderValue(*shader, GetShaderLocation(*shader, name), &value, SHADER_UNIFORM_FLOAT);
+    } else if (wrenGetSlotType(vm, 2) == WREN_TYPE_FOREIGN) {
+        Texture* texture = (Texture*)wrenGetSlotForeign(vm, 2);
+        SetShaderValueTexture(*shader, GetShaderLocation(*shader, name), *texture);
+    }
+}
+
+// Input
+
+void keyboardPressed(WrenVM* vm)
+{
+    if (!IsWindowReady())
+        return;
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
+    const char* key = wrenGetSlotString(vm, 1);
+    KeyboardKey k = *map_get(&keys, key);
+
+    if (k == KEY_NULL) {
+        VM_ABORT(vm, "Invalid key.");
+        return;
+    }
+
+    wrenSetSlotBool(vm, 0, IsKeyPressed(k));
+}
+
+void keyboardPressedRepeat(WrenVM* vm)
+{
+    if (!IsWindowReady())
+        return;
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
+    const char* key = wrenGetSlotString(vm, 1);
+    KeyboardKey k = *map_get(&keys, key);
+
+    if (k == KEY_NULL) {
+        VM_ABORT(vm, "Invalid key.");
+        return;
+    }
+
+    wrenSetSlotBool(vm, 0, IsKeyPressedRepeat(k));
+}
+
+void keyboardDown(WrenVM* vm)
+{
+    if (!IsWindowReady())
+        return;
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
+    const char* key = wrenGetSlotString(vm, 1);
+    KeyboardKey k = *map_get(&keys, key);
+
+    if (k == KEY_NULL) {
+        VM_ABORT(vm, "Invalid key.");
+        return;
+    }
+
+    wrenSetSlotBool(vm, 0, IsKeyDown(k));
+}
+
+void keyboardReleased(WrenVM* vm)
+{
+    if (!IsWindowReady())
+        return;
+
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
+    const char* key = wrenGetSlotString(vm, 1);
+    KeyboardKey k = *map_get(&keys, key);
+
+    if (k == KEY_NULL) {
+        VM_ABORT(vm, "Invalid key.");
+        return;
+    }
+
+    wrenSetSlotBool(vm, 0, IsKeyReleased(k));
+}
+
+void keyboardGetKeyPressed(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetKeyPressed());
+}
+
+void mousePressed(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
+    int button = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsMouseButtonPressed(button));
+}
+
+void mouseDown(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
+    int button = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsMouseButtonDown(button));
+}
+
+void mouseReleased(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
+    int button = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsMouseButtonReleased(button));
+}
+
+void mouseSetPosition(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    SetMousePosition(x, y);
+}
+
+void mouseSetOffset(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    SetMouseOffset(x, y);
+}
+
+void mouseSetScale(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    float x = (float)wrenGetSlotDouble(vm, 1);
+    float y = (float)wrenGetSlotDouble(vm, 2);
+    SetMouseScale(x, y);
+}
+
+void mouseGetX(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetMouseX());
+}
+
+void mouseGetY(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetMouseY());
+}
+
+void mouseGetDeltaX(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetMouseDelta().x);
+}
+
+void mouseGetDeltaY(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetMouseDelta().y);
+}
+
+void mouseGetWheel(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetMouseWheelMove());
+}
+
+void mouseSetCursor(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "cursor");
+    const char* cursor = wrenGetSlotString(vm, 1);
+
+    if (TextIsEqual(cursor, "default"))
+        SetMouseCursor(MOUSE_CURSOR_DEFAULT);
+    else if (TextIsEqual(cursor, "arrow"))
+        SetMouseCursor(MOUSE_CURSOR_ARROW);
+    else if (TextIsEqual(cursor, "ibeam"))
+        SetMouseCursor(MOUSE_CURSOR_IBEAM);
+    else if (TextIsEqual(cursor, "crosshair"))
+        SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
+    else if (TextIsEqual(cursor, "pointingHand"))
+        SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
+    else if (TextIsEqual(cursor, "resizeEW"))
+        SetMouseCursor(MOUSE_CURSOR_RESIZE_EW);
+    else if (TextIsEqual(cursor, "resizeNS"))
+        SetMouseCursor(MOUSE_CURSOR_RESIZE_NS);
+    else if (TextIsEqual(cursor, "resizeNWSE"))
+        SetMouseCursor(MOUSE_CURSOR_RESIZE_NWSE);
+    else if (TextIsEqual(cursor, "resizeNESW"))
+        SetMouseCursor(MOUSE_CURSOR_RESIZE_NESW);
+    else if (TextIsEqual(cursor, "resizeAll"))
+        SetMouseCursor(MOUSE_CURSOR_RESIZE_ALL);
+    else if (TextIsEqual(cursor, "notAllowed"))
+        SetMouseCursor(MOUSE_CURSOR_NOT_ALLOWED);
+    else
+        VM_ABORT(vm, "Invalid cursor.");
+}
+
+void mouseGetHidden(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsCursorHidden());
+}
+
+void mouseSetHidden(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, BOOL, "hidden");
+    bool hidden = wrenGetSlotBool(vm, 1);
+
+    if (hidden)
+        HideCursor();
+    else
+        ShowCursor();
+}
+
+void mouseSetEnabled(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, BOOL, "enabled");
+    bool enabled = wrenGetSlotBool(vm, 1);
+
+    if (enabled)
+        EnableCursor();
+    else
+        DisableCursor();
+}
+
+void mouseGetOnScreen(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsCursorOnScreen());
+}
+
+void gamepadAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Gamepad));
+}
+
+void gamepadNew(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "id");
+    int id = (int)wrenGetSlotDouble(vm, 1);
+
+    if (!IsGamepadAvailable(id)) {
+        VM_ABORT(vm, "Gamepad not available.");
+        return;
+    }
+
+    gamepad->id = id;
+}
+
+void gamepadAvailable(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "id");
+    int id = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsGamepadAvailable(id));
+}
+
+void gamepadPressed(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
+    int button = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsGamepadButtonPressed(gamepad->id, button));
+}
+
+void gamepadDown(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
+    int button = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsGamepadButtonDown(gamepad->id, button));
+}
+
+void gamepadReleased(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
+    int button = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotBool(vm, 0, IsGamepadButtonReleased(gamepad->id, button));
+}
+
+void gamepadAxis(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "axis");
+    int axis = (int)wrenGetSlotDouble(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetGamepadAxisMovement(gamepad->id, axis));
+}
+
+void gamepadGetId(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, gamepad->id);
+}
+
+void gamepadGetName(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotString(vm, 0, GetGamepadName(gamepad->id));
+}
+
+void gamepadGetAxisCount(WrenVM* vm)
+{
+    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, GetGamepadAxisCount(gamepad->id));
+}
+
+// System
+
 void windowInit(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
     ASSERT_SLOT_TYPE(vm, 3, STRING, "title");
-
     int width = (int)wrenGetSlotDouble(vm, 1);
     int height = (int)wrenGetSlotDouble(vm, 2);
     const char* title = wrenGetSlotString(vm, 3);
@@ -390,7 +1696,6 @@ void windowInit(WrenVM* vm)
 void windowClose(WrenVM* vm)
 {
     map_deinit(&keys);
-
     CloseWindow();
 }
 
@@ -418,7 +1723,6 @@ void windowSetPosition(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
     SetWindowPosition(x, y);
@@ -428,7 +1732,6 @@ void windowSetMinSize(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
-
     int width = (int)wrenGetSlotDouble(vm, 1);
     int height = (int)wrenGetSlotDouble(vm, 2);
     SetWindowMinSize(width, height);
@@ -438,7 +1741,6 @@ void windowSetMaxSize(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
-
     int width = (int)wrenGetSlotDouble(vm, 1);
     int height = (int)wrenGetSlotDouble(vm, 2);
     SetWindowMaxSize(width, height);
@@ -448,7 +1750,6 @@ void windowSetSize(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
-
     int width = (int)wrenGetSlotDouble(vm, 1);
     int height = (int)wrenGetSlotDouble(vm, 2);
     SetWindowSize(width, height);
@@ -457,6 +1758,20 @@ void windowSetSize(WrenVM* vm)
 void windowFocus(WrenVM* vm)
 {
     SetWindowFocused();
+}
+
+void windowListDropped(WrenVM* vm)
+{
+    FilePathList list = LoadDroppedFiles();
+    wrenEnsureSlots(vm, 2);
+    wrenSetSlotNewList(vm, 0);
+
+    for (int i = 0; i < (int)list.count; i++) {
+        wrenSetSlotString(vm, 1, list.paths[i]);
+        wrenInsertInList(vm, 0, i, 1);
+    }
+
+    UnloadDroppedFiles(list);
 }
 
 void windowGetClosed(WrenVM* vm)
@@ -501,12 +1816,6 @@ void windowGetResized(WrenVM* vm)
     wrenSetSlotBool(vm, 0, IsWindowResized());
 }
 
-void windowSetTitle(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "title");
-    SetWindowTitle(wrenGetSlotString(vm, 1));
-}
-
 void windowGetWidth(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
@@ -537,6 +1846,36 @@ void windowGetDpi(WrenVM* vm)
     wrenSetSlotDouble(vm, 0, GetWindowScaleDPI().x);
 }
 
+void windowGetFileDropped(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotBool(vm, 0, IsFileDropped());
+}
+
+void windowSetTitle(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "title");
+    const char* title = wrenGetSlotString(vm, 1);
+    SetWindowTitle(title);
+}
+
+void windowSetIcon(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "icon");
+    Texture* icon = (Texture*)wrenGetSlotForeign(vm, 1);
+    Image image = LoadImageFromTexture(*icon);
+    ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+    SetWindowIcon(image);
+    UnloadImage(image);
+}
+
+void windowSetTargetFps(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "fps");
+    int fps = (int)wrenGetSlotDouble(vm, 1);
+    SetTargetFPS(fps);
+}
+
 void windowGetResizable(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
@@ -546,7 +1885,6 @@ void windowGetResizable(WrenVM* vm)
 void windowSetResizable(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, BOOL, "resizable");
-
     bool resizable = wrenGetSlotBool(vm, 1);
 
     if (resizable) {
@@ -565,7 +1903,6 @@ void windowGetVSync(WrenVM* vm)
 void windowSetVSync(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, BOOL, "vsync");
-
     bool vsync = wrenGetSlotBool(vm, 1);
 
     if (vsync) {
@@ -573,12 +1910,6 @@ void windowSetVSync(WrenVM* vm)
     } else {
         ClearWindowState(FLAG_VSYNC_HINT);
     }
-}
-
-void windowSetTargetFps(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "fps");
-    SetTargetFPS((int)wrenGetSlotDouble(vm, 1));
 }
 
 void windowGetDt(WrenVM* vm)
@@ -599,1537 +1930,6 @@ void windowGetFps(WrenVM* vm)
     wrenSetSlotDouble(vm, 0, GetFPS());
 }
 
-void windowListDropped(WrenVM* vm)
-{
-    FilePathList list = LoadDroppedFiles();
-
-    wrenEnsureSlots(vm, 2);
-    wrenSetSlotNewList(vm, 0);
-
-    for (int i = 0; i < (int)list.count; i++) {
-        wrenSetSlotString(vm, 1, list.paths[i]);
-        wrenInsertInList(vm, 0, i, 1);
-    }
-
-    UnloadDroppedFiles(list);
-}
-
-void windowGetFileDropped(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotBool(vm, 0, IsFileDropped());
-}
-
-void windowSetIcon(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "icon");
-
-    Texture* icon = (Texture*)wrenGetSlotForeign(vm, 1);
-
-    Image image = LoadImageFromTexture(*icon);
-    ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
-    SetWindowIcon(image);
-    UnloadImage(image);
-}
-
-void graphicsBegin(WrenVM* vm)
-{
-    BeginDrawing();
-}
-
-void graphicsEnd(WrenVM* vm)
-{
-    EndDrawing();
-}
-
-void graphicsBeginBlend(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "mode");
-
-    const char* mode = wrenGetSlotString(vm, 1);
-
-    if (TextIsEqual(mode, "alpha"))
-        BeginBlendMode(BLEND_ALPHA);
-    else if (TextIsEqual(mode, "additive"))
-        BeginBlendMode(BLEND_ADDITIVE);
-    else if (TextIsEqual(mode, "multiplied"))
-        BeginBlendMode(BLEND_MULTIPLIED);
-    else if (TextIsEqual(mode, "addColors"))
-        BeginBlendMode(BLEND_ADD_COLORS);
-    else if (TextIsEqual(mode, "subtractColors"))
-        BeginBlendMode(BLEND_SUBTRACT_COLORS);
-    else if (TextIsEqual(mode, "alphaPremultiply"))
-        BeginBlendMode(BLEND_ALPHA_PREMULTIPLY);
-    else
-        VM_ABORT(vm, "Invalid blend mode. (\"alpha\", \"additive\"...)");
-}
-
-void graphicsEndBlend(WrenVM* vm)
-{
-    EndBlendMode();
-}
-
-void graphicsBeginScissor(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    int width = (int)wrenGetSlotDouble(vm, 3);
-    int height = (int)wrenGetSlotDouble(vm, 4);
-
-    BeginScissorMode(x, y, width, height);
-}
-
-void graphicsEndScissor(WrenVM* vm)
-{
-    EndScissorMode();
-}
-
-void graphicsClear(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "color");
-
-    Color* color = (Color*)wrenGetSlotForeign(vm, 1);
-    ClearBackground(*color);
-}
-
-void graphicsPrint(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "size");
-    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "color");
-
-    const char* text = wrenGetSlotString(vm, 1);
-    int x = (int)wrenGetSlotDouble(vm, 2);
-    int y = (int)wrenGetSlotDouble(vm, 3);
-    int size = (int)wrenGetSlotDouble(vm, 4);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 5);
-
-    DrawText(text, x, y, size, *color);
-}
-
-void graphicsScreenshot(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
-    const char* path = wrenGetSlotString(vm, 1);
-    TakeScreenshot(path);
-}
-
-void graphicsPixel(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 3);
-
-    DrawPixel(x, y, *color);
-}
-
-void graphicsLine(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "x2");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "y2");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "thick");
-    ASSERT_SLOT_TYPE(vm, 6, FOREIGN, "color");
-
-    int x1 = (int)wrenGetSlotDouble(vm, 1);
-    int y1 = (int)wrenGetSlotDouble(vm, 2);
-    int x2 = (int)wrenGetSlotDouble(vm, 3);
-    int y2 = (int)wrenGetSlotDouble(vm, 4);
-    float thick = (float)wrenGetSlotDouble(vm, 5);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 6);
-
-    DrawLineEx((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, thick, *color);
-}
-
-void graphicsCircle(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "radius");
-    ASSERT_SLOT_TYPE(vm, 4, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    float radius = (float)wrenGetSlotDouble(vm, 3);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 4);
-
-    DrawCircle(x, y, radius, *color);
-}
-
-void graphicsCircleLines(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "radius");
-    ASSERT_SLOT_TYPE(vm, 4, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    float radius = (float)wrenGetSlotDouble(vm, 3);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 4);
-
-    DrawCircleLines(x, y, radius, *color);
-}
-
-void graphicsEllipse(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "rx");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "ry");
-    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    float rx = (float)wrenGetSlotDouble(vm, 3);
-    float ry = (float)wrenGetSlotDouble(vm, 4);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 5);
-
-    DrawEllipse(x, y, rx, ry, *color);
-}
-
-void graphicsEllipseLines(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "rx");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "ry");
-    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    float rx = (float)wrenGetSlotDouble(vm, 3);
-    float ry = (float)wrenGetSlotDouble(vm, 4);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 5);
-
-    DrawEllipseLines(x, y, rx, ry, *color);
-}
-
-void graphicsRectangle(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "ox");
-    ASSERT_SLOT_TYPE(vm, 7, NUM, "oy");
-    ASSERT_SLOT_TYPE(vm, 8, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    int width = (int)wrenGetSlotDouble(vm, 3);
-    int height = (int)wrenGetSlotDouble(vm, 4);
-    int ox = (int)wrenGetSlotDouble(vm, 5);
-    int oy = (int)wrenGetSlotDouble(vm, 6);
-    float r = (float)wrenGetSlotDouble(vm, 7);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 8);
-
-    DrawRectanglePro((Rectangle) { (float)x, (float)y, (float)width, (float)height }, (Vector2) { (float)ox, (float)oy }, r, *color);
-}
-
-void graphicsRectangleLines(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "thick");
-    ASSERT_SLOT_TYPE(vm, 6, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    int width = (int)wrenGetSlotDouble(vm, 3);
-    int height = (int)wrenGetSlotDouble(vm, 4);
-    float thick = (float)wrenGetSlotDouble(vm, 5);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 6);
-
-    DrawRectangleLinesEx((Rectangle) { (float)x, (float)y, (float)width, (float)height }, thick, *color);
-}
-
-void graphicsTriangle(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "x2");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "y2");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "x3");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "y3");
-    ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
-
-    int x1 = (int)wrenGetSlotDouble(vm, 1);
-    int y1 = (int)wrenGetSlotDouble(vm, 2);
-    int x2 = (int)wrenGetSlotDouble(vm, 3);
-    int y2 = (int)wrenGetSlotDouble(vm, 4);
-    int x3 = (int)wrenGetSlotDouble(vm, 5);
-    int y3 = (int)wrenGetSlotDouble(vm, 6);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 7);
-
-    DrawTriangle((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, (Vector2) { (float)x3, (float)y3 }, *color);
-}
-
-void graphicsTriangleLines(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "x2");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "y2");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "x3");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "y3");
-    ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
-
-    int x1 = (int)wrenGetSlotDouble(vm, 1);
-    int y1 = (int)wrenGetSlotDouble(vm, 2);
-    int x2 = (int)wrenGetSlotDouble(vm, 3);
-    int y2 = (int)wrenGetSlotDouble(vm, 4);
-    int x3 = (int)wrenGetSlotDouble(vm, 5);
-    int y3 = (int)wrenGetSlotDouble(vm, 6);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 7);
-
-    DrawTriangleLines((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, (Vector2) { (float)x3, (float)y3 }, *color);
-}
-
-void graphicsPolygon(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "sides");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "radius");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 6, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    int sides = (int)wrenGetSlotDouble(vm, 3);
-    float radius = (float)wrenGetSlotDouble(vm, 4);
-    float r = (float)wrenGetSlotDouble(vm, 5);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 6);
-
-    DrawPoly((Vector2) { (float)x, (float)y }, sides, radius, r, *color);
-}
-
-void graphicsPolygonLines(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "sides");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "radius");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "thick");
-    ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    int sides = (int)wrenGetSlotDouble(vm, 3);
-    float radius = (float)wrenGetSlotDouble(vm, 4);
-    float r = (float)wrenGetSlotDouble(vm, 5);
-    float thick = (float)wrenGetSlotDouble(vm, 6);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 7);
-
-    DrawPolyLinesEx((Vector2) { (float)x, (float)y }, sides, radius, r, thick, *color);
-}
-
-void graphicsMeasure(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "size");
-
-    const char* text = wrenGetSlotString(vm, 1);
-    int size = (int)wrenGetSlotDouble(vm, 2);
-
-    wrenSetSlotDouble(vm, 0, MeasureText(text, size));
-}
-
-// BEGIN GIST CODE
-
-static int SEED = 2004;
-
-static const unsigned char HASH[] = {
-    208, 34, 231, 213, 32, 248, 233, 56, 161, 78, 24, 140, 71, 48, 140, 254, 245, 255, 247, 247, 40,
-    185, 248, 251, 245, 28, 124, 204, 204, 76, 36, 1, 107, 28, 234, 163, 202, 224, 245, 128, 167, 204,
-    9, 92, 217, 54, 239, 174, 173, 102, 193, 189, 190, 121, 100, 108, 167, 44, 43, 77, 180, 204, 8, 81,
-    70, 223, 11, 38, 24, 254, 210, 210, 177, 32, 81, 195, 243, 125, 8, 169, 112, 32, 97, 53, 195, 13,
-    203, 9, 47, 104, 125, 117, 114, 124, 165, 203, 181, 235, 193, 206, 70, 180, 174, 0, 167, 181, 41,
-    164, 30, 116, 127, 198, 245, 146, 87, 224, 149, 206, 57, 4, 192, 210, 65, 210, 129, 240, 178, 105,
-    228, 108, 245, 148, 140, 40, 35, 195, 38, 58, 65, 207, 215, 253, 65, 85, 208, 76, 62, 3, 237, 55, 89,
-    232, 50, 217, 64, 244, 157, 199, 121, 252, 90, 17, 212, 203, 149, 152, 140, 187, 234, 177, 73, 174,
-    193, 100, 192, 143, 97, 53, 145, 135, 19, 103, 13, 90, 135, 151, 199, 91, 239, 247, 33, 39, 145,
-    101, 120, 99, 3, 186, 86, 99, 41, 237, 203, 111, 79, 220, 135, 158, 42, 30, 154, 120, 67, 87, 167,
-    135, 176, 183, 191, 253, 115, 184, 21, 233, 58, 129, 233, 142, 39, 128, 211, 118, 137, 139, 255,
-    114, 20, 218, 113, 154, 27, 127, 246, 250, 1, 8, 198, 250, 209, 92, 222, 173, 21, 88, 102, 219
-};
-
-static int noise2(int x, int y)
-{
-    int yindex = (y + SEED) % 256;
-    if (yindex < 0)
-        yindex += 256;
-    int xindex = (HASH[yindex] + x) % 256;
-    if (xindex < 0)
-        xindex += 256;
-    const int result = HASH[xindex];
-    return result;
-}
-
-static double lin_inter(double x, double y, double s)
-{
-    return x + s * (y - x);
-}
-
-static double smooth_inter(double x, double y, double s)
-{
-    return lin_inter(x, y, s * s * (3 - 2 * s));
-}
-
-static double noise2d(double x, double y)
-{
-    const int x_int = (int)floor(x);
-    const int y_int = (int)floor(y);
-    const double x_frac = x - x_int;
-    const double y_frac = y - y_int;
-    const int s = noise2(x_int, y_int);
-    const int t = noise2(x_int + 1, y_int);
-    const int u = noise2(x_int, y_int + 1);
-    const int v = noise2(x_int + 1, y_int + 1);
-    const double low = smooth_inter(s, t, x_frac);
-    const double high = smooth_inter(u, v, x_frac);
-    const double result = smooth_inter(low, high, y_frac);
-    return result;
-}
-
-double Perlin_Get2d(double x, double y, double freq, int depth)
-{
-    double xa = x * freq;
-    double ya = y * freq;
-    double amp = 1.0;
-    double fin = 0;
-    double div = 0.0;
-    for (int i = 0; i < depth; i++) {
-        div += 256 * amp;
-        fin += noise2d(xa, ya) * amp;
-        amp /= 2;
-        xa *= 2;
-        ya *= 2;
-    }
-    return fin / div;
-}
-
-// END GIST CODE
-
-void graphicsNoise(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "frequency");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "depth");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    float freq = (float)wrenGetSlotDouble(vm, 3);
-    int depth = (int)wrenGetSlotDouble(vm, 4);
-    wrenSetSlotDouble(vm, 0, Perlin_Get2d(x, y, freq, depth));
-}
-
-void graphicsSetNoiseSeed(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "seed");
-    SEED = (int)wrenGetSlotDouble(vm, 1);
-}
-
-void graphicsSetLineSpacing(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "spacing");
-    int spacing = (int)wrenGetSlotDouble(vm, 1);
-    SetTextLineSpacing(spacing);
-}
-
-void mouseDown(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
-
-    int button = (int)wrenGetSlotDouble(vm, 1);
-    wrenSetSlotBool(vm, 0, IsMouseButtonDown(button));
-}
-
-void mousePressed(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
-
-    int button = (int)wrenGetSlotDouble(vm, 1);
-    wrenSetSlotBool(vm, 0, IsMouseButtonPressed(button));
-}
-
-void mouseReleased(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
-
-    int button = (int)wrenGetSlotDouble(vm, 1);
-    wrenSetSlotBool(vm, 0, IsMouseButtonReleased(button));
-}
-
-void mouseSetPosition(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    SetMousePosition(x, y);
-}
-
-void mouseSetOffset(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    SetMouseOffset(x, y);
-}
-
-void mouseSetScale(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-
-    float x = (float)wrenGetSlotDouble(vm, 1);
-    float y = (float)wrenGetSlotDouble(vm, 2);
-    SetMouseScale(x, y);
-}
-
-void mouseGetX(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotDouble(vm, 0, GetMouseX());
-}
-
-void mouseGetY(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotDouble(vm, 0, GetMouseY());
-}
-
-void mouseGetDeltaX(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotDouble(vm, 0, GetMouseDelta().x);
-}
-
-void mouseGetDeltaY(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotDouble(vm, 0, GetMouseDelta().y);
-}
-
-void mouseGetWheel(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotDouble(vm, 0, GetMouseWheelMove());
-}
-
-void mouseSetCursor(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "cursor");
-
-    const char* cursor = wrenGetSlotString(vm, 1);
-
-    if (TextIsEqual(cursor, "default"))
-        SetMouseCursor(MOUSE_CURSOR_DEFAULT);
-    else if (TextIsEqual(cursor, "arrow"))
-        SetMouseCursor(MOUSE_CURSOR_ARROW);
-    else if (TextIsEqual(cursor, "ibeam"))
-        SetMouseCursor(MOUSE_CURSOR_IBEAM);
-    else if (TextIsEqual(cursor, "crosshair"))
-        SetMouseCursor(MOUSE_CURSOR_CROSSHAIR);
-    else if (TextIsEqual(cursor, "pointingHand"))
-        SetMouseCursor(MOUSE_CURSOR_POINTING_HAND);
-    else if (TextIsEqual(cursor, "resizeEW"))
-        SetMouseCursor(MOUSE_CURSOR_RESIZE_EW);
-    else if (TextIsEqual(cursor, "resizeNS"))
-        SetMouseCursor(MOUSE_CURSOR_RESIZE_NS);
-    else if (TextIsEqual(cursor, "resizeNWSE"))
-        SetMouseCursor(MOUSE_CURSOR_RESIZE_NWSE);
-    else if (TextIsEqual(cursor, "resizeNESW"))
-        SetMouseCursor(MOUSE_CURSOR_RESIZE_NESW);
-    else if (TextIsEqual(cursor, "resizeAll"))
-        SetMouseCursor(MOUSE_CURSOR_RESIZE_ALL);
-    else if (TextIsEqual(cursor, "notAllowed"))
-        SetMouseCursor(MOUSE_CURSOR_NOT_ALLOWED);
-    else
-        VM_ABORT(vm, "Invalid cursor. (\"arrow\", \"ibeam\"...)");
-}
-
-void mouseGetHidden(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotBool(vm, 0, IsCursorHidden());
-}
-
-void mouseSetHidden(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, BOOL, "hidden");
-
-    bool hidden = wrenGetSlotBool(vm, 1);
-
-    if (hidden)
-        HideCursor();
-    else
-        ShowCursor();
-}
-
-void mouseSetEnabled(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, BOOL, "enabled");
-
-    bool enabled = wrenGetSlotBool(vm, 1);
-
-    if (enabled)
-        EnableCursor();
-    else
-        DisableCursor();
-}
-
-void mouseGetOnScreen(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotBool(vm, 0, IsCursorOnScreen());
-}
-
-void keyboardDown(WrenVM* vm)
-{
-    if (!IsWindowReady())
-        return;
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
-
-    const char* key = wrenGetSlotString(vm, 1);
-    KeyboardKey k = *map_get(&keys, key);
-
-    if (k == KEY_NULL) {
-        VM_ABORT(vm, "Invalid key. (\"space\", \"enter\"...)");
-        return;
-    }
-
-    wrenSetSlotBool(vm, 0, IsKeyDown(k));
-}
-
-void keyboardPressed(WrenVM* vm)
-{
-    if (!IsWindowReady())
-        return;
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
-
-    const char* key = wrenGetSlotString(vm, 1);
-    KeyboardKey k = *map_get(&keys, key);
-
-    if (k == KEY_NULL) {
-        VM_ABORT(vm, "Invalid key. (\"space\", \"enter\"...)");
-        return;
-    }
-
-    wrenSetSlotBool(vm, 0, IsKeyPressed(k));
-}
-
-void keyboardPressedRepeat(WrenVM* vm)
-{
-    if (!IsWindowReady())
-        return;
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
-
-    const char* key = wrenGetSlotString(vm, 1);
-    KeyboardKey k = *map_get(&keys, key);
-
-    if (k == KEY_NULL) {
-        VM_ABORT(vm, "Invalid key. (\"space\", \"enter\"...)");
-        return;
-    }
-
-    wrenSetSlotBool(vm, 0, IsKeyPressedRepeat(k));
-}
-
-void keyboardReleased(WrenVM* vm)
-{
-    if (!IsWindowReady())
-        return;
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "key");
-
-    const char* key = wrenGetSlotString(vm, 1);
-    KeyboardKey k = *map_get(&keys, key);
-
-    if (k == KEY_NULL) {
-        VM_ABORT(vm, "Invalid key. (\"space\", \"enter\"...)");
-        return;
-    }
-
-    wrenSetSlotBool(vm, 0, IsKeyReleased(k));
-}
-
-void keyboardGetKeyPressed(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotDouble(vm, 0, GetKeyPressed());
-}
-
-void colorAllocate(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Color));
-}
-
-void colorNew(WrenVM* vm)
-{
-    Color* color = (Color*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "g");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "b");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "a");
-
-    int r = (int)wrenGetSlotDouble(vm, 1);
-    int g = (int)wrenGetSlotDouble(vm, 2);
-    int b = (int)wrenGetSlotDouble(vm, 3);
-    int a = (int)wrenGetSlotDouble(vm, 4);
-
-    color->r = r;
-    color->g = g;
-    color->b = b;
-    color->a = a;
-}
-
-void colorNew2(WrenVM* vm)
-{
-    Color* color = (Color*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "g");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "b");
-
-    int r = (int)wrenGetSlotDouble(vm, 1);
-    int g = (int)wrenGetSlotDouble(vm, 2);
-    int b = (int)wrenGetSlotDouble(vm, 3);
-
-    color->r = r;
-    color->g = g;
-    color->b = b;
-    color->a = 255;
-}
-
-void colorGetIndex(WrenVM* vm)
-{
-    unsigned char* color = (unsigned char*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "index");
-
-    int index = (int)wrenGetSlotDouble(vm, 1);
-
-    if (index < 0 || index > 3) {
-        VM_ABORT(vm, "Invalid color index.");
-        return;
-    }
-
-    wrenSetSlotDouble(vm, 0, color[index]);
-}
-
-void colorSetIndex(WrenVM* vm)
-{
-    unsigned char* color = (unsigned char*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "index");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "value");
-
-    int index = (int)wrenGetSlotDouble(vm, 1);
-    int value = (int)wrenGetSlotDouble(vm, 2);
-
-    if (index < 0 || index > 3) {
-        VM_ABORT(vm, "Invalid color index.");
-        return;
-    }
-
-    color[index] = value;
-}
-
-void textureAllocate(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Texture));
-}
-
-void textureFinalize(void* data)
-{
-    Texture* texture = (Texture*)data;
-
-    if (IsWindowReady())
-        UnloadTexture(*texture);
-}
-
-void textureNew(WrenVM* vm)
-{
-    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
-
-    const char* path = wrenGetSlotString(vm, 1);
-
-    if (!IsWindowReady()) {
-        VM_ABORT(vm, "Cannot load texture before window initialization.");
-        return;
-    }
-
-    *texture = LoadTexture(path);
-    if (!IsTextureReady(*texture)) {
-        VM_ABORT(vm, "Failed to load texture.");
-        return;
-    }
-}
-
-void textureDraw(WrenVM* vm)
-{
-    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "sx");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "sy");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "ox");
-    ASSERT_SLOT_TYPE(vm, 7, NUM, "oy");
-    ASSERT_SLOT_TYPE(vm, 8, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    float r = (float)wrenGetSlotDouble(vm, 3);
-    float sx = (float)wrenGetSlotDouble(vm, 4);
-    float sy = (float)wrenGetSlotDouble(vm, 5);
-    int ox = (int)wrenGetSlotDouble(vm, 6);
-    int oy = (int)wrenGetSlotDouble(vm, 7);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 8);
-
-    Rectangle source = { 0, 0, (float)texture->width, (float)texture->height };
-
-    if (sx < 0)
-        source.width = -source.width;
-
-    if (sy < 0)
-        source.height = -source.height;
-
-    float absSx = sx < 0 ? -sx : sx;
-    float absSy = sy < 0 ? -sy : sy;
-
-    DrawTexturePro(*texture, source, (Rectangle) { (float)x, (float)y, (float)texture->width * absSx, (float)texture->height * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
-}
-
-void textureDrawRec(WrenVM* vm)
-{
-    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "srcX");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "srcY");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "srcWidth");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "srcHeight");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "dstX");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "dstY");
-    ASSERT_SLOT_TYPE(vm, 7, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 8, NUM, "sx");
-    ASSERT_SLOT_TYPE(vm, 9, NUM, "sy");
-    ASSERT_SLOT_TYPE(vm, 10, NUM, "ox");
-    ASSERT_SLOT_TYPE(vm, 11, NUM, "oy");
-    ASSERT_SLOT_TYPE(vm, 12, FOREIGN, "color");
-
-    int srcX = (int)wrenGetSlotDouble(vm, 1);
-    int srcY = (int)wrenGetSlotDouble(vm, 2);
-    int srcWidth = (int)wrenGetSlotDouble(vm, 3);
-    int srcHeight = (int)wrenGetSlotDouble(vm, 4);
-    int dstX = (int)wrenGetSlotDouble(vm, 5);
-    int dstY = (int)wrenGetSlotDouble(vm, 6);
-    float r = (float)wrenGetSlotDouble(vm, 7);
-    float sx = (float)wrenGetSlotDouble(vm, 8);
-    float sy = (float)wrenGetSlotDouble(vm, 9);
-    int ox = (int)wrenGetSlotDouble(vm, 10);
-    int oy = (int)wrenGetSlotDouble(vm, 11);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 12);
-
-    Rectangle source = { (float)srcX, (float)srcY, (float)srcWidth, (float)srcHeight };
-
-    if (sx < 0)
-        source.width = -source.width;
-
-    if (sy < 0)
-        source.height = -source.height;
-
-    float absSx = sx < 0 ? -sx : sx;
-    float absSy = sy < 0 ? -sy : sy;
-
-    DrawTexturePro(*texture, source, (Rectangle) { (float)dstX, (float)dstY, (float)srcWidth * absSx, (float)srcHeight * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
-}
-
-void textureGetWidth(WrenVM* vm)
-{
-    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, texture->width);
-}
-
-void textureGetHeight(WrenVM* vm)
-{
-    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, texture->height);
-}
-
-void textureSetFilter(WrenVM* vm)
-{
-    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "filter");
-
-    const char* filter = wrenGetSlotString(vm, 1);
-
-    if (TextIsEqual(filter, "point"))
-        SetTextureFilter(*texture, TEXTURE_FILTER_POINT);
-    else if (TextIsEqual(filter, "bilinear"))
-        SetTextureFilter(*texture, TEXTURE_FILTER_BILINEAR);
-    else
-        VM_ABORT(vm, "Invalid texture filter. (\"nearest\" or \"linear\")");
-}
-
-void textureSetWrap(WrenVM* vm)
-{
-    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "wrap");
-
-    const char* wrap = wrenGetSlotString(vm, 1);
-
-    if (TextIsEqual(wrap, "repeat"))
-        SetTextureWrap(*texture, TEXTURE_WRAP_REPEAT);
-    else if (TextIsEqual(wrap, "clamp"))
-        SetTextureWrap(*texture, TEXTURE_WRAP_CLAMP);
-    else
-        VM_ABORT(vm, "Invalid texture wrap. (\"repeat\" or \"clamp\")");
-}
-
-void renderTextureAllocate(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotNewForeign(vm, 0, 0, sizeof(RenderTexture));
-}
-
-void renderTextureFinalize(void* data)
-{
-    RenderTexture* texture = (RenderTexture*)data;
-
-    if (IsWindowReady())
-        UnloadRenderTexture(*texture);
-}
-
-void renderTextureNew(WrenVM* vm)
-{
-    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
-
-    int width = (int)wrenGetSlotDouble(vm, 1);
-    int height = (int)wrenGetSlotDouble(vm, 2);
-
-    if (!IsWindowReady()) {
-        VM_ABORT(vm, "Cannot load texture before window initialization.");
-        return;
-    }
-
-    *texture = LoadRenderTexture(width, height);
-    if (!IsRenderTextureReady(*texture)) {
-        VM_ABORT(vm, "Failed to load texture.");
-        return;
-    }
-}
-
-void renderTextureBegin(WrenVM* vm)
-{
-    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
-    BeginTextureMode(*texture);
-}
-
-void renderTextureEnd(WrenVM* vm)
-{
-    EndTextureMode();
-}
-
-void renderTextureDraw(WrenVM* vm)
-{
-    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "sx");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "sy");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "ox");
-    ASSERT_SLOT_TYPE(vm, 7, NUM, "oy");
-    ASSERT_SLOT_TYPE(vm, 8, FOREIGN, "color");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-    float r = (float)wrenGetSlotDouble(vm, 3);
-    float sx = (float)wrenGetSlotDouble(vm, 4);
-    float sy = (float)wrenGetSlotDouble(vm, 5);
-    int ox = (int)wrenGetSlotDouble(vm, 6);
-    int oy = (int)wrenGetSlotDouble(vm, 7);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 8);
-
-    Rectangle source = { 0, 0, (float)texture->texture.width, (float)texture->texture.height };
-
-    if (sx < 0)
-        source.width = -source.width;
-
-    if (sy < 0)
-        source.height = -source.height;
-
-    source.height = -source.height;
-
-    float absSx = sx < 0 ? -sx : sx;
-    float absSy = sy < 0 ? -sy : sy;
-
-    DrawTexturePro(texture->texture, source, (Rectangle) { (float)x, (float)y, (float)texture->texture.width * absSx, (float)texture->texture.height * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
-}
-
-void renderTextureDrawRec(WrenVM* vm)
-{
-    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "srcX");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "srcY");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "srcWidth");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "srcHeight");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "dstX");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "dstY");
-    ASSERT_SLOT_TYPE(vm, 7, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 8, NUM, "sx");
-    ASSERT_SLOT_TYPE(vm, 9, NUM, "sy");
-    ASSERT_SLOT_TYPE(vm, 10, NUM, "ox");
-    ASSERT_SLOT_TYPE(vm, 11, NUM, "oy");
-    ASSERT_SLOT_TYPE(vm, 12, FOREIGN, "color");
-
-    int srcX = (int)wrenGetSlotDouble(vm, 1);
-    int srcY = (int)wrenGetSlotDouble(vm, 2);
-    int srcWidth = (int)wrenGetSlotDouble(vm, 3);
-    int srcHeight = (int)wrenGetSlotDouble(vm, 4);
-    int dstX = (int)wrenGetSlotDouble(vm, 5);
-    int dstY = (int)wrenGetSlotDouble(vm, 6);
-    float r = (float)wrenGetSlotDouble(vm, 7);
-    float sx = (float)wrenGetSlotDouble(vm, 8);
-    float sy = (float)wrenGetSlotDouble(vm, 9);
-    int ox = (int)wrenGetSlotDouble(vm, 10);
-    int oy = (int)wrenGetSlotDouble(vm, 11);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 12);
-
-    Rectangle source = { (float)srcX, (float)srcY, (float)srcWidth, (float)srcHeight };
-
-    if (sx < 0)
-        source.width = -source.width;
-
-    if (sy < 0)
-        source.height = -source.height;
-
-    source.height = -source.height;
-
-    float absSx = sx < 0 ? -sx : sx;
-    float absSy = sy < 0 ? -sy : sy;
-
-    DrawTexturePro(texture->texture, source, (Rectangle) { (float)dstX, (float)dstY, (float)srcWidth * absSx, (float)srcHeight * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
-}
-
-void renderTextureGetWidth(WrenVM* vm)
-{
-    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, texture->texture.width);
-}
-
-void renderTextureGetHeight(WrenVM* vm)
-{
-    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, texture->texture.height);
-}
-
-void renderTextureSetFilter(WrenVM* vm)
-{
-    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "filter");
-
-    const char* filter = wrenGetSlotString(vm, 1);
-
-    if (TextIsEqual(filter, "point"))
-        SetTextureFilter(texture->texture, TEXTURE_FILTER_POINT);
-    else if (TextIsEqual(filter, "bilinear"))
-        SetTextureFilter(texture->texture, TEXTURE_FILTER_BILINEAR);
-    else
-        VM_ABORT(vm, "Invalid texture filter. (\"nearest\" or \"linear\")");
-}
-
-void renderTextureSetWrap(WrenVM* vm)
-{
-    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "wrap");
-
-    const char* wrap = wrenGetSlotString(vm, 1);
-
-    if (TextIsEqual(wrap, "repeat"))
-        SetTextureWrap(texture->texture, TEXTURE_WRAP_REPEAT);
-    else if (TextIsEqual(wrap, "clamp"))
-        SetTextureWrap(texture->texture, TEXTURE_WRAP_CLAMP);
-    else
-        VM_ABORT(vm, "Invalid texture wrap. (\"repeat\" or \"clamp\")");
-}
-
-void gamepadAllocate(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Gamepad));
-}
-
-void gamepadNew(WrenVM* vm)
-{
-    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "id");
-
-    int id = (int)wrenGetSlotDouble(vm, 1);
-
-    if (!IsGamepadAvailable(id)) {
-        VM_ABORT(vm, "Gamepad not available.");
-        return;
-    }
-
-    gamepad->id = id;
-}
-
-void gamepadAvailable(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "id");
-
-    int id = (int)wrenGetSlotDouble(vm, 1);
-    wrenSetSlotBool(vm, 0, IsGamepadAvailable(id));
-}
-
-void gamepadDown(WrenVM* vm)
-{
-    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
-
-    int button = (int)wrenGetSlotDouble(vm, 1);
-    wrenSetSlotBool(vm, 0, IsGamepadButtonDown(gamepad->id, button));
-}
-
-void gamepadPressed(WrenVM* vm)
-{
-    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
-
-    int button = (int)wrenGetSlotDouble(vm, 1);
-    wrenSetSlotBool(vm, 0, IsGamepadButtonPressed(gamepad->id, button));
-}
-
-void gamepadReleased(WrenVM* vm)
-{
-    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "button");
-
-    int button = (int)wrenGetSlotDouble(vm, 1);
-    wrenSetSlotBool(vm, 0, IsGamepadButtonReleased(gamepad->id, button));
-}
-
-void gamepadAxis(WrenVM* vm)
-{
-    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "axis");
-
-    int axis = (int)wrenGetSlotDouble(vm, 1);
-    wrenSetSlotDouble(vm, 0, GetGamepadAxisMovement(gamepad->id, axis));
-}
-
-void gamepadGetId(WrenVM* vm)
-{
-    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, gamepad->id);
-}
-
-void gamepadGetName(WrenVM* vm)
-{
-    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotString(vm, 0, GetGamepadName(gamepad->id));
-}
-
-void gamepadGetAxisCount(WrenVM* vm)
-{
-    Gamepad* gamepad = (Gamepad*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, GetGamepadAxisCount(gamepad->id));
-}
-
-void requestAllocate(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Request));
-}
-
-void requestFinalize(void* data)
-{
-    Request* request = (Request*)data;
-
-    naettClose(request->res);
-    naettFree(request->req);
-}
-
-void requestNew(WrenVM* vm)
-{
-    Request* request = (Request*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "url");
-
-    const char* url = wrenGetSlotString(vm, 1);
-
-    naettInit(NULL);
-
-    request->req = naettRequest(url, naettMethod("GET"), naettHeader("accept", "*/*"));
-}
-
-void requestMake(WrenVM* vm)
-{
-    Request* request = (Request*)wrenGetSlotForeign(vm, 0);
-    request->res = naettMake(request->req);
-}
-
-void requestGetComplete(WrenVM* vm)
-{
-    Request* request = (Request*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotBool(vm, 0, naettComplete(request->res));
-}
-
-void requestGetStatus(WrenVM* vm)
-{
-    Request* request = (Request*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, naettGetStatus(request->res));
-}
-
-void requestGetBody(WrenVM* vm)
-{
-    Request* request = (Request*)wrenGetSlotForeign(vm, 0);
-
-    int size;
-    const char* data = naettGetBody(request->res, &size);
-
-    wrenSetSlotBytes(vm, 0, data, size);
-}
-
-void cameraAllocate(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Camera2D));
-}
-
-void cameraNew(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-
-    camera->target = (Vector2) { (float)x, (float)y };
-    camera->offset = (Vector2) { GetScreenWidth() / 2.0f, GetScreenHeight() / 2.0f };
-    camera->rotation = 0.0f;
-    camera->zoom = 1.0f;
-}
-
-void cameraBegin(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-    BeginMode2D(*camera);
-}
-
-void cameraEnd(WrenVM* vm)
-{
-    EndMode2D();
-}
-
-void cameraGetX(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, camera->target.x);
-}
-
-void cameraGetY(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, camera->target.y);
-}
-
-void cameraGetOffsetX(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, camera->offset.x);
-}
-
-void cameraGetOffsetY(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, camera->offset.y);
-}
-
-void cameraGetRotation(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, camera->rotation);
-}
-
-void cameraGetZoom(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, camera->zoom);
-}
-
-void cameraSetX(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    camera->target.x = (float)x;
-}
-
-void cameraSetY(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "y");
-
-    int y = (int)wrenGetSlotDouble(vm, 1);
-    camera->target.y = (float)y;
-}
-
-void cameraSetOffsetX(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "ox");
-
-    int ox = (int)wrenGetSlotDouble(vm, 1);
-    camera->offset.x = (float)ox;
-}
-
-void cameraSetOffsetY(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "oy");
-
-    int oy = (int)wrenGetSlotDouble(vm, 1);
-    camera->offset.y = (float)oy;
-}
-
-void cameraSetRotation(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "r");
-
-    float r = (float)wrenGetSlotDouble(vm, 1);
-    camera->rotation = r;
-}
-
-void cameraSetZoom(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "zoom");
-
-    float z = (float)wrenGetSlotDouble(vm, 1);
-    camera->zoom = z;
-}
-
-void cameraScreenToWorld(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-
-    Vector2 result = GetScreenToWorld2D((Vector2) { (float)x, (float)y }, *camera);
-
-    wrenSetSlotNewMap(vm, 0);
-
-    wrenSetSlotString(vm, 1, "x");
-    wrenSetSlotDouble(vm, 2, result.x);
-    wrenSetMapValue(vm, 0, 1, 2);
-
-    wrenSetSlotString(vm, 1, "y");
-    wrenSetSlotDouble(vm, 2, result.y);
-    wrenSetMapValue(vm, 0, 1, 2);
-}
-
-void cameraWorldToScreen(WrenVM* vm)
-{
-    Camera2D* camera = (Camera2D*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
-
-    int x = (int)wrenGetSlotDouble(vm, 1);
-    int y = (int)wrenGetSlotDouble(vm, 2);
-
-    Vector2 result = GetWorldToScreen2D((Vector2) { (float)x, (float)y }, *camera);
-
-    wrenSetSlotNewMap(vm, 0);
-
-    wrenSetSlotString(vm, 1, "x");
-    wrenSetSlotDouble(vm, 2, result.x);
-    wrenSetMapValue(vm, 0, 1, 2);
-
-    wrenSetSlotString(vm, 1, "y");
-    wrenSetSlotDouble(vm, 2, result.y);
-    wrenSetMapValue(vm, 0, 1, 2);
-}
-
-void shaderAllocate(WrenVM* vm)
-{
-    wrenEnsureSlots(vm, 1);
-    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Shader));
-}
-
-void shaderFinalize(void* data)
-{
-    Shader* shader = (Shader*)data;
-
-    if (IsWindowReady()) {
-        UnloadShader(*shader);
-    }
-}
-
-void shaderNew(WrenVM* vm)
-{
-    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "vs");
-    ASSERT_SLOT_TYPE(vm, 2, STRING, "fs");
-
-    const char* vs = wrenGetSlotString(vm, 1);
-    const char* fs = wrenGetSlotString(vm, 2);
-
-    if (!IsWindowReady()) {
-        VM_ABORT(vm, "Cannot load shader before window initialization.");
-        return;
-    }
-
-    *shader = LoadShader(vs, fs);
-    if (!IsShaderReady(*shader)) {
-        VM_ABORT(vm, "Failed to load shader.");
-        return;
-    }
-}
-
-void shaderNew2(WrenVM* vm)
-{
-    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "fs");
-
-    const char* fs = wrenGetSlotString(vm, 1);
-
-    if (!IsWindowReady()) {
-        VM_ABORT(vm, "Cannot load shader before window initialization.");
-        return;
-    }
-
-    *shader = LoadShader(NULL, fs);
-    if (!IsShaderReady(*shader)) {
-        VM_ABORT(vm, "Failed to load shader.");
-        return;
-    }
-}
-
-void shaderBegin(WrenVM* vm)
-{
-    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
-    BeginShaderMode(*shader);
-}
-
-void shaderEnd(WrenVM* vm)
-{
-    EndShaderMode();
-}
-
-void shaderSet(WrenVM* vm)
-{
-    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
-
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "name");
-
-    const char* name = wrenGetSlotString(vm, 1);
-
-    if (wrenGetSlotType(vm, 2) == WREN_TYPE_NUM) {
-        float value = (float)wrenGetSlotDouble(vm, 2);
-        SetShaderValue(*shader, GetShaderLocation(*shader, name), &value, SHADER_UNIFORM_FLOAT);
-    } else if (wrenGetSlotType(vm, 2) == WREN_TYPE_FOREIGN) {
-        Texture* texture = (Texture*)wrenGetSlotForeign(vm, 2);
-        SetShaderValueTexture(*shader, GetShaderLocation(*shader, name), *texture);
-    }
-}
-
-void osOpenUrl(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "url");
-    OpenURL(wrenGetSlotString(vm, 1));
-}
-
-static char* readLine()
-{
-    int bufferSize = 10;
-    char* buffer = (char*)malloc(bufferSize);
-    if (buffer == NULL)
-        return NULL;
-
-    int index = 0;
-    char c;
-    while ((c = getchar()) != '\n' && c != EOF) {
-        buffer[index++] = c;
-
-        if (index >= bufferSize) {
-            bufferSize *= 2;
-            buffer = realloc(buffer, bufferSize);
-            if (buffer == NULL)
-                return NULL;
-        }
-    }
-
-    buffer[index] = '\0';
-
-    return buffer;
-}
-
 void osReadLine(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
@@ -2141,6 +1941,13 @@ void osReadLine(WrenVM* vm)
     }
 
     wrenSetSlotString(vm, 0, result);
+}
+
+void osOpenUrl(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "url");
+    const char* url = wrenGetSlotString(vm, 1);
+    OpenURL(url);
 }
 
 void osGetArgs(WrenVM* vm)
@@ -2174,21 +1981,21 @@ void osGetClipboard(WrenVM* vm)
 void osSetClipboard(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
-    SetClipboardText(wrenGetSlotString(vm, 1));
+    const char* text = wrenGetSlotString(vm, 1);
+    SetClipboardText(text);
 }
 
 void directoryExists(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
-    wrenSetSlotBool(vm, 0, DirectoryExists(wrenGetSlotString(vm, 1)));
+    const char* path = wrenGetSlotString(vm, 1);
+    wrenSetSlotBool(vm, 0, DirectoryExists(path));
 }
 
 void directoryList(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
-
     const char* path = wrenGetSlotString(vm, 1);
-
     FilePathList list = LoadDirectoryFiles(path);
 
     wrenEnsureSlots(vm, 2);
@@ -2205,24 +2012,77 @@ void directoryList(WrenVM* vm)
 void fileExists(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
-    wrenSetSlotBool(vm, 0, FileExists(wrenGetSlotString(vm, 1)));
+    const char* path = wrenGetSlotString(vm, 1);
+    wrenSetSlotBool(vm, 0, FileExists(path));
+}
+
+void fileSize(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    const char* path = wrenGetSlotString(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetFileLength(path));
+}
+
+void fileRead(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    const char* path = wrenGetSlotString(vm, 1);
+    wrenSetSlotString(vm, 0, LoadFileText(path));
 }
 
 void fileWrite(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
     ASSERT_SLOT_TYPE(vm, 2, STRING, "data");
-    SaveFileText(wrenGetSlotString(vm, 1), (char*)wrenGetSlotString(vm, 2));
+    const char* path = wrenGetSlotString(vm, 1);
+    const char* data = wrenGetSlotString(vm, 2);
+    SaveFileText(path, (char*)data);
 }
 
-void fileRead(WrenVM* vm)
+void requestAllocate(WrenVM* vm)
 {
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
-    wrenSetSlotString(vm, 0, LoadFileText(wrenGetSlotString(vm, 1)));
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Request));
 }
 
-void fileSize(WrenVM* vm)
+void requestFinalize(void* data)
 {
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
-    wrenSetSlotDouble(vm, 0, GetFileLength(wrenGetSlotString(vm, 1)));
+    Request* request = (Request*)data;
+    naettClose(request->res);
+    naettFree(request->req);
+}
+
+void requestNew(WrenVM* vm)
+{
+    Request* request = (Request*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "url");
+    const char* url = wrenGetSlotString(vm, 1);
+    naettInit(NULL);
+    request->req = naettRequest(url, naettMethod("GET"), naettHeader("accept", "*/*"));
+}
+
+void requestMake(WrenVM* vm)
+{
+    Request* request = (Request*)wrenGetSlotForeign(vm, 0);
+    request->res = naettMake(request->req);
+}
+
+void requestGetComplete(WrenVM* vm)
+{
+    Request* request = (Request*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotBool(vm, 0, naettComplete(request->res));
+}
+
+void requestGetStatus(WrenVM* vm)
+{
+    Request* request = (Request*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, naettGetStatus(request->res));
+}
+
+void requestGetBody(WrenVM* vm)
+{
+    Request* request = (Request*)wrenGetSlotForeign(vm, 0);
+    int size;
+    const char* data = naettGetBody(request->res, &size);
+    wrenSetSlotBytes(vm, 0, data, size);
 }
