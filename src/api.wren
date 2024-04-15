@@ -62,12 +62,12 @@ class Graphics {
         rectangle(x, y, width, height, 0, 0, 0, color)
     }
 
-    static rectangleLine(x, y, width, height, color) {
-        rectangleLine(x, y, width, height, 1, color)
+    static rectangleLines(x, y, width, height, color) {
+        rectangleLines(x, y, width, height, 1, color)
     }
 
-    static polygonLine(x, y, sides, radius, r, color) {
-        polygonLine(x, y, sides, radius, r, 1, color)
+    static polygonLines(x, y, sides, radius, r, color) {
+        polygonLines(x, y, sides, radius, r, 1, color)
     }
 
     foreign static noiseSeed=(v)                                         // Set noise seed
@@ -117,6 +117,7 @@ foreign class Texture {
 
     foreign draw(x, y, r, sx, sy, ox, oy, color)                                              // Draw texture
     foreign drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, r, sx, sy, ox, oy, color)    // Draw part of texture
+    foreign export(path)                                                                      // Export texture to image
 
     draw(x, y) {
         draw(x, y, 0, 1, 1, 0, 0, Color.white)
@@ -147,6 +148,7 @@ foreign class RenderTexture {
     foreign end()                                                                             // End rendering to texture
     foreign draw(x, y, r, sx, sy, ox, oy, color)                                              // Draw texture
     foreign drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, r, sx, sy, ox, oy, color)    // Draw part of texture
+    foreign export(path)                                                                      // Export texture to image
 
     draw(x, y) {
         draw(x, y, 0, 1, 1, 0, 0, Color.white)

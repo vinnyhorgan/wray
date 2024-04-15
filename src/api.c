@@ -755,6 +755,17 @@ void textureDrawRec(WrenVM* vm)
     DrawTexturePro(*texture, source, (Rectangle) { (float)dstX, (float)dstY, (float)srcWidth * absSx, (float)srcHeight * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
 }
 
+void textureExport(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    const char* path = wrenGetSlotString(vm, 1);
+
+    Image image = LoadImageFromTexture(*texture);
+    ExportImage(image, path);
+    UnloadImage(image);
+}
+
 void textureGetWidth(WrenVM* vm)
 {
     Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
@@ -917,6 +928,18 @@ void renderTextureDrawRec(WrenVM* vm)
     float absSy = sy < 0 ? -sy : sy;
 
     DrawTexturePro(texture->texture, source, (Rectangle) { (float)dstX, (float)dstY, (float)srcWidth * absSx, (float)srcHeight * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
+}
+
+void renderTextureExport(WrenVM* vm)
+{
+    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    const char* path = wrenGetSlotString(vm, 1);
+
+    Image image = LoadImageFromTexture(texture->texture);
+    ImageFlipVertical(&image);
+    ExportImage(image, path);
+    UnloadImage(image);
 }
 
 void renderTextureGetWidth(WrenVM* vm)
