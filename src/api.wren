@@ -117,7 +117,6 @@ foreign class Texture {
 
     foreign draw(x, y, r, sx, sy, ox, oy, color)                                              // Draw texture
     foreign drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, r, sx, sy, ox, oy, color)    // Draw part of texture
-    foreign export(path)                                                                      // Export texture to image
 
     draw(x, y) {
         draw(x, y, 0, 1, 1, 0, 0, Color.white)
@@ -146,9 +145,9 @@ foreign class RenderTexture {
 
     foreign begin()                                                                           // Begin rendering to texture
     foreign end()                                                                             // End rendering to texture
+    foreign export(path)                                                                      // Export texture to image
     foreign draw(x, y, r, sx, sy, ox, oy, color)                                              // Draw texture
     foreign drawRec(srcX, srcY, srcWidth, srcHeight, dstX, dstY, r, sx, sy, ox, oy, color)    // Draw part of texture
-    foreign export(path)                                                                      // Export texture to image
 
     draw(x, y) {
         draw(x, y, 0, 1, 1, 0, 0, Color.white)

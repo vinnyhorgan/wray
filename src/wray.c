@@ -187,8 +187,6 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return textureDraw;
         if (TextIsEqual(signature, "drawRec(_,_,_,_,_,_,_,_,_,_,_,_)"))
             return textureDrawRec;
-        if (TextIsEqual(signature, "export(_)"))
-            return textureExport;
         if (TextIsEqual(signature, "width"))
             return textureGetWidth;
         if (TextIsEqual(signature, "height"))
@@ -204,12 +202,12 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return renderTextureBegin;
         if (TextIsEqual(signature, "end()"))
             return renderTextureEnd;
+        if (TextIsEqual(signature, "export(_)"))
+            return renderTextureExport;
         if (TextIsEqual(signature, "draw(_,_,_,_,_,_,_,_)"))
             return renderTextureDraw;
         if (TextIsEqual(signature, "drawRec(_,_,_,_,_,_,_,_,_,_,_,_)"))
             return renderTextureDrawRec;
-        if (TextIsEqual(signature, "export(_)"))
-            return renderTextureExport;
         if (TextIsEqual(signature, "width"))
             return renderTextureGetWidth;
         if (TextIsEqual(signature, "height"))
