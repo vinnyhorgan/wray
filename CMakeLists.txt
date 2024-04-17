@@ -34,8 +34,18 @@ FetchContent_Declare(raylib
 
 FetchContent_MakeAvailable(raylib)
 
+FetchContent_Declare(enet
+    GIT_REPOSITORY https://github.com/lsalzman/enet.git
+    GIT_TAG v1.3.18
+    GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(enet)
+include_directories(${enet_SOURCE_DIR}/include)
+
 set(SOURCES
     src/api.c
+    src/net.c
     src/wray.c
     src/lib/argparse/argparse.c
     src/lib/map/map.c
@@ -49,8 +59,8 @@ if(WIN32)
 endif()
 
 add_executable(${PROJECT_NAME} ${SOURCES})
-target_link_libraries(${PROJECT_NAME} raylib)
+target_link_libraries(${PROJECT_NAME} raylib enet)
 
 if(WIN32)
-    target_link_libraries(${PROJECT_NAME} winhttp)
+    target_link_libraries(${PROJECT_NAME} winhttp ws2_32)
 endif()

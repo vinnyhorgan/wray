@@ -222,4 +222,10 @@ void requestGetComplete(WrenVM* vm);
 void requestGetStatus(WrenVM* vm);
 void requestGetBody(WrenVM* vm);
 
+// Enet
+
+void hostAllocate(WrenVM* vm);
+void hostFinalize(void* data);
+void hostNew(WrenVM* vm);
+
 #endif
