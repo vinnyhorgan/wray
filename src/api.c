@@ -1836,6 +1836,13 @@ void osReadLine(WrenVM* vm)
     wrenSetSlotString(vm, 0, result);
 }
 
+void osWait(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "seconds");
+    double seconds = wrenGetSlotDouble(vm, 1);
+    WaitTime(seconds);
+}
+
 void osOpenUrl(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, STRING, "url");

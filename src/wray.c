@@ -396,6 +396,8 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
     } else if (TextIsEqual(className, "OS")) {
         if (TextIsEqual(signature, "readLine()"))
             return osReadLine;
+        if (TextIsEqual(signature, "wait(_)"))
+            return osWait;
         if (TextIsEqual(signature, "openUrl(_)"))
             return osOpenUrl;
         if (TextIsEqual(signature, "args"))
@@ -447,6 +449,13 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return hostService;
         if (TextIsEqual(signature, "connect(_,_)"))
             return hostConnect;
+    } else if (TextIsEqual(className, "Peer")) {
+        if (TextIsEqual(signature, "disconnect()"))
+            return peerDisconnect;
+        if (TextIsEqual(signature, "send(_)"))
+            return peerSend;
+        if (TextIsEqual(signature, "toString"))
+            return peerToString;
     }
 
     return NULL;

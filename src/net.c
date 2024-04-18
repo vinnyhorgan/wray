@@ -6,6 +6,8 @@
 
 #include "lib/wren/wren.h"
 
+static WrenHandle* peerClass = NULL;
+
 void enetInit(WrenVM* vm)
 {
     if (enet_initialize() < 0) {
@@ -88,7 +90,22 @@ void hostService(WrenVM* vm)
         return;
     }
 
+    wrenEnsureSlots(vm, 4);
     wrenSetSlotNewMap(vm, 0);
+
+    if (event.peer) {
+        if (peerClass == NULL) {
+            wrenGetVariable(vm, "wray", "Peer", 1);
+            peerClass = wrenGetSlotHandle(vm, 1);
+        }
+
+        wrenSetSlotHandle(vm, 1, peerClass);
+        ENetPeer** p = wrenSetSlotNewForeign(vm, 3, 1, sizeof(ENetPeer*));
+        *p = event.peer;
+
+        wrenSetSlotString(vm, 2, "peer");
+        wrenSetMapValue(vm, 0, 2, 3);
+    }
 
     switch (event.type) {
     case ENET_EVENT_TYPE_CONNECT:
@@ -139,5 +156,40 @@ void hostConnect(WrenVM* vm)
     enet_address_set_host(&addr, address);
     addr.port = port;
 
-    enet_host_connect(*host, &addr, 1, 0);
+    ENetPeer* peer = enet_host_connect(*host, &addr, 1, 0);
+
+    if (peerClass == NULL) {
+        wrenGetVariable(vm, "wray", "Peer", 1);
+        peerClass = wrenGetSlotHandle(vm, 1);
+    }
+
+    wrenSetSlotHandle(vm, 1, peerClass);
+    ENetPeer** p = wrenSetSlotNewForeign(vm, 0, 1, sizeof(ENetPeer*));
+    *p = peer;
+}
+
+void peerDisconnect(WrenVM* vm)
+{
+    ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
+    enet_peer_disconnect(*peer, 0);
+}
+
+void peerSend(WrenVM* vm)
+{
+    ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+    enet_peer_send(*peer, 0, enet_packet_create(data, length, ENET_PACKET_FLAG_RELIABLE));
+}
+
+void peerToString(WrenVM* vm)
+{
+    ENetPeer* peer = *(ENetPeer**)wrenGetSlotForeign(vm, 0);
+    char string[256];
+    enet_address_get_host_ip(&peer->address, string, 256);
+    sprintf(string + strlen(string), ":%d", peer->address.port);
+    wrenSetSlotString(vm, 0, string);
 }

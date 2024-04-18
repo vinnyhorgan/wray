@@ -8,6 +8,7 @@ Window.setMinSize(320, 240)
 var gameWidth = 320
 var gameHeight = 240
 var screen = RenderTexture.new(gameWidth, gameHeight)
+var screenTexture = screen.texture
 
 var bunny = Texture.new("bunny.png")
 
@@ -31,7 +32,7 @@ while (!Window.closed) {
 
     Graphics.clear(Color.indigo)
 
-    Graphics.draw(screen.texture, (Window.width - gameWidth * scale) / 2, (Window.height - gameHeight * scale) / 2, 0, scale, -scale, 0, 0, Color.white)
+    Graphics.draw(screenTexture, (Window.width - gameWidth * scale) / 2, (Window.height - gameHeight * scale) / 2, 0, scale, -scale, 0, 0, Color.white)
 
     Graphics.end()
 }

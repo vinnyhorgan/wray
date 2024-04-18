@@ -288,6 +288,7 @@ class Window {
 
 class OS {
     foreign static readLine()       // Read line from console
+    foreign static wait(seconds)    // Halt program execution for given seconds
     foreign static openUrl(url)     // Open URL in default browser
 
     foreign static args             // Get command line arguments list
@@ -335,4 +336,11 @@ foreign class Host {
 
     foreign service(timeout)
     foreign connect(address, port)
+}
+
+foreign class Peer {
+    foreign disconnect()
+    foreign send(data)
+
+    foreign toString
 }

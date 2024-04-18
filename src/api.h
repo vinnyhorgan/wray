@@ -201,6 +201,7 @@ void windowGetTime(WrenVM* vm);
 void windowGetFps(WrenVM* vm);
 
 void osReadLine(WrenVM* vm);
+void osWait(WrenVM* vm);
 void osOpenUrl(WrenVM* vm);
 void osGetArgs(WrenVM* vm);
 void osGetName(WrenVM* vm);
@@ -240,5 +241,9 @@ void hostNew(WrenVM* vm);
 void hostNew2(WrenVM* vm);
 void hostService(WrenVM* vm);
 void hostConnect(WrenVM* vm);
+
+void peerDisconnect(WrenVM* vm);
+void peerSend(WrenVM* vm);
+void peerToString(WrenVM* vm);
 
 #endif
