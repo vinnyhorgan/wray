@@ -4,6 +4,18 @@
 #include "lib/naett/naett.h"
 #include "lib/wren/wren.h"
 
+#define VM_ABORT(vm, error)              \
+    do {                                 \
+        wrenSetSlotString(vm, 0, error); \
+        wrenAbortFiber(vm, 0);           \
+    } while (false);
+
+#define ASSERT_SLOT_TYPE(vm, slot, type, fieldName)                       \
+    if (wrenGetSlotType(vm, slot) != WREN_TYPE_##type) {                  \
+        VM_ABORT(vm, "Expected " #fieldName " to be of type " #type "."); \
+        return;                                                           \
+    }
+
 void setArgs(int argc, char** argv);
 
 // Audio
@@ -222,10 +234,17 @@ void requestGetComplete(WrenVM* vm);
 void requestGetStatus(WrenVM* vm);
 void requestGetBody(WrenVM* vm);
 
-// Enet
+// ENet
+
+void enetInit(WrenVM* vm);
+void enetClose(WrenVM* vm);
+void enetGetVersion(WrenVM* vm);
 
 void hostAllocate(WrenVM* vm);
 void hostFinalize(void* data);
 void hostNew(WrenVM* vm);
+void hostNew2(WrenVM* vm);
+void hostService(WrenVM* vm);
+void hostConnect(WrenVM* vm);
 
 #endif

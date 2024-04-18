@@ -8,18 +8,6 @@
 
 #include "icon.h"
 
-#define VM_ABORT(vm, error)              \
-    do {                                 \
-        wrenSetSlotString(vm, 0, error); \
-        wrenAbortFiber(vm, 0);           \
-    } while (false);
-
-#define ASSERT_SLOT_TYPE(vm, slot, type, fieldName)                       \
-    if (wrenGetSlotType(vm, slot) != WREN_TYPE_##type) {                  \
-        VM_ABORT(vm, "Expected " #fieldName " to be of type " #type "."); \
-        return;                                                           \
-    }
-
 static map_int_t keys;
 static int argCount;
 static char** args;

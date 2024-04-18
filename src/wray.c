@@ -443,6 +443,22 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return requestGetStatus;
         if (TextIsEqual(signature, "body"))
             return requestGetBody;
+    } else if (TextIsEqual(className, "ENet")) {
+        if (TextIsEqual(signature, "init()"))
+            return enetInit;
+        if (TextIsEqual(signature, "close()"))
+            return enetClose;
+        if (TextIsEqual(signature, "version"))
+            return enetGetVersion;
+    } else if (TextIsEqual(className, "Host")) {
+        if (TextIsEqual(signature, "init new()"))
+            return hostNew;
+        if (TextIsEqual(signature, "init new(_)"))
+            return hostNew2;
+        if (TextIsEqual(signature, "service(_)"))
+            return hostService;
+        if (TextIsEqual(signature, "connect(_,_)"))
+            return hostConnect;
     }
 
     return NULL;
@@ -476,6 +492,9 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
     } else if (TextIsEqual(className, "Request")) {
         methods.allocate = requestAllocate;
         methods.finalize = requestFinalize;
+    } else if (TextIsEqual(className, "Host")) {
+        methods.allocate = hostAllocate;
+        methods.finalize = hostFinalize;
     }
 
     return methods;

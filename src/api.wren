@@ -340,3 +340,22 @@ foreign class Request {
     foreign status                // Get request status
     foreign body                  // Get request body
 }
+
+//------------------------------
+// ENet
+//------------------------------
+
+class ENet {
+    foreign static init()
+    foreign static close()
+
+    foreign static version
+}
+
+foreign class Host {
+    foreign construct new()
+    foreign construct new(port)
+
+    foreign service(timeout)
+    foreign connect(address, port)
+}
