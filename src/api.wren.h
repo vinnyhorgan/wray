@@ -171,6 +171,7 @@ static const char* apiModuleSource =
 "    foreign height                                                                            // Get texture height\n"
 "    foreign filter=(v)                                                                        // Set texture filter (\"point\", \"bilinear\")\n"
 "    foreign wrap=(v)                                                                          // Set texture wrap (\"repeat\", \"clamp\")\n"
+"    foreign texture\n"
 "}\n"
 "\n"
 "foreign class Font {\n"

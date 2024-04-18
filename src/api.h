@@ -93,6 +93,7 @@ void renderTextureGetWidth(WrenVM* vm);
 void renderTextureGetHeight(WrenVM* vm);
 void renderTextureSetFilter(WrenVM* vm);
 void renderTextureSetWrap(WrenVM* vm);
+void renderTextureGetTexture(WrenVM* vm);
 
 void fontAllocate(WrenVM* vm);
 void fontFinalize(void* data);

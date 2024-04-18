@@ -169,6 +169,7 @@ foreign class RenderTexture {
     foreign height                                                                            // Get texture height
     foreign filter=(v)                                                                        // Set texture filter ("point", "bilinear")
     foreign wrap=(v)                                                                          // Set texture wrap ("repeat", "clamp")
+    foreign texture
 }
 
 foreign class Font {

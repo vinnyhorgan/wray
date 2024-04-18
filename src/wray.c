@@ -216,6 +216,8 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
             return renderTextureSetFilter;
         if (TextIsEqual(signature, "wrap=(_)"))
             return renderTextureSetWrap;
+        if (TextIsEqual(signature, "texture"))
+            return renderTextureGetTexture;
     } else if (TextIsEqual(className, "Font")) {
         if (TextIsEqual(signature, "init new(_,_)"))
             return fontNew;
@@ -739,7 +741,11 @@ static int fuseCommand(int argc, const char** argv)
 
     fuse(selfPath, argv[0]);
 
+#ifdef _WIN32
     printf("Created %s.\n", TextFormat("%s.exe", GetFileNameWithoutExt(argv[0])));
+#else
+    printf("Created %s.\n", TextFormat("%s_out", GetFileNameWithoutExt(argv[0])));
+#endif
 
     return 0;
 }

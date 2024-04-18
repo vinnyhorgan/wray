@@ -14,6 +14,8 @@ static int argCount;
 static char** args;
 static int SEED = 2004;
 
+static WrenHandle* textureClass = NULL;
+
 static const unsigned char HASH[] = {
     208, 34, 231, 213, 32, 248, 233, 56, 161, 78, 24, 140, 71, 48, 140, 254, 245, 255, 247, 247, 40,
     185, 248, 251, 245, 28, 124, 204, 204, 76, 36, 1, 107, 28, 234, 163, 202, 224, 245, 128, 167, 204,
@@ -960,6 +962,21 @@ void renderTextureSetWrap(WrenVM* vm)
         VM_ABORT(vm, "Invalid texture wrap.");
 }
 
+void renderTextureGetTexture(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 2);
+    RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
+
+    if (textureClass == NULL) {
+        wrenGetVariable(vm, "wray", "Texture", 1);
+        textureClass = wrenGetSlotHandle(vm, 1);
+    }
+
+    wrenSetSlotHandle(vm, 1, textureClass);
+    Texture* tex = wrenSetSlotNewForeign(vm, 0, 1, sizeof(Texture));
+    *tex = texture->texture;
+}
+
 void fontAllocate(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
@@ -1698,6 +1715,11 @@ void windowClose(WrenVM* vm)
 {
     map_deinit(&keys);
     CloseWindow();
+
+    if (textureClass != NULL) {
+        wrenReleaseHandle(vm, textureClass);
+        textureClass = NULL;
+    }
 }
 
 void windowToggleFullscreen(WrenVM* vm)
