@@ -1,5 +1,6 @@
 #include "api.h"
 
+#include <math.h>
 #include <stdio.h>
 
 #include <raylib.h>

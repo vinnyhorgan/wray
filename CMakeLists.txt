@@ -64,3 +64,7 @@ target_link_libraries(${PROJECT_NAME} raylib enet)
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} winhttp ws2_32)
 endif()
+
+if(UNIX)
+    target_link_libraries(${PROJECT_NAME} curl)
+endif()

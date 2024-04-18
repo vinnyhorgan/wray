@@ -697,7 +697,17 @@ static void fuse(const char* selfPath, const char* eggPath)
     memcpy(output + selfSize + eggSize, &eggSize, sizeof(int));
     memcpy(output + selfSize + eggSize + 4, "WRAY", 4);
 
-    SaveFileData(TextFormat("%s.exe", GetFileNameWithoutExt(eggPath)), output, selfSize + eggSize + 8);
+#ifdef _WIN32
+    const char* outName = TextFormat("%s.exe", GetFileNameWithoutExt(eggPath));
+#else
+    const char* outName = TextFormat("%s_out", GetFileNameWithoutExt(eggPath));
+#endif
+
+    SaveFileData(outName, output, selfSize + eggSize + 8);
+
+#ifndef _WIN32
+    chmod(outName, 0777);
+#endif
 }
 
 static int fuseCommand(int argc, const char** argv)
@@ -785,7 +795,7 @@ int main(int argc, char** argv)
     argparse_init(&argparse, options, usages, ARGPARSE_STOP_AT_NON_OPTION);
     argparse_describe(&argparse, "\nAvailable commands: new, nest, fuse. Use `wray <command> --help` for details.", NULL);
 
-    argc = argparse_parse(&argparse, argc, argv);
+    argc = argparse_parse(&argparse, argc, (const char**)argv);
     if (argc < 1) {
         argparse_usage(&argparse);
         return 1;
@@ -799,7 +809,7 @@ int main(int argc, char** argv)
     }
 
     if (command) {
-        return command->fn(argc, argv);
+        return command->fn(argc, (const char**)argv);
     }
 
     setArgs(argc, argv);
