@@ -349,16 +349,12 @@ foreign class Host {
     foreign setBandwidthLimit(incoming, outgoing)
     foreign getPeer(index)
 
-    connect(address) {
-        connect(address, 1, 0)
-    }
+    connect(address) { connect(address, 1, 0) }
 
-    service() {
-        service(0)
-    }
+    service() { service(0) }
 
     broadcast(data) {
-        broadcast(data, 0, 0)
+        broadcast(data, 0, "reliable")
     }
 
     foreign totalSent
@@ -393,7 +389,7 @@ foreign class Peer {
     }
 
     send(data) {
-        send(data, 0, 0)
+        send(data, 0, "reliable")
     }
 
     foreign connectId
