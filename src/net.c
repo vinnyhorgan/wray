@@ -6,17 +6,20 @@
 
 #include "lib/wren/wren.h"
 
+void enetClose()
+{
+    enet_deinitialize();
+}
+
 void enetInit(WrenVM* vm)
 {
     if (enet_initialize() < 0) {
         VM_ABORT(vm, "Failed to initialize ENet.")
         return;
     }
-}
 
-void enetClose(WrenVM* vm)
-{
-    enet_deinitialize();
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    data->enetInit = true;
 }
 
 void enetGetVersion(WrenVM* vm)
@@ -163,25 +166,248 @@ void hostConnect(WrenVM* vm)
 void peerDisconnect(WrenVM* vm)
 {
     ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
-    enet_peer_disconnect(*peer, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "data");
+    int data = (int)wrenGetSlotDouble(vm, 1);
+    enet_peer_disconnect(*peer, data);
+}
+
+void peerDisconnectNow(WrenVM* vm)
+{
+    ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "data");
+    int data = (int)wrenGetSlotDouble(vm, 1);
+    enet_peer_disconnect_now(*peer, data);
+}
+
+void peerDisconnectLater(WrenVM* vm)
+{
+    ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "data");
+    int data = (int)wrenGetSlotDouble(vm, 1);
+    enet_peer_disconnect_later(*peer, data);
+}
+
+void peerPing(WrenVM* vm)
+{
+    ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
+    enet_peer_ping(*peer);
+}
+
+void peerReset(WrenVM* vm)
+{
+    ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
+    enet_peer_reset(*peer);
 }
 
 void peerSend(WrenVM* vm)
 {
     ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "datsa");
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "channel");
+    ASSERT_SLOT_TYPE(vm, 3, STRING, "flag");
 
     int length;
     const char* data = wrenGetSlotBytes(vm, 1, &length);
+    int channel = (int)wrenGetSlotDouble(vm, 2);
+    const char* flagString = wrenGetSlotString(vm, 3);
 
-    enet_peer_send(*peer, 0, enet_packet_create(data, length, ENET_PACKET_FLAG_RELIABLE));
+    int flag = ENET_PACKET_FLAG_RELIABLE;
+
+    if (strcmp(flagString, "unsequenced") == 0) {
+        flag = ENET_PACKET_FLAG_UNSEQUENCED;
+    } else if (strcmp(flagString, "reliable") == 0) {
+        flag = ENET_PACKET_FLAG_RELIABLE;
+    } else if (strcmp(flagString, "unreliable") == 0) {
+        flag = 0;
+    } else {
+        VM_ABORT(vm, "Invalid packet flag.")
+        return;
+    }
+
+    ENetPacket* packet = enet_packet_create(data, length, flag);
+    if (packet == NULL) {
+        VM_ABORT(vm, "Failed to create packet.")
+        return;
+    }
+
+    enet_peer_send(*peer, channel, packet);
+}
+
+void peerReceive(WrenVM* vm)
+{
+    ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
+
+    enet_uint8 channel;
+    ENetPacket* packet = enet_peer_receive(*peer, &channel);
+    if (packet == NULL) {
+        wrenSetSlotNull(vm, 0);
+        return;
+    }
+
+    wrenEnsureSlots(vm, 3);
+    wrenSetSlotNewMap(vm, 0);
+
+    wrenSetSlotString(vm, 1, "data");
+    wrenSetSlotBytes(vm, 2, packet->data, packet->dataLength);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "channel");
+    wrenSetSlotDouble(vm, 2, channel);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    enet_packet_destroy(packet);
+}
+
+void peerConfigThrottle(WrenVM* vm)
+{
+    ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "interval");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "acceleration");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "deceleration");
+    int interval = (int)wrenGetSlotDouble(vm, 1);
+    int acceleration = (int)wrenGetSlotDouble(vm, 2);
+    int deceleration = (int)wrenGetSlotDouble(vm, 3);
+    enet_peer_throttle_configure(*peer, interval, acceleration, deceleration);
+}
+
+void peerSetTimeout(WrenVM* vm)
+{
+    ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "limit");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "minimum");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "maximum");
+    int limit = (int)wrenGetSlotDouble(vm, 1);
+    int minimum = (int)wrenGetSlotDouble(vm, 2);
+    int maximum = (int)wrenGetSlotDouble(vm, 3);
+    enet_peer_timeout(*peer, limit, minimum, maximum);
+}
+
+void peerGetConnectId(WrenVM* vm)
+{
+    ENetPeer* peer = *(ENetPeer**)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, peer->connectID);
+}
+
+static size_t findPeerIndex(WrenVM* vm, ENetHost* host, ENetPeer* peer)
+{
+    size_t index;
+    for (index = 0; index < host->peerCount; index++) {
+        if (peer == &(host->peers[index]))
+            return index;
+    }
+
+    VM_ABORT(vm, "Failed to find peer index.")
+    return index;
+}
+
+void peerGetIndex(WrenVM* vm)
+{
+    ENetPeer* peer = *(ENetPeer**)wrenGetSlotForeign(vm, 0);
+    size_t index = findPeerIndex(vm, peer->host, peer);
+    wrenSetSlotDouble(vm, 0, index);
+}
+
+void peerGetState(WrenVM* vm)
+{
+    ENetPeer* peer = *(ENetPeer**)wrenGetSlotForeign(vm, 0);
+
+    switch (peer->state) {
+    case (ENET_PEER_STATE_DISCONNECTED):
+        wrenSetSlotString(vm, 0, "disconnected");
+        break;
+    case (ENET_PEER_STATE_CONNECTING):
+        wrenSetSlotString(vm, 0, "connecting");
+        break;
+    case (ENET_PEER_STATE_ACKNOWLEDGING_CONNECT):
+        wrenSetSlotString(vm, 0, "acknowledging_connect");
+        break;
+    case (ENET_PEER_STATE_CONNECTION_PENDING):
+        wrenSetSlotString(vm, 0, "connection_pending");
+        break;
+    case (ENET_PEER_STATE_CONNECTION_SUCCEEDED):
+        wrenSetSlotString(vm, 0, "connection_succeeded");
+        break;
+    case (ENET_PEER_STATE_CONNECTED):
+        wrenSetSlotString(vm, 0, "connected");
+        break;
+    case (ENET_PEER_STATE_DISCONNECT_LATER):
+        wrenSetSlotString(vm, 0, "disconnect_later");
+        break;
+    case (ENET_PEER_STATE_DISCONNECTING):
+        wrenSetSlotString(vm, 0, "disconnecting");
+        break;
+    case (ENET_PEER_STATE_ACKNOWLEDGING_DISCONNECT):
+        wrenSetSlotString(vm, 0, "acknowledging_disconnect");
+        break;
+    case (ENET_PEER_STATE_ZOMBIE):
+        wrenSetSlotString(vm, 0, "zombie");
+        break;
+    default:
+        wrenSetSlotString(vm, 0, "unknown");
+    }
+}
+
+void peerGetRtt(WrenVM* vm)
+{
+    ENetPeer* peer = *(ENetPeer**)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, peer->roundTripTime);
+}
+
+void peerGetLastRtt(WrenVM* vm)
+{
+    ENetPeer* peer = *(ENetPeer**)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, peer->lastRoundTripTime);
+}
+
+void peerGetTimeout(WrenVM* vm)
+{
+    ENetPeer* peer = *(ENetPeer**)wrenGetSlotForeign(vm, 0);
+
+    wrenEnsureSlots(vm, 2);
+    wrenSetSlotNewMap(vm, 0);
+
+    wrenSetSlotString(vm, 1, "limit");
+    wrenSetSlotDouble(vm, 2, peer->timeoutLimit);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "minimum");
+    wrenSetSlotDouble(vm, 2, peer->timeoutMinimum);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "maximum");
+    wrenSetSlotDouble(vm, 2, peer->timeoutMaximum);
+    wrenSetMapValue(vm, 0, 1, 2);
 }
 
 void peerGetToString(WrenVM* vm)
 {
     ENetPeer* peer = *(ENetPeer**)wrenGetSlotForeign(vm, 0);
-    char string[256];
-    enet_address_get_host_ip(&peer->address, string, 256);
-    sprintf(string + strlen(string), ":%d", peer->address.port);
-    wrenSetSlotString(vm, 0, string);
+    char host[128];
+    enet_address_get_host_ip(&peer->address, host, 128);
+    sprintf(host + strlen(host), ":%d", peer->address.port);
+    wrenSetSlotString(vm, 0, host);
+}
+
+void peerSetPingInterval(WrenVM* vm)
+{
+    ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "interval");
+    int interval = (int)wrenGetSlotDouble(vm, 1);
+    enet_peer_ping_interval(*peer, interval);
+}
+
+void peerSetRtt(WrenVM* vm)
+{
+    ENetPeer* peer = *(ENetPeer**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "rtt");
+    int rtt = (int)wrenGetSlotDouble(vm, 1);
+    peer->roundTripTime = rtt;
+}
+
+void peerSetLastRtt(WrenVM* vm)
+{
+    ENetPeer* peer = *(ENetPeer**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "lastRtt");
+    int lastRtt = (int)wrenGetSlotDouble(vm, 1);
+    peer->lastRoundTripTime = lastRtt;
 }

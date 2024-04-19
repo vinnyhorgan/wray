@@ -77,6 +77,7 @@ Thanks to all these amazing projects:
 - [love2d](https://love2d.org)
 - [raylib-wren](https://github.com/TSnake41/raylib-wren)
 - [dome](https://domeengine.com)
+- [enet](https://github.com/lsalzman/enet)
 - [argparse](https://github.com/cofyc/argparse)
 - [map](https://github.com/rxi/map)
 - [naett](https://github.com/erkkah/naett)

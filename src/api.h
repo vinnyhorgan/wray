@@ -20,12 +20,14 @@
 typedef struct vmData {
     bool audioInit;
     bool windowInit;
+    bool enetInit;
     map_int_t keys;
     WrenHandle* textureClass;
     WrenHandle* peerClass;
 } vmData;
 
 void setArgs(int argc, char** argv);
+void enetClose();
 
 // Audio
 
@@ -248,7 +250,6 @@ void requestGetBody(WrenVM* vm);
 // ENet
 
 void enetInit(WrenVM* vm);
-void enetClose(WrenVM* vm);
 void enetGetVersion(WrenVM* vm);
 
 void hostAllocate(WrenVM* vm);
@@ -259,7 +260,23 @@ void hostService(WrenVM* vm);
 void hostConnect(WrenVM* vm);
 
 void peerDisconnect(WrenVM* vm);
+void peerDisconnectNow(WrenVM* vm);
+void peerDisconnectLater(WrenVM* vm);
+void peerPing(WrenVM* vm);
+void peerReset(WrenVM* vm);
 void peerSend(WrenVM* vm);
+void peerReceive(WrenVM* vm);
+void peerConfigThrottle(WrenVM* vm);
+void peerSetTimeout(WrenVM* vm);
+void peerGetConnectId(WrenVM* vm);
+void peerGetIndex(WrenVM* vm);
+void peerGetState(WrenVM* vm);
+void peerGetRtt(WrenVM* vm);
+void peerGetLastRtt(WrenVM* vm);
+void peerGetTimeout(WrenVM* vm);
 void peerGetToString(WrenVM* vm);
+void peerSetPingInterval(WrenVM* vm);
+void peerSetRtt(WrenVM* vm);
+void peerSetLastRtt(WrenVM* vm);
 
 #endif

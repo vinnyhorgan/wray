@@ -131,13 +131,13 @@ foreign class Color {
 
 foreign class Image {
     foreign construct new(pathOrTexture)    // Load image from file (PNG, BMP, JPG) or texture
-    foreign construct new(width, height)
+    foreign construct new(width, height)    // New image
 
-    foreign export(path)
+    foreign export(path)                    // Save image to file
 
-    foreign width
-    foreign height
-    foreign format
+    foreign width                           // Get image width
+    foreign height                          // Get image height
+    foreign format                          // Get image pixel format
 }
 
 foreign class Texture {
@@ -334,7 +334,6 @@ foreign class Request {
 
 class ENet {
     foreign static init()
-    foreign static close()
 
     foreign static version
 }
@@ -348,8 +347,40 @@ foreign class Host {
 }
 
 foreign class Peer {
-    foreign disconnect()
-    foreign send(data)
+    foreign disconnect(data)
+    foreign disconnectNow(data)
+    foreign disconnectLater(data)
+    foreign ping()
+    foreign reset()
+    foreign send(data, channel, flag)
+    foreign receive()
+    foreign configThrottle(interval, acceleration, deceleration)
+    foreign setTimeout(limit, minimum, maximum)
 
+    disconnect() {
+        disconnect(0)
+    }
+
+    disconnectNow() {
+        disconnectNow(0)
+    }
+
+    disconnectLater() {
+        disconnectLater(0)
+    }
+
+    send(data) {
+        send(data, 0, 0)
+    }
+
+    foreign connectId
+    foreign index
+    foreign state
+    foreign rtt
+    foreign lastRtt
+    foreign timeout
     foreign toString
+    foreign pingInterval=(v)
+    foreign rtt=(v)
+    foreign lastRtt=(v)
 }

@@ -225,75 +225,90 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("name", gamepadGetName)
         BIND_METHOD("axisCount", gamepadGetAxisCount)
     } else if (TextIsEqual(className, "Window")) {
-        BIND_METHOD("init(_,_,_)", windowInit);
-        BIND_METHOD("toggleFullscreen()", windowToggleFullscreen);
-        BIND_METHOD("maximize()", windowMaximize);
-        BIND_METHOD("minimize()", windowMinimize);
-        BIND_METHOD("restore()", windowRestore);
-        BIND_METHOD("setPosition(_,_)", windowSetPosition);
-        BIND_METHOD("setMinSize(_,_)", windowSetMinSize);
-        BIND_METHOD("setMaxSize(_,_)", windowSetMaxSize);
-        BIND_METHOD("setSize(_,_)", windowSetSize);
-        BIND_METHOD("focus()", windowFocus);
-        BIND_METHOD("listDropped()", windowListDropped);
-        BIND_METHOD("closed", windowGetClosed);
-        BIND_METHOD("fullscreen", windowGetFullscreen);
-        BIND_METHOD("hidden", windowGetHidden);
-        BIND_METHOD("minimized", windowGetMinimized);
-        BIND_METHOD("maximized", windowGetMaximized);
-        BIND_METHOD("focused", windowGetFocused);
-        BIND_METHOD("resized", windowGetResized);
-        BIND_METHOD("width", windowGetWidth);
-        BIND_METHOD("height", windowGetHeight);
-        BIND_METHOD("x", windowGetX);
-        BIND_METHOD("y", windowGetY);
-        BIND_METHOD("dpi", windowGetDpi);
-        BIND_METHOD("fileDropped", windowGetFileDropped);
-        BIND_METHOD("title=(_)", windowSetTitle);
-        BIND_METHOD("icon=(_)", windowSetIcon);
-        BIND_METHOD("targetFps=(_)", windowSetTargetFps);
-        BIND_METHOD("resizable", windowGetResizable);
-        BIND_METHOD("resizable=(_)", windowSetResizable);
-        BIND_METHOD("vsync", windowGetVSync);
-        BIND_METHOD("vsync=(_)", windowSetVSync);
-        BIND_METHOD("dt", windowGetDt);
-        BIND_METHOD("time", windowGetTime);
-        BIND_METHOD("fps", windowGetFps);
+        BIND_METHOD("init(_,_,_)", windowInit)
+        BIND_METHOD("toggleFullscreen()", windowToggleFullscreen)
+        BIND_METHOD("maximize()", windowMaximize)
+        BIND_METHOD("minimize()", windowMinimize)
+        BIND_METHOD("restore()", windowRestore)
+        BIND_METHOD("setPosition(_,_)", windowSetPosition)
+        BIND_METHOD("setMinSize(_,_)", windowSetMinSize)
+        BIND_METHOD("setMaxSize(_,_)", windowSetMaxSize)
+        BIND_METHOD("setSize(_,_)", windowSetSize)
+        BIND_METHOD("focus()", windowFocus)
+        BIND_METHOD("listDropped()", windowListDropped)
+        BIND_METHOD("closed", windowGetClosed)
+        BIND_METHOD("fullscreen", windowGetFullscreen)
+        BIND_METHOD("hidden", windowGetHidden)
+        BIND_METHOD("minimized", windowGetMinimized)
+        BIND_METHOD("maximized", windowGetMaximized)
+        BIND_METHOD("focused", windowGetFocused)
+        BIND_METHOD("resized", windowGetResized)
+        BIND_METHOD("width", windowGetWidth)
+        BIND_METHOD("height", windowGetHeight)
+        BIND_METHOD("x", windowGetX)
+        BIND_METHOD("y", windowGetY)
+        BIND_METHOD("dpi", windowGetDpi)
+        BIND_METHOD("fileDropped", windowGetFileDropped)
+        BIND_METHOD("title=(_)", windowSetTitle)
+        BIND_METHOD("icon=(_)", windowSetIcon)
+        BIND_METHOD("targetFps=(_)", windowSetTargetFps)
+        BIND_METHOD("resizable", windowGetResizable)
+        BIND_METHOD("resizable=(_)", windowSetResizable)
+        BIND_METHOD("vsync", windowGetVSync)
+        BIND_METHOD("vsync=(_)", windowSetVSync)
+        BIND_METHOD("dt", windowGetDt)
+        BIND_METHOD("time", windowGetTime)
+        BIND_METHOD("fps", windowGetFps)
     } else if (TextIsEqual(className, "OS")) {
-        BIND_METHOD("readLine()", osReadLine);
-        BIND_METHOD("wait(_)", osWait);
-        BIND_METHOD("openUrl(_)", osOpenUrl);
-        BIND_METHOD("args", osGetArgs);
-        BIND_METHOD("name", osGetName);
-        BIND_METHOD("clipboard", osGetClipboard);
-        BIND_METHOD("clipboard=(_)", osSetClipboard);
+        BIND_METHOD("readLine()", osReadLine)
+        BIND_METHOD("wait(_)", osWait)
+        BIND_METHOD("openUrl(_)", osOpenUrl)
+        BIND_METHOD("args", osGetArgs)
+        BIND_METHOD("name", osGetName)
+        BIND_METHOD("clipboard", osGetClipboard)
+        BIND_METHOD("clipboard=(_)", osSetClipboard)
     } else if (TextIsEqual(className, "Directory")) {
-        BIND_METHOD("exists(_)", directoryExists);
-        BIND_METHOD("list(_)", directoryList);
+        BIND_METHOD("exists(_)", directoryExists)
+        BIND_METHOD("list(_)", directoryList)
     } else if (TextIsEqual(className, "File")) {
-        BIND_METHOD("exists(_)", fileExists);
-        BIND_METHOD("size(_)", fileSize);
-        BIND_METHOD("read(_)", fileRead);
-        BIND_METHOD("write(_,_)", fileWrite);
+        BIND_METHOD("exists(_)", fileExists)
+        BIND_METHOD("size(_)", fileSize)
+        BIND_METHOD("read(_)", fileRead)
+        BIND_METHOD("write(_,_)", fileWrite)
     } else if (TextIsEqual(className, "Request")) {
-        BIND_METHOD("init new(_)", requestNew);
-        BIND_METHOD("make()", requestMake);
-        BIND_METHOD("complete", requestGetComplete);
-        BIND_METHOD("status", requestGetStatus);
-        BIND_METHOD("body", requestGetBody);
+        BIND_METHOD("init new(_)", requestNew)
+        BIND_METHOD("make()", requestMake)
+        BIND_METHOD("complete", requestGetComplete)
+        BIND_METHOD("status", requestGetStatus)
+        BIND_METHOD("body", requestGetBody)
     } else if (TextIsEqual(className, "ENet")) {
-        BIND_METHOD("init()", enetInit);
-        BIND_METHOD("close()", enetClose);
-        BIND_METHOD("version", enetGetVersion);
+        BIND_METHOD("init()", enetInit)
+        BIND_METHOD("version", enetGetVersion)
     } else if (TextIsEqual(className, "Host")) {
-        BIND_METHOD("init new()", hostNew);
-        BIND_METHOD("init new(_)", hostNew2);
-        BIND_METHOD("service(_)", hostService);
-        BIND_METHOD("connect(_,_)", hostConnect);
+        BIND_METHOD("init new()", hostNew)
+        BIND_METHOD("init new(_)", hostNew2)
+        BIND_METHOD("service(_)", hostService)
+        BIND_METHOD("connect(_,_)", hostConnect)
     } else if (TextIsEqual(className, "Peer")) {
-        BIND_METHOD("disconnect()", peerDisconnect);
-        BIND_METHOD("send(_)", peerSend);
-        BIND_METHOD("toString", peerGetToString);
+        BIND_METHOD("disconnect(_)", peerDisconnect)
+        BIND_METHOD("disconnectNow(_)", peerDisconnectNow)
+        BIND_METHOD("disconnectLater(_)", peerDisconnectLater)
+        BIND_METHOD("ping()", peerPing)
+        BIND_METHOD("reset()", peerReset)
+        BIND_METHOD("send(_,_,_)", peerSend)
+        BIND_METHOD("receive()", peerReceive)
+        BIND_METHOD("configThrottle(_,_,_)", peerConfigThrottle)
+        BIND_METHOD("setTimeout(_,_,_)", peerSetTimeout)
+        BIND_METHOD("connectId", peerGetConnectId)
+        BIND_METHOD("index", peerGetIndex)
+        BIND_METHOD("state", peerGetState)
+        BIND_METHOD("rtt", peerGetRtt)
+        BIND_METHOD("lastRtt", peerGetLastRtt)
+        BIND_METHOD("timeout", peerGetTimeout)
+        BIND_METHOD("toString", peerGetToString)
+        BIND_METHOD("pingInterval=(_)", peerSetPingInterval)
+        BIND_METHOD("rtt=(_)", peerSetRtt)
+        BIND_METHOD("lastRtt=(_)", peerSetLastRtt)
     }
 
     return NULL;
@@ -382,6 +397,7 @@ static void runWren(const char* script, const char* module)
     vmData* data = malloc(sizeof(vmData));
     data->audioInit = false;
     data->windowInit = false;
+    data->enetInit = false;
 
     loadKeys(&data->keys);
 
@@ -407,6 +423,8 @@ static void runWren(const char* script, const char* module)
         CloseAudioDevice();
     if (data->windowInit)
         CloseWindow();
+    if (data->enetInit)
+        enetClose();
 
     free(data);
 }
