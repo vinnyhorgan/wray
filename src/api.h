@@ -81,6 +81,15 @@ void colorNew2(WrenVM* vm);
 void colorGetIndex(WrenVM* vm);
 void colorSetIndex(WrenVM* vm);
 
+void imageAllocate(WrenVM* vm);
+void imageFinalize(void* data);
+void imageNew(WrenVM* vm);
+void imageNew2(WrenVM* vm);
+void imageExport(WrenVM* vm);
+void imageGetWidth(WrenVM* vm);
+void imageGetHeight(WrenVM* vm);
+void imageGetFormat(WrenVM* vm);
+
 void textureAllocate(WrenVM* vm);
 void textureFinalize(void* data);
 void textureNew(WrenVM* vm);

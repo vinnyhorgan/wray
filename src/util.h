@@ -6,6 +6,6 @@
 void loadKeys(map_int_t* keys);
 char* readLine();
 void setSeed(int seed);
-double Perlin_Get2d(double x, double y, double freq, int depth);
+double perlin2d(double x, double y, double freq, int depth);
 
 #endif

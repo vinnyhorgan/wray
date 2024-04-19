@@ -1,7 +1,5 @@
 #include "api.h"
 
-#include <math.h>
-
 #include <raylib.h>
 
 #include "icon.h"
@@ -233,7 +231,7 @@ void graphicsNoise(WrenVM* vm)
     int y = (int)wrenGetSlotDouble(vm, 2);
     float frequency = (float)wrenGetSlotDouble(vm, 3);
     int depth = (int)wrenGetSlotDouble(vm, 4);
-    wrenSetSlotDouble(vm, 0, Perlin_Get2d(x, y, frequency, depth));
+    wrenSetSlotDouble(vm, 0, perlin2d(x, y, frequency, depth));
 }
 
 void graphicsClear(WrenVM* vm)
@@ -614,6 +612,116 @@ void colorSetIndex(WrenVM* vm)
     color[index] = value;
 }
 
+void imageAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Image));
+}
+
+void imageFinalize(void* data)
+{
+    Image* image = (Image*)data;
+    UnloadImage(*image);
+}
+
+void imageNew(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+
+    if (wrenGetSlotType(vm, 1) == WREN_TYPE_STRING) {
+        const char* path = wrenGetSlotString(vm, 1);
+
+        *image = LoadImage(path);
+        if (!IsImageReady(*image)) {
+            VM_ABORT(vm, "Failed to load image.");
+            return;
+        }
+    } else if (wrenGetSlotType(vm, 1) == WREN_TYPE_FOREIGN) {
+        Texture* texture = (Texture*)wrenGetSlotForeign(vm, 1);
+        *image = LoadImageFromTexture(*texture);
+    }
+}
+
+void imageNew2(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
+    int width = (int)wrenGetSlotDouble(vm, 1);
+    int height = (int)wrenGetSlotDouble(vm, 2);
+    *image = GenImageColor(width, height, BLACK);
+}
+
+void imageExport(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    const char* path = wrenGetSlotString(vm, 1);
+    ExportImage(*image, path);
+}
+
+void imageGetWidth(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, image->width);
+}
+
+void imageGetHeight(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, image->height);
+}
+
+void imageGetFormat(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+
+    switch (image->format) {
+    case PIXELFORMAT_UNCOMPRESSED_GRAYSCALE:
+        wrenSetSlotString(vm, 0, "grayscale");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA:
+        wrenSetSlotString(vm, 0, "grayscaleAlpha");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_R5G6B5:
+        wrenSetSlotString(vm, 0, "R5G6B5");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_R8G8B8:
+        wrenSetSlotString(vm, 0, "R8G8B8");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_R5G5B5A1:
+        wrenSetSlotString(vm, 0, "R5G5B5A1");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_R4G4B4A4:
+        wrenSetSlotString(vm, 0, "R4G4B4A4");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_R8G8B8A8:
+        wrenSetSlotString(vm, 0, "R8G8B8A8");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_R32:
+        wrenSetSlotString(vm, 0, "R32");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_R32G32B32:
+        wrenSetSlotString(vm, 0, "R32G32B32");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_R32G32B32A32:
+        wrenSetSlotString(vm, 0, "R32G32B32A32");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_R16:
+        wrenSetSlotString(vm, 0, "R16");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_R16G16B16:
+        wrenSetSlotString(vm, 0, "R16G16B16");
+        break;
+    case PIXELFORMAT_UNCOMPRESSED_R16G16B16A16:
+        wrenSetSlotString(vm, 0, "R16G16B16A16");
+        break;
+    default:
+        wrenSetSlotString(vm, 0, "Unknown");
+        break;
+    }
+}
+
 void textureAllocate(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
@@ -629,18 +737,23 @@ void textureFinalize(void* data)
 void textureNew(WrenVM* vm)
 {
     Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
-    const char* path = wrenGetSlotString(vm, 1);
 
     if (!IsWindowReady()) {
         VM_ABORT(vm, "Cannot load texture before window initialization.");
         return;
     }
 
-    *texture = LoadTexture(path);
-    if (!IsTextureReady(*texture)) {
-        VM_ABORT(vm, "Failed to load texture.");
-        return;
+    if (wrenGetSlotType(vm, 1) == WREN_TYPE_STRING) {
+        const char* path = wrenGetSlotString(vm, 1);
+
+        *texture = LoadTexture(path);
+        if (!IsTextureReady(*texture)) {
+            VM_ABORT(vm, "Failed to load texture.");
+            return;
+        }
+    } else if (wrenGetSlotType(vm, 1) == WREN_TYPE_FOREIGN) {
+        Image* image = (Image*)wrenGetSlotForeign(vm, 1);
+        *texture = LoadTextureFromImage(*image);
     }
 }
 

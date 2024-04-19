@@ -144,6 +144,13 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("init new(_,_,_)", colorNew2)
         BIND_METHOD("[_]", colorGetIndex)
         BIND_METHOD("[_]=(_)", colorSetIndex)
+    } else if (TextIsEqual(className, "Image")) {
+        BIND_METHOD("init new(_)", imageNew)
+        BIND_METHOD("init new(_,_)", imageNew2)
+        BIND_METHOD("export(_)", imageExport)
+        BIND_METHOD("width", imageGetWidth)
+        BIND_METHOD("height", imageGetHeight)
+        BIND_METHOD("format", imageGetFormat)
     } else if (TextIsEqual(className, "Texture")) {
         BIND_METHOD("init new(_)", textureNew)
         BIND_METHOD("width", textureGetWidth)
@@ -301,6 +308,9 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
         methods.finalize = soundFinalize;
     } else if (TextIsEqual(className, "Color")) {
         methods.allocate = colorAllocate;
+    } else if (TextIsEqual(className, "Image")) {
+        methods.allocate = imageAllocate;
+        methods.finalize = imageFinalize;
     } else if (TextIsEqual(className, "Texture")) {
         methods.allocate = textureAllocate;
         methods.finalize = textureFinalize;

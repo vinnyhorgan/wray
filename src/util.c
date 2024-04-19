@@ -148,6 +148,8 @@ void setSeed(int seed)
     SEED = seed;
 }
 
+// Perlin noise from: https://gist.github.com/nowl/828013
+
 static const unsigned char HASH[] = {
     208, 34, 231, 213, 32, 248, 233, 56, 161, 78, 24, 140, 71, 48, 140, 254, 245, 255, 247, 247, 40,
     185, 248, 251, 245, 28, 124, 204, 204, 76, 36, 1, 107, 28, 234, 163, 202, 224, 245, 128, 167, 204,
@@ -168,9 +170,11 @@ static int noise2(int x, int y)
     int yindex = (y + SEED) % 256;
     if (yindex < 0)
         yindex += 256;
+
     int xindex = (HASH[yindex] + x) % 256;
     if (xindex < 0)
         xindex += 256;
+
     const int result = HASH[xindex];
     return result;
 }
@@ -187,8 +191,8 @@ static double smooth_inter(double x, double y, double s)
 
 static double noise2d(double x, double y)
 {
-    const int x_int = (int)floor(x);
-    const int y_int = (int)floor(y);
+    const int x_int = floor(x);
+    const int y_int = floor(y);
     const double x_frac = x - x_int;
     const double y_frac = y - y_int;
     const int s = noise2(x_int, y_int);
@@ -201,13 +205,14 @@ static double noise2d(double x, double y)
     return result;
 }
 
-double Perlin_Get2d(double x, double y, double freq, int depth)
+double perlin2d(double x, double y, double freq, int depth)
 {
     double xa = x * freq;
     double ya = y * freq;
     double amp = 1.0;
     double fin = 0;
     double div = 0.0;
+
     for (int i = 0; i < depth; i++) {
         div += 256 * amp;
         fin += noise2d(xa, ya) * amp;
@@ -215,5 +220,6 @@ double Perlin_Get2d(double x, double y, double freq, int depth)
         xa *= 2;
         ya *= 2;
     }
+
     return fin / div;
 }

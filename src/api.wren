@@ -129,8 +129,19 @@ foreign class Color {
     static peach { new(255, 204, 170) }
 }
 
+foreign class Image {
+    foreign construct new(pathOrTexture)    // Load image from file (PNG, BMP, JPG) or texture
+    foreign construct new(width, height)
+
+    foreign export(path)
+
+    foreign width
+    foreign height
+    foreign format
+}
+
 foreign class Texture {
-    foreign construct new(path)    // Load texture from file (PNG, BMP, JPG)
+    foreign construct new(pathOrImage)    // Load texture from file (PNG, BMP, JPG) or image
 
     foreign width                  // Get texture width
     foreign height                 // Get texture height
