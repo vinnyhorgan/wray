@@ -9,6 +9,7 @@
 
 #include "api.h"
 #include "api.wren.h"
+#include "util.h"
 
 #define WRAY_VERSION "0.1.0"
 
@@ -372,6 +373,8 @@ static void runWren(const char* script, const char* module)
     data->audioInit = false;
     data->windowInit = false;
 
+    loadKeys(&data->keys);
+
     wrenEnsureSlots(vm, 1);
     wrenGetVariable(vm, "wray", "Texture", 0);
     data->textureClass = wrenGetSlotHandle(vm, 0);
@@ -384,6 +387,8 @@ static void runWren(const char* script, const char* module)
 
     wrenReleaseHandle(vm, data->textureClass);
     wrenReleaseHandle(vm, data->peerClass);
+
+    map_deinit(&data->keys);
 
     UnloadFileText(source);
     wrenFreeVM(vm);

@@ -50,6 +50,7 @@ include_directories(${enet_SOURCE_DIR}/include)
 set(SOURCES
     src/api.c
     src/net.c
+    src/util.c
     src/wray.c
     src/lib/argparse/argparse.c
     src/lib/map/map.c

@@ -1,6 +1,7 @@
 #ifndef API_H
 #define API_H
 
+#include "lib/map/map.h"
 #include "lib/naett/naett.h"
 #include "lib/wren/wren.h"
 
@@ -19,6 +20,7 @@
 typedef struct vmData {
     bool audioInit;
     bool windowInit;
+    map_int_t keys;
     WrenHandle* textureClass;
     WrenHandle* peerClass;
 } vmData;
