@@ -4,7 +4,6 @@
 
 class Audio {
     foreign static init()        // Initialize audio device
-    foreign static close()       // Close audio device
 
     foreign static volume        // Get master volume
     foreign static volume=(v)    // Set master volume
@@ -247,7 +246,6 @@ foreign class Gamepad {
 
 class Window {
     foreign static init(width, height, title)    // Initialize window
-    foreign static close()                       // Close window
     foreign static toggleFullscreen()            // Toggle fullscreen mode
     foreign static maximize()                    // Maximize window
     foreign static minimize()                    // Minimize window

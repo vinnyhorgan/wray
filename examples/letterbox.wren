@@ -36,5 +36,3 @@ while (!Window.closed) {
 
     Graphics.end()
 }
-
-Window.close()

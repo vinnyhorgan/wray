@@ -4,6 +4,10 @@ set(CMAKE_C_STANDARD 99)
 
 set(CMAKE_WARN_DEPRECATED OFF CACHE BOOL "" FORCE)
 
+if(MSVC)
+    add_compile_options(/wd4244 /wd4267 /wd4996)
+endif()
+
 include(FetchContent)
 set(FETCHCONTENT_QUIET FALSE)
 

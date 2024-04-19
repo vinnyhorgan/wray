@@ -6,8 +6,6 @@
 
 #include "lib/wren/wren.h"
 
-static WrenHandle* peerClass = NULL;
-
 void enetInit(WrenVM* vm)
 {
     if (enet_initialize() < 0) {
@@ -94,12 +92,9 @@ void hostService(WrenVM* vm)
     wrenSetSlotNewMap(vm, 0);
 
     if (event.peer) {
-        if (peerClass == NULL) {
-            wrenGetVariable(vm, "wray", "Peer", 1);
-            peerClass = wrenGetSlotHandle(vm, 1);
-        }
+        vmData* data = (vmData*)wrenGetUserData(vm);
 
-        wrenSetSlotHandle(vm, 1, peerClass);
+        wrenSetSlotHandle(vm, 1, data->peerClass);
         ENetPeer** p = wrenSetSlotNewForeign(vm, 3, 1, sizeof(ENetPeer*));
         *p = event.peer;
 
@@ -158,12 +153,9 @@ void hostConnect(WrenVM* vm)
 
     ENetPeer* peer = enet_host_connect(*host, &addr, 1, 0);
 
-    if (peerClass == NULL) {
-        wrenGetVariable(vm, "wray", "Peer", 1);
-        peerClass = wrenGetSlotHandle(vm, 1);
-    }
+    vmData* data = (vmData*)wrenGetUserData(vm);
 
-    wrenSetSlotHandle(vm, 1, peerClass);
+    wrenSetSlotHandle(vm, 1, data->peerClass);
     ENetPeer** p = wrenSetSlotNewForeign(vm, 0, 1, sizeof(ENetPeer*));
     *p = peer;
 }
@@ -177,7 +169,7 @@ void peerDisconnect(WrenVM* vm)
 void peerSend(WrenVM* vm)
 {
     ENetPeer** peer = (ENetPeer**)wrenGetSlotForeign(vm, 0);
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "datsa");
 
     int length;
     const char* data = wrenGetSlotBytes(vm, 1, &length);
@@ -185,7 +177,7 @@ void peerSend(WrenVM* vm)
     enet_peer_send(*peer, 0, enet_packet_create(data, length, ENET_PACKET_FLAG_RELIABLE));
 }
 
-void peerToString(WrenVM* vm)
+void peerGetToString(WrenVM* vm)
 {
     ENetPeer* peer = *(ENetPeer**)wrenGetSlotForeign(vm, 0);
     char string[256];

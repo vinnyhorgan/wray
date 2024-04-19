@@ -14,8 +14,6 @@ static int argCount;
 static char** args;
 static int SEED = 2004;
 
-static WrenHandle* textureClass = NULL;
-
 static const unsigned char HASH[] = {
     208, 34, 231, 213, 32, 248, 233, 56, 161, 78, 24, 140, 71, 48, 140, 254, 245, 255, 247, 247, 40,
     185, 248, 251, 245, 28, 124, 204, 204, 76, 36, 1, 107, 28, 234, 163, 202, 224, 245, 128, 167, 204,
@@ -126,11 +124,9 @@ void audioInit(WrenVM* vm)
         VM_ABORT(vm, "Failed to initialize audio.");
         return;
     }
-}
 
-void audioClose(WrenVM* vm)
-{
-    CloseAudioDevice();
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    data->audioInit = true;
 }
 
 void audioGetVolume(WrenVM* vm)
@@ -726,8 +722,7 @@ void textureAllocate(WrenVM* vm)
 void textureFinalize(void* data)
 {
     Texture* texture = (Texture*)data;
-    if (IsWindowReady())
-        UnloadTexture(*texture);
+    UnloadTexture(*texture);
 }
 
 void textureNew(WrenVM* vm)
@@ -837,12 +832,9 @@ void renderTextureGetTexture(WrenVM* vm)
     wrenEnsureSlots(vm, 2);
     RenderTexture* texture = (RenderTexture*)wrenGetSlotForeign(vm, 0);
 
-    if (textureClass == NULL) {
-        wrenGetVariable(vm, "wray", "Texture", 1);
-        textureClass = wrenGetSlotHandle(vm, 1);
-    }
+    vmData* data = (vmData*)wrenGetUserData(vm);
 
-    wrenSetSlotHandle(vm, 1, textureClass);
+    wrenSetSlotHandle(vm, 1, data->textureClass);
     Texture* tex = wrenSetSlotNewForeign(vm, 0, 1, sizeof(Texture));
     *tex = texture->texture;
 }
@@ -1472,6 +1464,9 @@ void windowInit(WrenVM* vm)
     SetWindowIcon(icon);
     SetExitKey(KEY_NULL);
 
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    data->windowInit = true;
+
     map_init(&keys);
 
     map_set(&keys, "apostrophe", KEY_APOSTROPHE);
@@ -1579,17 +1574,6 @@ void windowInit(WrenVM* vm)
     map_set(&keys, "kpAdd", KEY_KP_ADD);
     map_set(&keys, "kpEnter", KEY_KP_ENTER);
     map_set(&keys, "kpEqual", KEY_KP_EQUAL);
-}
-
-void windowClose(WrenVM* vm)
-{
-    map_deinit(&keys);
-    CloseWindow();
-
-    if (textureClass != NULL) {
-        wrenReleaseHandle(vm, textureClass);
-        textureClass = NULL;
-    }
 }
 
 void windowToggleFullscreen(WrenVM* vm)

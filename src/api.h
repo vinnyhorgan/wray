@@ -16,12 +16,18 @@
         return;                                                           \
     }
 
+typedef struct vmData {
+    bool audioInit;
+    bool windowInit;
+    WrenHandle* textureClass;
+    WrenHandle* peerClass;
+} vmData;
+
 void setArgs(int argc, char** argv);
 
 // Audio
 
 void audioInit(WrenVM* vm);
-void audioClose(WrenVM* vm);
 void audioGetVolume(WrenVM* vm);
 void audioSetVolume(WrenVM* vm);
 
@@ -165,7 +171,6 @@ void gamepadGetAxisCount(WrenVM* vm);
 // System
 
 void windowInit(WrenVM* vm);
-void windowClose(WrenVM* vm);
 void windowToggleFullscreen(WrenVM* vm);
 void windowMaximize(WrenVM* vm);
 void windowMinimize(WrenVM* vm);
@@ -244,6 +249,6 @@ void hostConnect(WrenVM* vm);
 
 void peerDisconnect(WrenVM* vm);
 void peerSend(WrenVM* vm);
-void peerToString(WrenVM* vm);
+void peerGetToString(WrenVM* vm);
 
 #endif

@@ -90,372 +90,202 @@ static WrenLoadModuleResult wrenLoadModule(WrenVM* vm, const char* name)
     return result;
 }
 
+#define BIND_METHOD(s, m)          \
+    if (TextIsEqual(signature, s)) \
+        return m;
+
 static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module, const char* className, bool isStatic, const char* signature)
 {
     if (TextIsEqual(className, "Audio")) {
-        if (TextIsEqual(signature, "init()"))
-            return audioInit;
-        if (TextIsEqual(signature, "close()"))
-            return audioClose;
-        if (TextIsEqual(signature, "volume"))
-            return audioGetVolume;
-        if (TextIsEqual(signature, "volume=(_)"))
-            return audioSetVolume;
+        BIND_METHOD("init()", audioInit)
+        BIND_METHOD("volume", audioGetVolume)
+        BIND_METHOD("volume=(_)", audioSetVolume)
     } else if (TextIsEqual(className, "Sound")) {
-        if (TextIsEqual(signature, "init new(_)"))
-            return soundNew;
-        if (TextIsEqual(signature, "play()"))
-            return soundPlay;
-        if (TextIsEqual(signature, "stop()"))
-            return soundStop;
-        if (TextIsEqual(signature, "pause()"))
-            return soundPause;
-        if (TextIsEqual(signature, "resume()"))
-            return soundResume;
-        if (TextIsEqual(signature, "playing"))
-            return soundGetPlaying;
-        if (TextIsEqual(signature, "volume=(_)"))
-            return soundSetVolume;
-        if (TextIsEqual(signature, "pitch=(_)"))
-            return soundSetPitch;
-        if (TextIsEqual(signature, "pan=(_)"))
-            return soundSetPan;
+        BIND_METHOD("init new(_)", soundNew)
+        BIND_METHOD("play()", soundPlay)
+        BIND_METHOD("stop()", soundStop)
+        BIND_METHOD("pause()", soundPause)
+        BIND_METHOD("resume()", soundResume)
+        BIND_METHOD("playing", soundGetPlaying)
+        BIND_METHOD("volume=(_)", soundSetVolume)
+        BIND_METHOD("pitch=(_)", soundSetPitch)
+        BIND_METHOD("pan=(_)", soundSetPan)
     } else if (TextIsEqual(className, "Graphics")) {
-        if (TextIsEqual(signature, "begin()"))
-            return graphicsBegin;
-        if (TextIsEqual(signature, "end()"))
-            return graphicsEnd;
-        if (TextIsEqual(signature, "beginBlend(_)"))
-            return graphicsBeginBlend;
-        if (TextIsEqual(signature, "endBlend()"))
-            return graphicsEndBlend;
-        if (TextIsEqual(signature, "beginScissor(_,_,_,_)"))
-            return graphicsBeginScissor;
-        if (TextIsEqual(signature, "endScissor()"))
-            return graphicsEndScissor;
-        if (TextIsEqual(signature, "screenshot(_)"))
-            return graphicsScreenshot;
-        if (TextIsEqual(signature, "measure(_,_)"))
-            return graphicsMeasure;
-        if (TextIsEqual(signature, "noise(_,_,_,_)"))
-            return graphicsNoise;
-        if (TextIsEqual(signature, "clear(_)"))
-            return graphicsClear;
-        if (TextIsEqual(signature, "print(_,_,_,_,_)"))
-            return graphicsPrint;
-        if (TextIsEqual(signature, "pixel(_,_,_)"))
-            return graphicsPixel;
-        if (TextIsEqual(signature, "line(_,_,_,_,_,_)"))
-            return graphicsLine;
-        if (TextIsEqual(signature, "circle(_,_,_,_)"))
-            return graphicsCircle;
-        if (TextIsEqual(signature, "circleLines(_,_,_,_)"))
-            return graphicsCircleLines;
-        if (TextIsEqual(signature, "ellipse(_,_,_,_,_)"))
-            return graphicsEllipse;
-        if (TextIsEqual(signature, "ellipseLines(_,_,_,_,_)"))
-            return graphicsEllipseLines;
-        if (TextIsEqual(signature, "rectangle(_,_,_,_,_,_,_,_)"))
-            return graphicsRectangle;
-        if (TextIsEqual(signature, "rectangleLines(_,_,_,_,_,_)"))
-            return graphicsRectangleLines;
-        if (TextIsEqual(signature, "triangle(_,_,_,_,_,_,_)"))
-            return graphicsTriangle;
-        if (TextIsEqual(signature, "triangleLines(_,_,_,_,_,_,_)"))
-            return graphicsTriangleLines;
-        if (TextIsEqual(signature, "polygon(_,_,_,_,_,_)"))
-            return graphicsPolygon;
-        if (TextIsEqual(signature, "polygonLines(_,_,_,_,_,_,_)"))
-            return graphicsPolygonLines;
-        if (TextIsEqual(signature, "draw(_,_,_,_,_,_,_,_,_)"))
-            return graphicsDraw;
-        if (TextIsEqual(signature, "drawRec(_,_,_,_,_,_,_,_,_,_,_,_,_)"))
-            return graphicsDrawRec;
-        if (TextIsEqual(signature, "noiseSeed=(_)"))
-            return graphicsSetNoiseSeed;
-        if (TextIsEqual(signature, "lineSpacing=(_)"))
-            return graphicsSetLineSpacing;
+        BIND_METHOD("begin()", graphicsBegin)
+        BIND_METHOD("end()", graphicsEnd)
+        BIND_METHOD("beginBlend(_)", graphicsBeginBlend)
+        BIND_METHOD("endBlend()", graphicsEndBlend)
+        BIND_METHOD("beginScissor(_,_,_,_)", graphicsBeginScissor)
+        BIND_METHOD("endScissor()", graphicsEndScissor)
+        BIND_METHOD("screenshot(_)", graphicsScreenshot)
+        BIND_METHOD("measure(_,_)", graphicsMeasure)
+        BIND_METHOD("noise(_,_,_,_)", graphicsNoise)
+        BIND_METHOD("clear(_)", graphicsClear)
+        BIND_METHOD("print(_,_,_,_,_)", graphicsPrint)
+        BIND_METHOD("pixel(_,_,_)", graphicsPixel)
+        BIND_METHOD("line(_,_,_,_,_,_)", graphicsLine)
+        BIND_METHOD("circle(_,_,_,_)", graphicsCircle)
+        BIND_METHOD("circleLines(_,_,_,_)", graphicsCircleLines)
+        BIND_METHOD("ellipse(_,_,_,_,_)", graphicsEllipse)
+        BIND_METHOD("ellipseLines(_,_,_,_,_)", graphicsEllipseLines)
+        BIND_METHOD("rectangle(_,_,_,_,_,_,_,_)", graphicsRectangle)
+        BIND_METHOD("rectangleLines(_,_,_,_,_,_)", graphicsRectangleLines)
+        BIND_METHOD("triangle(_,_,_,_,_,_,_)", graphicsTriangle)
+        BIND_METHOD("triangleLines(_,_,_,_,_,_,_)", graphicsTriangleLines)
+        BIND_METHOD("polygon(_,_,_,_,_,_)", graphicsPolygon)
+        BIND_METHOD("polygonLines(_,_,_,_,_,_,_)", graphicsPolygonLines)
+        BIND_METHOD("draw(_,_,_,_,_,_,_,_,_)", graphicsDraw)
+        BIND_METHOD("drawRec(_,_,_,_,_,_,_,_,_,_,_,_,_)", graphicsDrawRec)
+        BIND_METHOD("noiseSeed=(_)", graphicsSetNoiseSeed)
+        BIND_METHOD("lineSpacing=(_)", graphicsSetLineSpacing)
     } else if (TextIsEqual(className, "Color")) {
-        if (TextIsEqual(signature, "init new(_,_,_,_)"))
-            return colorNew;
-        if (TextIsEqual(signature, "init new(_,_,_)"))
-            return colorNew2;
-        if (TextIsEqual(signature, "[_]"))
-            return colorGetIndex;
-        if (TextIsEqual(signature, "[_]=(_)"))
-            return colorSetIndex;
+        BIND_METHOD("init new(_,_,_,_)", colorNew)
+        BIND_METHOD("init new(_,_,_)", colorNew2)
+        BIND_METHOD("[_]", colorGetIndex)
+        BIND_METHOD("[_]=(_)", colorSetIndex)
     } else if (TextIsEqual(className, "Texture")) {
-        if (TextIsEqual(signature, "init new(_)"))
-            return textureNew;
-        if (TextIsEqual(signature, "width"))
-            return textureGetWidth;
-        if (TextIsEqual(signature, "height"))
-            return textureGetHeight;
-        if (TextIsEqual(signature, "filter=(_)"))
-            return textureSetFilter;
-        if (TextIsEqual(signature, "wrap=(_)"))
-            return textureSetWrap;
+        BIND_METHOD("init new(_)", textureNew)
+        BIND_METHOD("width", textureGetWidth)
+        BIND_METHOD("height", textureGetHeight)
+        BIND_METHOD("filter=(_)", textureSetFilter)
+        BIND_METHOD("wrap=(_)", textureSetWrap)
     } else if (TextIsEqual(className, "RenderTexture")) {
-        if (TextIsEqual(signature, "init new(_,_)"))
-            return renderTextureNew;
-        if (TextIsEqual(signature, "begin()"))
-            return renderTextureBegin;
-        if (TextIsEqual(signature, "end()"))
-            return renderTextureEnd;
-        if (TextIsEqual(signature, "texture"))
-            return renderTextureGetTexture;
+        BIND_METHOD("init new(_,_)", renderTextureNew)
+        BIND_METHOD("begin()", renderTextureBegin)
+        BIND_METHOD("end()", renderTextureEnd)
+        BIND_METHOD("texture", renderTextureGetTexture)
     } else if (TextIsEqual(className, "Font")) {
-        if (TextIsEqual(signature, "init new(_,_)"))
-            return fontNew;
-        if (TextIsEqual(signature, "print(_,_,_,_,_,_,_)"))
-            return fontPrint;
-        if (TextIsEqual(signature, "measure(_)"))
-            return fontMeasure;
-        if (TextIsEqual(signature, "size"))
-            return fontGetSize;
+        BIND_METHOD("init new(_,_)", fontNew)
+        BIND_METHOD("print(_,_,_,_,_,_,_)", fontPrint)
+        BIND_METHOD("measure(_)", fontMeasure)
+        BIND_METHOD("size", fontGetSize)
     } else if (TextIsEqual(className, "Camera")) {
-        if (TextIsEqual(signature, "init new(_,_)"))
-            return cameraNew;
-        if (TextIsEqual(signature, "begin()"))
-            return cameraBegin;
-        if (TextIsEqual(signature, "end()"))
-            return cameraEnd;
-        if (TextIsEqual(signature, "screenToWorld(_,_)"))
-            return cameraScreenToWorld;
-        if (TextIsEqual(signature, "worldToScreen(_,_)"))
-            return cameraWorldToScreen;
-        if (TextIsEqual(signature, "x"))
-            return cameraGetX;
-        if (TextIsEqual(signature, "y"))
-            return cameraGetY;
-        if (TextIsEqual(signature, "ox"))
-            return cameraGetOffsetX;
-        if (TextIsEqual(signature, "oy"))
-            return cameraGetOffsetY;
-        if (TextIsEqual(signature, "r"))
-            return cameraGetRotation;
-        if (TextIsEqual(signature, "zoom"))
-            return cameraGetZoom;
-        if (TextIsEqual(signature, "x=(_)"))
-            return cameraSetX;
-        if (TextIsEqual(signature, "y=(_)"))
-            return cameraSetY;
-        if (TextIsEqual(signature, "ox=(_)"))
-            return cameraSetOffsetX;
-        if (TextIsEqual(signature, "oy=(_)"))
-            return cameraSetOffsetY;
-        if (TextIsEqual(signature, "r=(_)"))
-            return cameraSetRotation;
-        if (TextIsEqual(signature, "zoom=(_)"))
-            return cameraSetZoom;
+        BIND_METHOD("init new(_,_)", cameraNew)
+        BIND_METHOD("begin()", cameraBegin)
+        BIND_METHOD("end()", cameraEnd)
+        BIND_METHOD("screenToWorld(_,_)", cameraScreenToWorld)
+        BIND_METHOD("worldToScreen(_,_)", cameraWorldToScreen)
+        BIND_METHOD("x", cameraGetX)
+        BIND_METHOD("y", cameraGetY)
+        BIND_METHOD("ox", cameraGetOffsetX)
+        BIND_METHOD("oy", cameraGetOffsetY)
+        BIND_METHOD("r", cameraGetRotation)
+        BIND_METHOD("zoom", cameraGetZoom)
+        BIND_METHOD("x=(_)", cameraSetX)
+        BIND_METHOD("y=(_)", cameraSetY)
+        BIND_METHOD("ox=(_)", cameraSetOffsetX)
+        BIND_METHOD("oy=(_)", cameraSetOffsetY)
+        BIND_METHOD("r=(_)", cameraSetRotation)
+        BIND_METHOD("zoom=(_)", cameraSetZoom)
     } else if (TextIsEqual(className, "Shader")) {
-        if (TextIsEqual(signature, "init new(_)"))
-            return shaderNew;
-        if (TextIsEqual(signature, "init new(_,_)"))
-            return shaderNew2;
-        if (TextIsEqual(signature, "begin()"))
-            return shaderBegin;
-        if (TextIsEqual(signature, "end()"))
-            return shaderEnd;
-        if (TextIsEqual(signature, "set(_,_)"))
-            return shaderSet;
+        BIND_METHOD("init new(_)", shaderNew)
+        BIND_METHOD("init new(_,_)", shaderNew2)
+        BIND_METHOD("begin()", shaderBegin)
+        BIND_METHOD("end()", shaderEnd)
+        BIND_METHOD("set(_,_)", shaderSet)
     } else if (TextIsEqual(className, "Keyboard")) {
-        if (TextIsEqual(signature, "pressed(_)"))
-            return keyboardPressed;
-        if (TextIsEqual(signature, "pressedRepeat(_)"))
-            return keyboardPressedRepeat;
-        if (TextIsEqual(signature, "down(_)"))
-            return keyboardDown;
-        if (TextIsEqual(signature, "released(_)"))
-            return keyboardReleased;
-        if (TextIsEqual(signature, "keyPressed"))
-            return keyboardGetKeyPressed;
+        BIND_METHOD("pressed(_)", keyboardPressed)
+        BIND_METHOD("pressedRepeat(_)", keyboardPressedRepeat)
+        BIND_METHOD("down(_)", keyboardDown)
+        BIND_METHOD("released(_)", keyboardReleased)
+        BIND_METHOD("keyPressed", keyboardGetKeyPressed)
     } else if (TextIsEqual(className, "Mouse")) {
-        if (TextIsEqual(signature, "pressed(_)"))
-            return mousePressed;
-        if (TextIsEqual(signature, "down(_)"))
-            return mouseDown;
-        if (TextIsEqual(signature, "released(_)"))
-            return mouseReleased;
-        if (TextIsEqual(signature, "setPosition(_,_)"))
-            return mouseSetPosition;
-        if (TextIsEqual(signature, "setOffset(_,_)"))
-            return mouseSetOffset;
-        if (TextIsEqual(signature, "setScale(_,_)"))
-            return mouseSetScale;
-        if (TextIsEqual(signature, "x"))
-            return mouseGetX;
-        if (TextIsEqual(signature, "y"))
-            return mouseGetY;
-        if (TextIsEqual(signature, "dx"))
-            return mouseGetDeltaX;
-        if (TextIsEqual(signature, "dy"))
-            return mouseGetDeltaY;
-        if (TextIsEqual(signature, "wheel"))
-            return mouseGetWheel;
-        if (TextIsEqual(signature, "cursor=(_)"))
-            return mouseSetCursor;
-        if (TextIsEqual(signature, "hidden"))
-            return mouseGetHidden;
-        if (TextIsEqual(signature, "hidden=(_)"))
-            return mouseSetHidden;
-        if (TextIsEqual(signature, "enabled=(_)"))
-            return mouseSetEnabled;
-        if (TextIsEqual(signature, "onScreen"))
-            return mouseGetOnScreen;
+        BIND_METHOD("pressed(_)", mousePressed)
+        BIND_METHOD("down(_)", mouseDown)
+        BIND_METHOD("released(_)", mouseReleased)
+        BIND_METHOD("setPosition(_,_)", mouseSetPosition)
+        BIND_METHOD("setOffset(_,_)", mouseSetOffset)
+        BIND_METHOD("setScale(_,_)", mouseSetScale)
+        BIND_METHOD("x", mouseGetX)
+        BIND_METHOD("y", mouseGetY)
+        BIND_METHOD("dx", mouseGetDeltaX)
+        BIND_METHOD("dy", mouseGetDeltaY)
+        BIND_METHOD("wheel", mouseGetWheel)
+        BIND_METHOD("cursor=(_)", mouseSetCursor)
+        BIND_METHOD("hidden", mouseGetHidden)
+        BIND_METHOD("hidden=(_)", mouseSetHidden)
+        BIND_METHOD("enabled=(_)", mouseSetEnabled)
+        BIND_METHOD("onScreen", mouseGetOnScreen)
     } else if (TextIsEqual(className, "Gamepad")) {
-        if (TextIsEqual(signature, "available(_)"))
-            return gamepadAvailable;
-        if (TextIsEqual(signature, "init new(_)"))
-            return gamepadNew;
-        if (TextIsEqual(signature, "pressed(_)"))
-            return gamepadPressed;
-        if (TextIsEqual(signature, "down(_)"))
-            return gamepadDown;
-        if (TextIsEqual(signature, "released(_)"))
-            return gamepadReleased;
-        if (TextIsEqual(signature, "axis(_)"))
-            return gamepadAxis;
-        if (TextIsEqual(signature, "id"))
-            return gamepadGetId;
-        if (TextIsEqual(signature, "name"))
-            return gamepadGetName;
-        if (TextIsEqual(signature, "axisCount"))
-            return gamepadGetAxisCount;
+        BIND_METHOD("available(_)", gamepadAvailable)
+        BIND_METHOD("init new(_)", gamepadNew)
+        BIND_METHOD("pressed(_)", gamepadPressed)
+        BIND_METHOD("down(_)", gamepadDown)
+        BIND_METHOD("released(_)", gamepadReleased)
+        BIND_METHOD("axis(_)", gamepadAxis)
+        BIND_METHOD("id", gamepadGetId)
+        BIND_METHOD("name", gamepadGetName)
+        BIND_METHOD("axisCount", gamepadGetAxisCount)
     } else if (TextIsEqual(className, "Window")) {
-        if (TextIsEqual(signature, "init(_,_,_)"))
-            return windowInit;
-        if (TextIsEqual(signature, "close()"))
-            return windowClose;
-        if (TextIsEqual(signature, "toggleFullscreen()"))
-            return windowToggleFullscreen;
-        if (TextIsEqual(signature, "maximize()"))
-            return windowMaximize;
-        if (TextIsEqual(signature, "minimize()"))
-            return windowMinimize;
-        if (TextIsEqual(signature, "restore()"))
-            return windowRestore;
-        if (TextIsEqual(signature, "setPosition(_,_)"))
-            return windowSetPosition;
-        if (TextIsEqual(signature, "setMinSize(_,_)"))
-            return windowSetMinSize;
-        if (TextIsEqual(signature, "setMaxSize(_,_)"))
-            return windowSetMaxSize;
-        if (TextIsEqual(signature, "setSize(_,_)"))
-            return windowSetSize;
-        if (TextIsEqual(signature, "focus()"))
-            return windowFocus;
-        if (TextIsEqual(signature, "listDropped()"))
-            return windowListDropped;
-        if (TextIsEqual(signature, "closed"))
-            return windowGetClosed;
-        if (TextIsEqual(signature, "fullscreen"))
-            return windowGetFullscreen;
-        if (TextIsEqual(signature, "hidden"))
-            return windowGetHidden;
-        if (TextIsEqual(signature, "minimized"))
-            return windowGetMinimized;
-        if (TextIsEqual(signature, "maximized"))
-            return windowGetMaximized;
-        if (TextIsEqual(signature, "focused"))
-            return windowGetFocused;
-        if (TextIsEqual(signature, "resized"))
-            return windowGetResized;
-        if (TextIsEqual(signature, "width"))
-            return windowGetWidth;
-        if (TextIsEqual(signature, "height"))
-            return windowGetHeight;
-        if (TextIsEqual(signature, "x"))
-            return windowGetX;
-        if (TextIsEqual(signature, "y"))
-            return windowGetY;
-        if (TextIsEqual(signature, "dpi"))
-            return windowGetDpi;
-        if (TextIsEqual(signature, "fileDropped"))
-            return windowGetFileDropped;
-        if (TextIsEqual(signature, "title=(_)"))
-            return windowSetTitle;
-        if (TextIsEqual(signature, "icon=(_)"))
-            return windowSetIcon;
-        if (TextIsEqual(signature, "targetFps=(_)"))
-            return windowSetTargetFps;
-        if (TextIsEqual(signature, "resizable"))
-            return windowGetResizable;
-        if (TextIsEqual(signature, "resizable=(_)"))
-            return windowSetResizable;
-        if (TextIsEqual(signature, "vsync"))
-            return windowGetVSync;
-        if (TextIsEqual(signature, "vsync=(_)"))
-            return windowSetVSync;
-        if (TextIsEqual(signature, "dt"))
-            return windowGetDt;
-        if (TextIsEqual(signature, "time"))
-            return windowGetTime;
-        if (TextIsEqual(signature, "fps"))
-            return windowGetFps;
+        BIND_METHOD("init(_,_,_)", windowInit);
+        BIND_METHOD("toggleFullscreen()", windowToggleFullscreen);
+        BIND_METHOD("maximize()", windowMaximize);
+        BIND_METHOD("minimize()", windowMinimize);
+        BIND_METHOD("restore()", windowRestore);
+        BIND_METHOD("setPosition(_,_)", windowSetPosition);
+        BIND_METHOD("setMinSize(_,_)", windowSetMinSize);
+        BIND_METHOD("setMaxSize(_,_)", windowSetMaxSize);
+        BIND_METHOD("setSize(_,_)", windowSetSize);
+        BIND_METHOD("focus()", windowFocus);
+        BIND_METHOD("listDropped()", windowListDropped);
+        BIND_METHOD("closed", windowGetClosed);
+        BIND_METHOD("fullscreen", windowGetFullscreen);
+        BIND_METHOD("hidden", windowGetHidden);
+        BIND_METHOD("minimized", windowGetMinimized);
+        BIND_METHOD("maximized", windowGetMaximized);
+        BIND_METHOD("focused", windowGetFocused);
+        BIND_METHOD("resized", windowGetResized);
+        BIND_METHOD("width", windowGetWidth);
+        BIND_METHOD("height", windowGetHeight);
+        BIND_METHOD("x", windowGetX);
+        BIND_METHOD("y", windowGetY);
+        BIND_METHOD("dpi", windowGetDpi);
+        BIND_METHOD("fileDropped", windowGetFileDropped);
+        BIND_METHOD("title=(_)", windowSetTitle);
+        BIND_METHOD("icon=(_)", windowSetIcon);
+        BIND_METHOD("targetFps=(_)", windowSetTargetFps);
+        BIND_METHOD("resizable", windowGetResizable);
+        BIND_METHOD("resizable=(_)", windowSetResizable);
+        BIND_METHOD("vsync", windowGetVSync);
+        BIND_METHOD("vsync=(_)", windowSetVSync);
+        BIND_METHOD("dt", windowGetDt);
+        BIND_METHOD("time", windowGetTime);
+        BIND_METHOD("fps", windowGetFps);
     } else if (TextIsEqual(className, "OS")) {
-        if (TextIsEqual(signature, "readLine()"))
-            return osReadLine;
-        if (TextIsEqual(signature, "wait(_)"))
-            return osWait;
-        if (TextIsEqual(signature, "openUrl(_)"))
-            return osOpenUrl;
-        if (TextIsEqual(signature, "args"))
-            return osGetArgs;
-        if (TextIsEqual(signature, "name"))
-            return osGetName;
-        if (TextIsEqual(signature, "clipboard"))
-            return osGetClipboard;
-        if (TextIsEqual(signature, "clipboard=(_)"))
-            return osSetClipboard;
+        BIND_METHOD("readLine()", osReadLine);
+        BIND_METHOD("wait(_)", osWait);
+        BIND_METHOD("openUrl(_)", osOpenUrl);
+        BIND_METHOD("args", osGetArgs);
+        BIND_METHOD("name", osGetName);
+        BIND_METHOD("clipboard", osGetClipboard);
+        BIND_METHOD("clipboard=(_)", osSetClipboard);
     } else if (TextIsEqual(className, "Directory")) {
-        if (TextIsEqual(signature, "exists(_)"))
-            return directoryExists;
-        if (TextIsEqual(signature, "list(_)"))
-            return directoryList;
+        BIND_METHOD("exists(_)", directoryExists);
+        BIND_METHOD("list(_)", directoryList);
     } else if (TextIsEqual(className, "File")) {
-        if (TextIsEqual(signature, "exists(_)"))
-            return fileExists;
-        if (TextIsEqual(signature, "size(_)"))
-            return fileSize;
-        if (TextIsEqual(signature, "read(_)"))
-            return fileRead;
-        if (TextIsEqual(signature, "write(_,_)"))
-            return fileWrite;
+        BIND_METHOD("exists(_)", fileExists);
+        BIND_METHOD("size(_)", fileSize);
+        BIND_METHOD("read(_)", fileRead);
+        BIND_METHOD("write(_,_)", fileWrite);
     } else if (TextIsEqual(className, "Request")) {
-        if (TextIsEqual(signature, "init new(_)"))
-            return requestNew;
-        if (TextIsEqual(signature, "make()"))
-            return requestMake;
-        if (TextIsEqual(signature, "complete"))
-            return requestGetComplete;
-        if (TextIsEqual(signature, "status"))
-            return requestGetStatus;
-        if (TextIsEqual(signature, "body"))
-            return requestGetBody;
+        BIND_METHOD("init new(_)", requestNew);
+        BIND_METHOD("make()", requestMake);
+        BIND_METHOD("complete", requestGetComplete);
+        BIND_METHOD("status", requestGetStatus);
+        BIND_METHOD("body", requestGetBody);
     } else if (TextIsEqual(className, "ENet")) {
-        if (TextIsEqual(signature, "init()"))
-            return enetInit;
-        if (TextIsEqual(signature, "close()"))
-            return enetClose;
-        if (TextIsEqual(signature, "version"))
-            return enetGetVersion;
+        BIND_METHOD("init()", enetInit);
+        BIND_METHOD("close()", enetClose);
+        BIND_METHOD("version", enetGetVersion);
     } else if (TextIsEqual(className, "Host")) {
-        if (TextIsEqual(signature, "init new()"))
-            return hostNew;
-        if (TextIsEqual(signature, "init new(_)"))
-            return hostNew2;
-        if (TextIsEqual(signature, "service(_)"))
-            return hostService;
-        if (TextIsEqual(signature, "connect(_,_)"))
-            return hostConnect;
+        BIND_METHOD("init new()", hostNew);
+        BIND_METHOD("init new(_)", hostNew2);
+        BIND_METHOD("service(_)", hostService);
+        BIND_METHOD("connect(_,_)", hostConnect);
     } else if (TextIsEqual(className, "Peer")) {
-        if (TextIsEqual(signature, "disconnect()"))
-            return peerDisconnect;
-        if (TextIsEqual(signature, "send(_)"))
-            return peerSend;
-        if (TextIsEqual(signature, "toString"))
-            return peerToString;
+        BIND_METHOD("disconnect()", peerDisconnect);
+        BIND_METHOD("send(_)", peerSend);
+        BIND_METHOD("toString", peerGetToString);
     }
 
     return NULL;
@@ -531,10 +361,39 @@ static void runWren(const char* script, const char* module)
     config.errorFn = wrenError;
 
     WrenVM* vm = wrenNewVM(&config);
+
+    if (wrenInterpret(vm, "wray", apiModuleSource) != WREN_RESULT_SUCCESS) {
+        wrenFreeVM(vm);
+        UnloadFileText(source);
+        return;
+    }
+
+    vmData* data = malloc(sizeof(vmData));
+    data->audioInit = false;
+    data->windowInit = false;
+
+    wrenEnsureSlots(vm, 1);
+    wrenGetVariable(vm, "wray", "Texture", 0);
+    data->textureClass = wrenGetSlotHandle(vm, 0);
+    wrenGetVariable(vm, "wray", "Peer", 0);
+    data->peerClass = wrenGetSlotHandle(vm, 0);
+
+    wrenSetUserData(vm, data);
+
     wrenInterpret(vm, module, source);
+
+    wrenReleaseHandle(vm, data->textureClass);
+    wrenReleaseHandle(vm, data->peerClass);
 
     UnloadFileText(source);
     wrenFreeVM(vm);
+
+    if (data->audioInit)
+        CloseAudioDevice();
+    if (data->windowInit)
+        CloseWindow();
+
+    free(data);
 }
 
 typedef struct {
