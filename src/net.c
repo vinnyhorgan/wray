@@ -14,7 +14,7 @@ void enetClose()
 void enetInit(WrenVM* vm)
 {
     if (enet_initialize() < 0) {
-        VM_ABORT(vm, "Failed to initialize ENet.")
+        VM_ABORT(vm, "Failed to initialize ENet.");
         return;
     }
 
@@ -40,98 +40,164 @@ void hostFinalize(void* data)
 {
     ENetHost** host = (ENetHost**)data;
 
-    if (*host != NULL) {
+    if (*host)
         enet_host_destroy(*host);
-        *host = NULL;
+
+    *host = NULL;
+}
+
+// Thanks to: https://github.com/leafo/lua-enet
+static void parse_address(WrenVM* vm, const char* addr_str, ENetAddress* address)
+{
+    int host_i = 0, port_i = 0;
+    char host_str[128] = { 0 };
+    char port_str[32] = { 0 };
+    int scanning_port = 0;
+
+    char* c = (char*)addr_str;
+
+    while (*c != 0) {
+        if (host_i >= 128 || port_i >= 32) {
+            VM_ABORT(vm, "Hostname too long.");
+            return;
+        }
+        if (scanning_port) {
+            port_str[port_i++] = *c;
+        } else {
+            if (*c == ':') {
+                scanning_port = 1;
+            } else {
+                host_str[host_i++] = *c;
+            }
+        }
+        c++;
+    }
+    host_str[host_i] = '\0';
+    port_str[port_i] = '\0';
+
+    if (host_i == 0) {
+        VM_ABORT(vm, "Failed to parse address.");
+        return;
+    }
+    if (port_i == 0) {
+        VM_ABORT(vm, "Missing port in address.");
+        return;
+    }
+
+    if (strcmp("*", host_str) == 0) {
+        address->host = ENET_HOST_ANY;
+    } else {
+        if (enet_address_set_host(address, host_str) != 0) {
+            VM_ABORT(vm, "Failed to resolve hostname.");
+            return;
+        }
+    }
+
+    if (strcmp("*", port_str) == 0) {
+        address->port = ENET_PORT_ANY;
+    } else {
+        address->port = atoi(port_str);
     }
 }
 
 void hostNew(WrenVM* vm)
 {
     ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "peerCount");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "channelCount");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "inBandwidth");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "outBandwidth");
+    int peerCount = (int)wrenGetSlotDouble(vm, 2);
+    int channelCount = (int)wrenGetSlotDouble(vm, 3);
+    int inBandwidth = (int)wrenGetSlotDouble(vm, 4);
+    int outBandwidth = (int)wrenGetSlotDouble(vm, 5);
 
-    *host = enet_host_create(NULL, 64, 1, 0, 0);
+    if (wrenGetSlotType(vm, 1) == WREN_TYPE_NULL) {
+        *host = enet_host_create(NULL, peerCount, channelCount, inBandwidth, outBandwidth);
+    } else if (wrenGetSlotType(vm, 1) == WREN_TYPE_STRING) {
+        const char* address = wrenGetSlotString(vm, 1);
+        ENetAddress addr;
+        parse_address(vm, address, &addr);
+        *host = enet_host_create(&addr, peerCount, channelCount, inBandwidth, outBandwidth);
+    } else {
+        VM_ABORT(vm, "Invalid address type.");
+        return;
+    }
+
     if (*host == NULL) {
-        VM_ABORT(vm, "Failed to create ENet host.")
+        VM_ABORT(vm, "Failed to create ENet host.");
         return;
     }
 }
 
-void hostNew2(WrenVM* vm)
+void hostConnect(WrenVM* vm)
 {
     ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "port");
-    int port = (int)wrenGetSlotDouble(vm, 1);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "address");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "channelCount");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "data");
+    const char* address = wrenGetSlotString(vm, 1);
+    int channelCount = (int)wrenGetSlotDouble(vm, 2);
+    int data = (int)wrenGetSlotDouble(vm, 3);
 
     ENetAddress addr;
-    addr.host = ENET_HOST_ANY;
-    addr.port = port;
+    parse_address(vm, address, &addr);
 
-    *host = enet_host_create(&addr, 64, 1, 0, 0);
-    if (*host == NULL) {
-        VM_ABORT(vm, "Failed to create ENet host.")
+    ENetPeer* peer = enet_host_connect(*host, &addr, channelCount, data);
+    if (peer == NULL) {
+        VM_ABORT(vm, "Failed to connect to ENet host.");
         return;
     }
+
+    vmData* d = (vmData*)wrenGetUserData(vm);
+    wrenSetSlotHandle(vm, 1, d->peerClass);
+    ENetPeer** p = wrenSetSlotNewForeign(vm, 0, 1, sizeof(ENetPeer*));
+    *p = peer;
 }
 
-void hostService(WrenVM* vm)
+static pushEvent(WrenVM* vm, ENetEvent* event)
 {
-    ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "timeout");
-    int timeout = (int)wrenGetSlotDouble(vm, 1);
-
-    ENetEvent event;
-
-    int status = enet_host_service(*host, &event, timeout);
-    if (status == 0) {
-        wrenSetSlotNull(vm, 0);
-        return;
-    } else if (status < 0) {
-        VM_ABORT(vm, "Failed to service ENet host.")
-        return;
-    }
-
     wrenEnsureSlots(vm, 4);
     wrenSetSlotNewMap(vm, 0);
 
-    if (event.peer) {
+    if (event->peer) {
+        wrenSetSlotString(vm, 1, "peer");
+
         vmData* data = (vmData*)wrenGetUserData(vm);
+        wrenSetSlotHandle(vm, 3, data->peerClass);
+        ENetPeer** p = wrenSetSlotNewForeign(vm, 2, 3, sizeof(ENetPeer*));
+        *p = event->peer;
 
-        wrenSetSlotHandle(vm, 1, data->peerClass);
-        ENetPeer** p = wrenSetSlotNewForeign(vm, 3, 1, sizeof(ENetPeer*));
-        *p = event.peer;
-
-        wrenSetSlotString(vm, 2, "peer");
-        wrenSetMapValue(vm, 0, 2, 3);
+        wrenSetMapValue(vm, 0, 1, 2);
     }
 
-    switch (event.type) {
+    switch (event->type) {
     case ENET_EVENT_TYPE_CONNECT:
         wrenSetSlotString(vm, 1, "data");
-        wrenSetSlotDouble(vm, 2, event.data);
+        wrenSetSlotDouble(vm, 2, event->data);
         wrenSetMapValue(vm, 0, 1, 2);
 
         wrenSetSlotString(vm, 2, "connect");
         break;
     case ENET_EVENT_TYPE_DISCONNECT:
         wrenSetSlotString(vm, 1, "data");
-        wrenSetSlotDouble(vm, 2, event.data);
+        wrenSetSlotDouble(vm, 2, event->data);
         wrenSetMapValue(vm, 0, 1, 2);
 
         wrenSetSlotString(vm, 2, "disconnect");
         break;
     case ENET_EVENT_TYPE_RECEIVE:
         wrenSetSlotString(vm, 1, "data");
-        wrenSetSlotBytes(vm, 2, event.packet->data, event.packet->dataLength);
+        wrenSetSlotBytes(vm, 2, event->packet->data, event->packet->dataLength);
         wrenSetMapValue(vm, 0, 1, 2);
 
         wrenSetSlotString(vm, 1, "channel");
-        wrenSetSlotDouble(vm, 2, event.channelID);
+        wrenSetSlotDouble(vm, 2, event->channelID);
         wrenSetMapValue(vm, 0, 1, 2);
 
         wrenSetSlotString(vm, 2, "receive");
 
-        enet_packet_destroy(event.packet);
+        enet_packet_destroy(event->packet);
         break;
     case ENET_EVENT_TYPE_NONE:
         wrenSetSlotString(vm, 2, "none");
@@ -142,25 +208,165 @@ void hostService(WrenVM* vm)
     wrenSetMapValue(vm, 0, 1, 2);
 }
 
-void hostConnect(WrenVM* vm)
+void hostService(WrenVM* vm)
 {
     ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "address");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "port");
-    const char* address = wrenGetSlotString(vm, 1);
-    int port = (int)wrenGetSlotDouble(vm, 2);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "timeout");
+    int timeout = (int)wrenGetSlotDouble(vm, 1);
 
-    ENetAddress addr;
-    enet_address_set_host(&addr, address);
-    addr.port = port;
+    ENetEvent event;
+    int status = enet_host_service(*host, &event, timeout);
+    if (status == 0) {
+        wrenSetSlotNull(vm, 0);
+        return;
+    } else if (status < 0) {
+        VM_ABORT(vm, "Failed to service ENet host.");
+        return;
+    }
 
-    ENetPeer* peer = enet_host_connect(*host, &addr, 1, 0);
+    pushEvent(vm, &event);
+}
+
+void hostCheckEvents(WrenVM* vm)
+{
+    ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);
+
+    ENetEvent event;
+    int status = enet_host_check_events(*host, &event);
+    if (status == 0) {
+        wrenSetSlotNull(vm, 0);
+        return;
+    } else if (status < 0) {
+        VM_ABORT(vm, "Failed to check events on ENet host.");
+        return;
+    }
+
+    pushEvent(vm, &event);
+}
+
+void hostCompressWithRangeCoder(WrenVM* vm)
+{
+    ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);
+    int result = enet_host_compress_with_range_coder(*host);
+
+    if (result == 0) {
+        wrenSetSlotBool(vm, 0, true);
+    } else {
+        wrenSetSlotBool(vm, 0, false);
+    }
+}
+
+void hostFlush(WrenVM* vm)
+{
+    ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);
+    enet_host_flush(*host);
+}
+
+void hostBroadcast(WrenVM* vm)
+{
+    ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "channel");
+    ASSERT_SLOT_TYPE(vm, 3, STRING, "flag");
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+    int channel = (int)wrenGetSlotDouble(vm, 2);
+    const char* flagString = wrenGetSlotString(vm, 3);
+
+    int flag = ENET_PACKET_FLAG_RELIABLE;
+
+    if (strcmp(flagString, "unsequenced") == 0) {
+        flag = ENET_PACKET_FLAG_UNSEQUENCED;
+    } else if (strcmp(flagString, "reliable") == 0) {
+        flag = ENET_PACKET_FLAG_RELIABLE;
+    } else if (strcmp(flagString, "unreliable") == 0) {
+        flag = 0;
+    } else {
+        VM_ABORT(vm, "Invalid packet flag.");
+        return;
+    }
+
+    ENetPacket* packet = enet_packet_create(data, length, flag);
+    if (packet == NULL) {
+        VM_ABORT(vm, "Failed to create packet.");
+        return;
+    }
+
+    enet_host_broadcast(*host, channel, packet);
+}
+
+void hostSetBandwidthLimit(WrenVM* vm)
+{
+    ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "incoming");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "outgoing");
+    int incoming = (int)wrenGetSlotDouble(vm, 1);
+    int outgoing = (int)wrenGetSlotDouble(vm, 2);
+    enet_host_bandwidth_limit(*host, incoming, outgoing);
+}
+
+void hostGetPeer(WrenVM* vm)
+{
+    ENetHost* host = *(ENetHost**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "index");
+    int index = (int)wrenGetSlotDouble(vm, 1);
+
+    if (index < 0 || index >= host->peerCount) {
+        VM_ABORT(vm, "Invalid peer index.");
+        return;
+    }
+
+    ENetPeer* peer = &(host->peers[index]);
 
     vmData* data = (vmData*)wrenGetUserData(vm);
-
     wrenSetSlotHandle(vm, 1, data->peerClass);
     ENetPeer** p = wrenSetSlotNewForeign(vm, 0, 1, sizeof(ENetPeer*));
     *p = peer;
+}
+
+void hostGetTotalSent(WrenVM* vm)
+{
+    ENetHost* host = *(ENetHost**)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, host->totalSentData);
+}
+
+void hostGetTotalReceived(WrenVM* vm)
+{
+    ENetHost* host = *(ENetHost**)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, host->totalReceivedData);
+}
+
+void hostGetServiceTime(WrenVM* vm)
+{
+    ENetHost* host = *(ENetHost**)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, host->serviceTime);
+}
+
+void hostGetPeerCount(WrenVM* vm)
+{
+    ENetHost* host = *(ENetHost**)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, host->peerCount);
+}
+
+void hostGetAddress(WrenVM* vm)
+{
+    ENetHost* host = *(ENetHost**)wrenGetSlotForeign(vm, 0);
+
+    ENetAddress addr;
+    enet_socket_get_address(host->socket, &addr);
+
+    char address[128];
+    sprintf(address, "%d.%d.%d.%d:%d", addr.host & 0xFF, (addr.host >> 8) & 0xFF, (addr.host >> 16) & 0xFF, (addr.host >> 24) & 0xFF, addr.port);
+    wrenSetSlotString(vm, 0, address);
+}
+
+void hostSetChannelLimit(WrenVM* vm)
+{
+    ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "limit");
+    int limit = (int)wrenGetSlotDouble(vm, 1);
+    enet_host_channel_limit(*host, limit);
 }
 
 void peerDisconnect(WrenVM* vm)
@@ -220,13 +426,13 @@ void peerSend(WrenVM* vm)
     } else if (strcmp(flagString, "unreliable") == 0) {
         flag = 0;
     } else {
-        VM_ABORT(vm, "Invalid packet flag.")
+        VM_ABORT(vm, "Invalid packet flag.");
         return;
     }
 
     ENetPacket* packet = enet_packet_create(data, length, flag);
     if (packet == NULL) {
-        VM_ABORT(vm, "Failed to create packet.")
+        VM_ABORT(vm, "Failed to create packet.");
         return;
     }
 
@@ -296,7 +502,7 @@ static size_t findPeerIndex(WrenVM* vm, ENetHost* host, ENetPeer* peer)
             return index;
     }
 
-    VM_ABORT(vm, "Failed to find peer index.")
+    VM_ABORT(vm, "Failed to find peer index.");
     return index;
 }
 

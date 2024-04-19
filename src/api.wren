@@ -339,11 +339,34 @@ class ENet {
 }
 
 foreign class Host {
-    foreign construct new()
-    foreign construct new(port)
-
+    foreign construct new(address, peerCount, channelCount, inBandwidth, outBandwidth)
+    foreign connect(address, channelCount, data)
     foreign service(timeout)
-    foreign connect(address, port)
+    foreign checkEvents()
+    foreign compressWithRangeCoder()
+    foreign flush()
+    foreign broadcast(data, channel, flag)
+    foreign setBandwidthLimit(incoming, outgoing)
+    foreign getPeer(index)
+
+    connect(address) {
+        connect(address, 1, 0)
+    }
+
+    service() {
+        service(0)
+    }
+
+    broadcast(data) {
+        broadcast(data, 0, 0)
+    }
+
+    foreign totalSent
+    foreign totalReceived
+    foreign serviceTime
+    foreign peerCount
+    foreign address
+    foreign channelLimit=(v)
 }
 
 foreign class Peer {

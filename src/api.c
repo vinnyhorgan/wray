@@ -639,6 +639,9 @@ void imageNew(WrenVM* vm)
     } else if (wrenGetSlotType(vm, 1) == WREN_TYPE_FOREIGN) {
         Texture* texture = (Texture*)wrenGetSlotForeign(vm, 1);
         *image = LoadImageFromTexture(*texture);
+    } else {
+        VM_ABORT(vm, "Invalid image type.");
+        return;
     }
 }
 
@@ -754,6 +757,9 @@ void textureNew(WrenVM* vm)
     } else if (wrenGetSlotType(vm, 1) == WREN_TYPE_FOREIGN) {
         Image* image = (Image*)wrenGetSlotForeign(vm, 1);
         *texture = LoadTextureFromImage(*image);
+    } else {
+        VM_ABORT(vm, "Invalid texture type.");
+        return;
     }
 }
 
