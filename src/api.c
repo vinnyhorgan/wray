@@ -1750,6 +1750,34 @@ void osOpenUrl(WrenVM* vm)
     OpenURL(url);
 }
 
+void osCompress(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+    int compressedLength;
+    unsigned char* compressed = CompressData(data, length, &compressedLength);
+
+    wrenSetSlotBytes(vm, 0, compressed, compressedLength);
+    free(compressed);
+}
+
+void osDecompress(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+    int decompressedLength;
+    unsigned char* decompressed = DecompressData(data, length, &decompressedLength);
+
+    wrenSetSlotBytes(vm, 0, decompressed, decompressedLength);
+    free(decompressed);
+}
+
 void osGetArgs(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 2);
@@ -1770,6 +1798,12 @@ void osGetName(WrenVM* vm)
 #else
     wrenSetSlotString(vm, 0, "linux");
 #endif
+}
+
+void osGetWrayVersion(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotString(vm, 0, WRAY_VERSION);
 }
 
 void osGetClipboard(WrenVM* vm)

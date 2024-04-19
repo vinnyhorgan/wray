@@ -11,8 +11,6 @@
 #include "api.wren.h"
 #include "util.h"
 
-#define WRAY_VERSION "1.0.0 dev"
-
 #ifdef _WIN32
 #include <direct.h>
 #define mkdir(path) _mkdir(path)
@@ -263,8 +261,11 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("readLine()", osReadLine);
         BIND_METHOD("wait(_)", osWait);
         BIND_METHOD("openUrl(_)", osOpenUrl);
+        BIND_METHOD("compress(_)", osCompress);
+        BIND_METHOD("decompress(_)", osDecompress);
         BIND_METHOD("args", osGetArgs);
         BIND_METHOD("name", osGetName);
+        BIND_METHOD("wrayVersion", osGetWrayVersion);
         BIND_METHOD("clipboard", osGetClipboard);
         BIND_METHOD("clipboard=(_)", osSetClipboard);
     } else if (TextIsEqual(className, "Directory")) {

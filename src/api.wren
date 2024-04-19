@@ -135,6 +135,8 @@ foreign class Image {
 
     foreign export(path)                    // Save image to file
 
+    // TODO: add more image methods
+
     foreign width                           // Get image width
     foreign height                          // Get image height
     foreign format                          // Get image pixel format
@@ -296,14 +298,17 @@ class Window {
 }
 
 class OS {
-    foreign static readLine()       // Read line from console
-    foreign static wait(seconds)    // Halt program execution for given seconds
-    foreign static openUrl(url)     // Open URL in default browser
+    foreign static readLine()          // Read line from console
+    foreign static wait(seconds)       // Halt program execution for given seconds
+    foreign static openUrl(url)        // Open URL in default browser
+    foreign static compress(data)      // Compress data using DEFLATE algorithm
+    foreign static decompress(data)    // Decompress data using DEFLATE algorithm
 
-    foreign static args             // Get command line arguments list
-    foreign static name             // Get operating system name ("windows", "macos", "linux")
-    foreign static clipboard        // Get clipboard text
-    foreign static clipboard=(v)    // Set clipboard text
+    foreign static args                // Get command line arguments list
+    foreign static name                // Get operating system name ("windows", "macos", "linux")
+    foreign static wrayVersion         // Get version of Wray
+    foreign static clipboard           // Get clipboard text
+    foreign static clipboard=(v)       // Set clipboard text
 }
 
 class Directory {
@@ -333,13 +338,16 @@ foreign class Request {
 //------------------------------
 
 class ENet {
-    foreign static init()
+    foreign static init()     // Initialize ENet
 
-    foreign static version
+    foreign static version    // Get ENet version
 }
 
+// This is a port of lua-enet. It tries to be as close as possible while adapting the api to wren.
+// Check out the documentation here: https://leafo.net/lua-enet/
 foreign class Host {
     foreign construct new(address, peerCount, channelCount, inBandwidth, outBandwidth)
+
     foreign connect(address, channelCount, data)
     foreign service(timeout)
     foreign checkEvents()

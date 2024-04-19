@@ -17,6 +17,8 @@
         return;                                                           \
     }
 
+#define WRAY_VERSION "1.0.0 dev"
+
 typedef struct vmData {
     bool audioInit;
     bool windowInit;
@@ -221,8 +223,11 @@ void windowGetFps(WrenVM* vm);
 void osReadLine(WrenVM* vm);
 void osWait(WrenVM* vm);
 void osOpenUrl(WrenVM* vm);
+void osCompress(WrenVM* vm);
+void osDecompress(WrenVM* vm);
 void osGetArgs(WrenVM* vm);
 void osGetName(WrenVM* vm);
+void osGetWrayVersion(WrenVM* vm);
 void osGetClipboard(WrenVM* vm);
 void osSetClipboard(WrenVM* vm);
 
