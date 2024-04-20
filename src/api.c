@@ -1861,7 +1861,11 @@ void fileRead(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
     const char* path = wrenGetSlotString(vm, 1);
-    wrenSetSlotString(vm, 0, LoadFileText(path));
+
+    int length;
+    unsigned char* file = LoadFileData(path, &length);
+    wrenSetSlotBytes(vm, 0, file, length);
+    UnloadFileData(file);
 }
 
 void fileWrite(WrenVM* vm)
@@ -1869,8 +1873,10 @@ void fileWrite(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
     ASSERT_SLOT_TYPE(vm, 2, STRING, "data");
     const char* path = wrenGetSlotString(vm, 1);
-    const char* data = wrenGetSlotString(vm, 2);
-    SaveFileText(path, (char*)data);
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 2, &length);
+    SaveFileData(path, (void*)data, length);
 }
 
 void requestAllocate(WrenVM* vm)

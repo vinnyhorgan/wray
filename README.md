@@ -26,8 +26,8 @@ To get started simply download the latest release for your operating system.
 Wray has a simple CLI which allows to create, package and run projects.
 
 ```
-wray new hello
-wray hello
+wray new my_project
+wray my_project
 ```
 
 This should output: "Hello, World!".
@@ -51,11 +51,28 @@ while (!Window.closed) {
 
     Graphics.end()
 }
-
-Window.close()
 ```
 
 For more examples check the `examples` folder in the repository!
+
+## Distribution
+
+Once you've completed your project, you have to package it up.
+First you should create an `egg` file.
+This is an archive that contains all the project files and assets.
+
+```
+wray nest my_project
+```
+
+This file can now be distributed, but users will need to have the wray runtime installed.
+You can also create completely indipendent executables by fusing the runtime and the egg file.
+
+```
+wray fuse my_project.egg
+```
+
+This will create the file `my_project.exe`, which can be distributed.
 
 ## Building
 
