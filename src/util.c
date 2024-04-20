@@ -224,3 +224,69 @@ double perlin2d(double x, double y, double freq, int depth)
 
     return fin / div;
 }
+
+// Hex encoding from: https://github.com/love2d/love/blob/main/src/modules/data/DataModule.cpp
+
+static const char hexchars[] = "0123456789abcdef";
+
+char* bytesToHex(const unsigned char* src, size_t srclen, size_t* dstlen)
+{
+    *dstlen = srclen * 2;
+    if (*dstlen == 0)
+        return NULL;
+
+    char* dst = NULL;
+    dst = (char*)malloc(*dstlen + 1);
+    if (dst == NULL) {
+        return NULL;
+    }
+
+    for (size_t i = 0; i < srclen; i++) {
+        unsigned char b = src[i];
+        dst[i * 2 + 0] = hexchars[b >> 4];
+        dst[i * 2 + 1] = hexchars[b & 0xF];
+    }
+
+    dst[*dstlen] = '\0';
+
+    return dst;
+}
+
+static unsigned char nibble(char c)
+{
+    if (c >= '0' && c <= '9')
+        return (unsigned char)(c - '0');
+    if (c >= 'A' && c <= 'F')
+        return (unsigned char)(c - 'A' + 0x0a);
+    if (c >= 'a' && c <= 'f')
+        return (unsigned char)(c - 'a' + 0x0a);
+
+    return 0;
+}
+
+unsigned char* hexToBytes(const char* src, size_t srclen, size_t* dstlen)
+{
+    if (srclen >= 2 && src[0] == '0' && (src[1] == 'x' || src[1] == 'X')) {
+        src += 2;
+        srclen -= 2;
+    }
+
+    *dstlen = (srclen + 1) / 2;
+    if (*dstlen == 0)
+        return NULL;
+
+    unsigned char* dst = NULL;
+    dst = (unsigned char*)malloc(*dstlen);
+    if (dst == NULL) {
+        return NULL;
+    }
+
+    for (size_t i = 0; i < *dstlen; i++) {
+        dst[i] = nibble(src[i * 2]) << 4;
+
+        if (i * 2 + 1 < srclen)
+            dst[i] |= nibble(src[i * 2 + 1]);
+    }
+
+    return dst;
+}

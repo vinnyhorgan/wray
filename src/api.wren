@@ -298,17 +298,22 @@ class Window {
 }
 
 class OS {
-    foreign static readLine()          // Read line from console
-    foreign static wait(seconds)       // Halt program execution for given seconds
-    foreign static openUrl(url)        // Open URL in default browser
-    foreign static compress(data)      // Compress data using DEFLATE algorithm
-    foreign static decompress(data)    // Decompress data using DEFLATE algorithm
+    foreign static readLine()            // Read line from console
+    foreign static wait(seconds)         // Halt program execution for given seconds
+    foreign static openUrl(url)          // Open URL in default browser
+    foreign static compress(data)        // Compress data using DEFLATE algorithm
+    foreign static decompress(data)      // Decompress data using DEFLATE algorithm
+    foreign static encodeBase64(data)    // Encode data using base64
+    foreign static decodeBase64(data)    // Decode data using base64
+    foreign static encodeHex(data)       // Encode data using hex
+    foreign static decodeHex(data)       // Decode data using hex
+    foreign static hash(data)            // Hash data using SHA256
 
-    foreign static args                // Get command line arguments list
-    foreign static name                // Get operating system name ("windows", "macos", "linux")
-    foreign static wrayVersion         // Get version of Wray
-    foreign static clipboard           // Get clipboard text
-    foreign static clipboard=(v)       // Set clipboard text
+    foreign static args                  // Get command line arguments list
+    foreign static name                  // Get operating system name ("windows", "macos", "linux")
+    foreign static wrayVersion           // Get version of Wray
+    foreign static clipboard             // Get clipboard text
+    foreign static clipboard=(v)         // Set clipboard text
 }
 
 class Directory {
