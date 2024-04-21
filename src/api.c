@@ -2,11 +2,13 @@
 
 #include <raylib.h>
 
+#include "font.h"
 #include "icon.h"
 #include "util.h"
 
 static int argCount;
 static char** args;
+static Font defaultFont;
 
 void setArgs(int argc, char** argv)
 {
@@ -267,7 +269,11 @@ void graphicsPrint(WrenVM* vm)
     int y = (int)wrenGetSlotDouble(vm, 3);
     int size = (int)wrenGetSlotDouble(vm, 4);
     Color* color = (Color*)wrenGetSlotForeign(vm, 5);
-    DrawText(text, x, y, size, *color);
+
+    if (size < defaultFont.baseSize)
+        size = defaultFont.baseSize;
+
+    DrawTextEx(defaultFont, text, (Vector2) { (float)x, (float)y }, size, size / defaultFont.baseSize, *color);
 }
 
 void graphicsPixel(WrenVM* vm)
@@ -1615,6 +1621,16 @@ void windowInit(WrenVM* vm)
 
     SetWindowIcon(icon);
     SetExitKey(KEY_NULL);
+
+    Image font = {
+        .data = FONT_DATA,
+        .width = FONT_WIDTH,
+        .height = FONT_HEIGHT,
+        .format = FONT_FORMAT,
+        .mipmaps = 1
+    };
+
+    defaultFont = LoadFontFromImage(font, MAGENTA, 32);
 
     vmData* data = (vmData*)wrenGetUserData(vm);
     data->windowInit = true;

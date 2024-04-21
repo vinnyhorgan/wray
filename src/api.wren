@@ -141,9 +141,9 @@ foreign class Image {
     foreign flipHorizontal()                                                            // Flip image horizontally
     foreign rotate(angle)                                                               // Rotate image by angle in degrees
 
-    foreign width                           // Get image width
-    foreign height                          // Get image height
-    foreign format                          // Get image pixel format
+    foreign width                                                                       // Get image width
+    foreign height                                                                      // Get image height
+    foreign format                                                                      // Get image pixel format
 }
 
 foreign class Texture {
