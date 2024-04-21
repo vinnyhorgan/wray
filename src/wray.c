@@ -109,6 +109,16 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("volume=(_)", soundSetVolume);
         BIND_METHOD("pitch=(_)", soundSetPitch);
         BIND_METHOD("pan=(_)", soundSetPan);
+    } else if (TextIsEqual(className, "SoundAlias")) {
+        BIND_METHOD("init new(_)", soundAliasNew);
+        BIND_METHOD("play()", soundPlay);
+        BIND_METHOD("stop()", soundStop);
+        BIND_METHOD("pause()", soundPause);
+        BIND_METHOD("resume()", soundResume);
+        BIND_METHOD("playing", soundGetPlaying);
+        BIND_METHOD("volume=(_)", soundSetVolume);
+        BIND_METHOD("pitch=(_)", soundSetPitch);
+        BIND_METHOD("pan=(_)", soundSetPan);
     } else if (TextIsEqual(className, "Graphics")) {
         BIND_METHOD("begin()", graphicsBegin);
         BIND_METHOD("end()", graphicsEnd);
@@ -133,8 +143,6 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("triangleLines(_,_,_,_,_,_,_)", graphicsTriangleLines);
         BIND_METHOD("polygon(_,_,_,_,_,_)", graphicsPolygon);
         BIND_METHOD("polygonLines(_,_,_,_,_,_,_)", graphicsPolygonLines);
-        BIND_METHOD("draw(_,_,_,_,_,_,_,_,_)", graphicsDraw);
-        BIND_METHOD("drawRec(_,_,_,_,_,_,_,_,_,_,_,_,_)", graphicsDrawRec);
         BIND_METHOD("noiseSeed=(_)", graphicsSetNoiseSeed);
         BIND_METHOD("lineSpacing=(_)", graphicsSetLineSpacing);
     } else if (TextIsEqual(className, "Color")) {
@@ -144,13 +152,19 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("[_]=(_)", colorSetIndex);
     } else if (TextIsEqual(className, "Image")) {
         BIND_METHOD("init new(_)", imageNew);
-        BIND_METHOD("init new(_,_)", imageNew2);
+        BIND_METHOD("init new(_,_,_)", imageNew2);
+        BIND_METHOD("init fromScreen()", imageNew3);
+        BIND_METHOD("init gradientLinear(_,_,_,_,_)", imageNew4);
+        BIND_METHOD("init gradientRadial(_,_,_,_,_)", imageNew5);
+        BIND_METHOD("init gradientSquare(_,_,_,_,_)", imageNew6);
         BIND_METHOD("export(_)", imageExport);
         BIND_METHOD("width", imageGetWidth);
         BIND_METHOD("height", imageGetHeight);
         BIND_METHOD("format", imageGetFormat);
     } else if (TextIsEqual(className, "Texture")) {
         BIND_METHOD("init new(_)", textureNew);
+        BIND_METHOD("draw(_,_,_,_,_,_,_,_)", textureDraw);
+        BIND_METHOD("drawRec(_,_,_,_,_,_,_,_,_,_,_,_)", textureDrawRec);
         BIND_METHOD("width", textureGetWidth);
         BIND_METHOD("height", textureGetHeight);
         BIND_METHOD("filter=(_)", textureSetFilter);
@@ -339,6 +353,9 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
     if (TextIsEqual(className, "Sound")) {
         methods.allocate = soundAllocate;
         methods.finalize = soundFinalize;
+    } else if (TextIsEqual(className, "SoundAlias")) {
+        methods.allocate = soundAllocate;
+        methods.finalize = soundAliasFinalize;
     } else if (TextIsEqual(className, "Color")) {
         methods.allocate = colorAllocate;
     } else if (TextIsEqual(className, "Image")) {

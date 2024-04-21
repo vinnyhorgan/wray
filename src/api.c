@@ -149,6 +149,20 @@ void soundSetPan(WrenVM* vm)
     SetSoundPan(*sound, pan);
 }
 
+void soundAliasFinalize(void* data)
+{
+    Sound* sound = (Sound*)data;
+    UnloadSoundAlias(*sound);
+}
+
+void soundAliasNew(WrenVM* vm)
+{
+    Sound* sound = (Sound*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "sound");
+    Sound* other = (Sound*)wrenGetSlotForeign(vm, 1);
+    *sound = LoadSoundAlias(*other);
+}
+
 // Graphics
 
 void graphicsBegin(WrenVM* vm)
@@ -452,84 +466,6 @@ void graphicsPolygonLines(WrenVM* vm)
     DrawPolyLinesEx((Vector2) { (float)x, (float)y }, sides, radius, r, thick, *color);
 }
 
-void graphicsDraw(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "texture");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "x");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "y");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "sx");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "sy");
-    ASSERT_SLOT_TYPE(vm, 7, NUM, "ox");
-    ASSERT_SLOT_TYPE(vm, 8, NUM, "oy");
-    ASSERT_SLOT_TYPE(vm, 9, FOREIGN, "color");
-    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 1);
-    int x = (int)wrenGetSlotDouble(vm, 2);
-    int y = (int)wrenGetSlotDouble(vm, 3);
-    float r = (float)wrenGetSlotDouble(vm, 4);
-    float sx = (float)wrenGetSlotDouble(vm, 5);
-    float sy = (float)wrenGetSlotDouble(vm, 6);
-    int ox = (int)wrenGetSlotDouble(vm, 7);
-    int oy = (int)wrenGetSlotDouble(vm, 8);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 9);
-
-    Rectangle source = { 0, 0, (float)texture->width, (float)texture->height };
-
-    if (sx < 0)
-        source.width = -source.width;
-
-    if (sy < 0)
-        source.height = -source.height;
-
-    float absSx = sx < 0 ? -sx : sx;
-    float absSy = sy < 0 ? -sy : sy;
-
-    DrawTexturePro(*texture, source, (Rectangle) { (float)x, (float)y, (float)texture->width * absSx, (float)texture->height * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
-}
-
-void graphicsDrawRec(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "texture");
-    ASSERT_SLOT_TYPE(vm, 2, NUM, "srcX");
-    ASSERT_SLOT_TYPE(vm, 3, NUM, "srcY");
-    ASSERT_SLOT_TYPE(vm, 4, NUM, "srcWidth");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "srcHeight");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "dstX");
-    ASSERT_SLOT_TYPE(vm, 7, NUM, "dstY");
-    ASSERT_SLOT_TYPE(vm, 8, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 9, NUM, "sx");
-    ASSERT_SLOT_TYPE(vm, 10, NUM, "sy");
-    ASSERT_SLOT_TYPE(vm, 11, NUM, "ox");
-    ASSERT_SLOT_TYPE(vm, 12, NUM, "oy");
-    ASSERT_SLOT_TYPE(vm, 13, FOREIGN, "color");
-    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 1);
-    int srcX = (int)wrenGetSlotDouble(vm, 2);
-    int srcY = (int)wrenGetSlotDouble(vm, 3);
-    int srcWidth = (int)wrenGetSlotDouble(vm, 4);
-    int srcHeight = (int)wrenGetSlotDouble(vm, 5);
-    int dstX = (int)wrenGetSlotDouble(vm, 6);
-    int dstY = (int)wrenGetSlotDouble(vm, 7);
-    float r = (float)wrenGetSlotDouble(vm, 8);
-    float sx = (float)wrenGetSlotDouble(vm, 9);
-    float sy = (float)wrenGetSlotDouble(vm, 10);
-    int ox = (int)wrenGetSlotDouble(vm, 11);
-    int oy = (int)wrenGetSlotDouble(vm, 12);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 13);
-
-    Rectangle source = { (float)srcX, (float)srcY, (float)srcWidth, (float)srcHeight };
-
-    if (sx < 0)
-        source.width = -source.width;
-
-    if (sy < 0)
-        source.height = -source.height;
-
-    float absSx = sx < 0 ? -sx : sx;
-    float absSy = sy < 0 ? -sy : sy;
-
-    DrawTexturePro(*texture, source, (Rectangle) { (float)dstX, (float)dstY, (float)srcWidth * absSx, (float)srcHeight * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
-}
-
 void graphicsSetNoiseSeed(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, NUM, "seed");
@@ -650,9 +586,65 @@ void imageNew2(WrenVM* vm)
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
+    ASSERT_SLOT_TYPE(vm, 3, FOREIGN, "color");
     int width = (int)wrenGetSlotDouble(vm, 1);
     int height = (int)wrenGetSlotDouble(vm, 2);
-    *image = GenImageColor(width, height, BLACK);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 3);
+    *image = GenImageColor(width, height, *color);
+}
+
+void imageNew3(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    *image = LoadImageFromScreen();
+}
+
+void imageNew4(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "direction");
+    ASSERT_SLOT_TYPE(vm, 4, FOREIGN, "startColor");
+    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "endColor");
+    int width = (int)wrenGetSlotDouble(vm, 1);
+    int height = (int)wrenGetSlotDouble(vm, 2);
+    int direction = (int)wrenGetSlotDouble(vm, 3);
+    Color* startColor = (Color*)wrenGetSlotForeign(vm, 4);
+    Color* endColor = (Color*)wrenGetSlotForeign(vm, 5);
+    *image = GenImageGradientLinear(width, height, direction, *startColor, *endColor);
+}
+
+void imageNew5(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "density");
+    ASSERT_SLOT_TYPE(vm, 4, FOREIGN, "innerColor");
+    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "outerColor");
+    int width = (int)wrenGetSlotDouble(vm, 1);
+    int height = (int)wrenGetSlotDouble(vm, 2);
+    float density = (float)wrenGetSlotDouble(vm, 3);
+    Color* innerColor = (Color*)wrenGetSlotForeign(vm, 4);
+    Color* outerColor = (Color*)wrenGetSlotForeign(vm, 5);
+    *image = GenImageGradientRadial(width, height, density, *innerColor, *outerColor);
+}
+
+void imageNew6(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "density");
+    ASSERT_SLOT_TYPE(vm, 4, FOREIGN, "innerColor");
+    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "outerColor");
+    int width = (int)wrenGetSlotDouble(vm, 1);
+    int height = (int)wrenGetSlotDouble(vm, 2);
+    float density = (float)wrenGetSlotDouble(vm, 3);
+    Color* innerColor = (Color*)wrenGetSlotForeign(vm, 4);
+    Color* outerColor = (Color*)wrenGetSlotForeign(vm, 5);
+    *image = GenImageGradientSquare(width, height, density, *innerColor, *outerColor);
 }
 
 void imageExport(WrenVM* vm)
@@ -660,7 +652,7 @@ void imageExport(WrenVM* vm)
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
     const char* path = wrenGetSlotString(vm, 1);
-    ExportImage(*image, path);
+    wrenSetSlotBool(vm, 0, ExportImage(*image, path));
 }
 
 void imageGetWidth(WrenVM* vm)
@@ -761,6 +753,82 @@ void textureNew(WrenVM* vm)
         VM_ABORT(vm, "Invalid texture type.");
         return;
     }
+}
+
+void textureDraw(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "sx");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "sy");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 8, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    float r = (float)wrenGetSlotDouble(vm, 3);
+    float sx = (float)wrenGetSlotDouble(vm, 4);
+    float sy = (float)wrenGetSlotDouble(vm, 5);
+    int ox = (int)wrenGetSlotDouble(vm, 6);
+    int oy = (int)wrenGetSlotDouble(vm, 7);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 8);
+
+    Rectangle source = { 0, 0, (float)texture->width, (float)texture->height };
+
+    if (sx < 0)
+        source.width = -source.width;
+
+    if (sy < 0)
+        source.height = -source.height;
+
+    float absSx = sx < 0 ? -sx : sx;
+    float absSy = sy < 0 ? -sy : sy;
+
+    DrawTexturePro(*texture, source, (Rectangle) { (float)x, (float)y, (float)texture->width * absSx, (float)texture->height * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
+}
+
+void textureDrawRec(WrenVM* vm)
+{
+    Texture* texture = (Texture*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "srcX");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "srcY");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "srcWidth");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "srcHeight");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "dstX");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "dstY");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "r");
+    ASSERT_SLOT_TYPE(vm, 8, NUM, "sx");
+    ASSERT_SLOT_TYPE(vm, 9, NUM, "sy");
+    ASSERT_SLOT_TYPE(vm, 10, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 11, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 12, FOREIGN, "color");
+    int srcX = (int)wrenGetSlotDouble(vm, 1);
+    int srcY = (int)wrenGetSlotDouble(vm, 2);
+    int srcWidth = (int)wrenGetSlotDouble(vm, 3);
+    int srcHeight = (int)wrenGetSlotDouble(vm, 4);
+    int dstX = (int)wrenGetSlotDouble(vm, 5);
+    int dstY = (int)wrenGetSlotDouble(vm, 6);
+    float r = (float)wrenGetSlotDouble(vm, 7);
+    float sx = (float)wrenGetSlotDouble(vm, 8);
+    float sy = (float)wrenGetSlotDouble(vm, 9);
+    int ox = (int)wrenGetSlotDouble(vm, 10);
+    int oy = (int)wrenGetSlotDouble(vm, 11);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 12);
+
+    Rectangle source = { (float)srcX, (float)srcY, (float)srcWidth, (float)srcHeight };
+
+    if (sx < 0)
+        source.width = -source.width;
+
+    if (sy < 0)
+        source.height = -source.height;
+
+    float absSx = sx < 0 ? -sx : sx;
+    float absSy = sy < 0 ? -sy : sy;
+
+    DrawTexturePro(*texture, source, (Rectangle) { (float)dstX, (float)dstY, (float)srcWidth * absSx, (float)srcHeight * absSy }, (Vector2) { (float)ox, (float)oy }, r, *color);
 }
 
 void textureGetWidth(WrenVM* vm)

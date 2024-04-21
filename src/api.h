@@ -49,6 +49,9 @@ void soundSetVolume(WrenVM* vm);
 void soundSetPitch(WrenVM* vm);
 void soundSetPan(WrenVM* vm);
 
+void soundAliasFinalize(void* data);
+void soundAliasNew(WrenVM* vm);
+
 // Graphics
 
 void graphicsBegin(WrenVM* vm);
@@ -74,8 +77,6 @@ void graphicsTriangle(WrenVM* vm);
 void graphicsTriangleLines(WrenVM* vm);
 void graphicsPolygon(WrenVM* vm);
 void graphicsPolygonLines(WrenVM* vm);
-void graphicsDraw(WrenVM* vm);
-void graphicsDrawRec(WrenVM* vm);
 void graphicsSetNoiseSeed(WrenVM* vm);
 void graphicsSetLineSpacing(WrenVM* vm);
 
@@ -89,6 +90,10 @@ void imageAllocate(WrenVM* vm);
 void imageFinalize(void* data);
 void imageNew(WrenVM* vm);
 void imageNew2(WrenVM* vm);
+void imageNew3(WrenVM* vm);
+void imageNew4(WrenVM* vm);
+void imageNew5(WrenVM* vm);
+void imageNew6(WrenVM* vm);
 void imageExport(WrenVM* vm);
 void imageGetWidth(WrenVM* vm);
 void imageGetHeight(WrenVM* vm);
@@ -97,6 +102,8 @@ void imageGetFormat(WrenVM* vm);
 void textureAllocate(WrenVM* vm);
 void textureFinalize(void* data);
 void textureNew(WrenVM* vm);
+void textureDraw(WrenVM* vm);
+void textureDrawRec(WrenVM* vm);
 void textureGetWidth(WrenVM* vm);
 void textureGetHeight(WrenVM* vm);
 void textureSetFilter(WrenVM* vm);
