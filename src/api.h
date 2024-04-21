@@ -223,18 +223,19 @@ void windowGetFps(WrenVM* vm);
 void osReadLine(WrenVM* vm);
 void osWait(WrenVM* vm);
 void osOpenUrl(WrenVM* vm);
-void osCompress(WrenVM* vm);
-void osDecompress(WrenVM* vm);
-void osEncodeBase64(WrenVM* vm);
-void osDecodeBase64(WrenVM* vm);
-void osEncodeHex(WrenVM* vm);
-void osDecodeHex(WrenVM* vm);
-void osHash(WrenVM* vm);
 void osGetArgs(WrenVM* vm);
 void osGetName(WrenVM* vm);
 void osGetWrayVersion(WrenVM* vm);
 void osGetClipboard(WrenVM* vm);
 void osSetClipboard(WrenVM* vm);
+
+void dataCompress(WrenVM* vm);
+void dataDecompress(WrenVM* vm);
+void dataEncodeBase64(WrenVM* vm);
+void dataDecodeBase64(WrenVM* vm);
+void dataEncodeHex(WrenVM* vm);
+void dataDecodeHex(WrenVM* vm);
+void dataHash(WrenVM* vm);
 
 void directoryExists(WrenVM* vm);
 void directoryList(WrenVM* vm);

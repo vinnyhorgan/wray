@@ -261,18 +261,19 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("readLine()", osReadLine);
         BIND_METHOD("wait(_)", osWait);
         BIND_METHOD("openUrl(_)", osOpenUrl);
-        BIND_METHOD("compress(_)", osCompress);
-        BIND_METHOD("decompress(_)", osDecompress);
-        BIND_METHOD("encodeBase64(_)", osEncodeBase64);
-        BIND_METHOD("decodeBase64(_)", osDecodeBase64);
-        BIND_METHOD("encodeHex(_)", osEncodeHex);
-        BIND_METHOD("decodeHex(_)", osDecodeHex);
-        BIND_METHOD("hash(_)", osHash);
         BIND_METHOD("args", osGetArgs);
         BIND_METHOD("name", osGetName);
         BIND_METHOD("wrayVersion", osGetWrayVersion);
         BIND_METHOD("clipboard", osGetClipboard);
         BIND_METHOD("clipboard=(_)", osSetClipboard);
+    } else if (TextIsEqual(className, "Data")) {
+        BIND_METHOD("compress(_)", dataCompress);
+        BIND_METHOD("decompress(_)", dataDecompress);
+        BIND_METHOD("encodeBase64(_)", dataEncodeBase64);
+        BIND_METHOD("decodeBase64(_)", dataDecodeBase64);
+        BIND_METHOD("encodeHex(_)", dataEncodeHex);
+        BIND_METHOD("decodeHex(_)", dataDecodeHex);
+        BIND_METHOD("hash(_)", dataHash);
     } else if (TextIsEqual(className, "Directory")) {
         BIND_METHOD("exists(_)", directoryExists);
         BIND_METHOD("list(_)", directoryList);

@@ -1750,94 +1750,6 @@ void osOpenUrl(WrenVM* vm)
     OpenURL(url);
 }
 
-void osCompress(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
-
-    int length;
-    const char* data = wrenGetSlotBytes(vm, 1, &length);
-
-    int compressedLength;
-    unsigned char* compressed = CompressData(data, length, &compressedLength);
-
-    wrenSetSlotBytes(vm, 0, compressed, compressedLength);
-    free(compressed);
-}
-
-void osDecompress(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
-
-    int length;
-    const char* data = wrenGetSlotBytes(vm, 1, &length);
-
-    int decompressedLength;
-    unsigned char* decompressed = DecompressData(data, length, &decompressedLength);
-
-    wrenSetSlotBytes(vm, 0, decompressed, decompressedLength);
-    free(decompressed);
-}
-
-void osEncodeBase64(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
-
-    int length;
-    const char* data = wrenGetSlotBytes(vm, 1, &length);
-
-    int encodedLength;
-    char* encoded = EncodeDataBase64(data, length, &encodedLength);
-
-    wrenSetSlotBytes(vm, 0, encoded, encodedLength);
-    free(encoded);
-}
-
-void osDecodeBase64(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
-
-    int length;
-    const char* data = wrenGetSlotBytes(vm, 1, &length);
-
-    int decodedLength;
-    unsigned char* decoded = DecodeDataBase64(data, &decodedLength);
-
-    wrenSetSlotBytes(vm, 0, decoded, decodedLength);
-    free(decoded);
-}
-
-void osEncodeHex(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
-
-    int length;
-    const char* data = wrenGetSlotBytes(vm, 1, &length);
-
-    size_t encodedLength;
-    char* encoded = bytesToHex(data, length, &encodedLength);
-
-    wrenSetSlotBytes(vm, 0, encoded, encodedLength);
-    free(encoded);
-}
-
-void osDecodeHex(WrenVM* vm)
-{
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
-
-    int length;
-    const char* data = wrenGetSlotBytes(vm, 1, &length);
-
-    size_t decodedLength;
-    unsigned char* decoded = hexToBytes(data, length, &decodedLength);
-
-    wrenSetSlotBytes(vm, 0, decoded, decodedLength);
-    free(decoded);
-}
-
-void osHash(WrenVM* vm)
-{
-}
-
 void osGetArgs(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 2);
@@ -1877,6 +1789,106 @@ void osSetClipboard(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
     const char* text = wrenGetSlotString(vm, 1);
     SetClipboardText(text);
+}
+
+void dataCompress(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+    int compressedLength;
+    unsigned char* compressed = CompressData(data, length, &compressedLength);
+
+    wrenSetSlotBytes(vm, 0, compressed, compressedLength);
+    free(compressed);
+}
+
+void dataDecompress(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+    int decompressedLength;
+    unsigned char* decompressed = DecompressData(data, length, &decompressedLength);
+
+    wrenSetSlotBytes(vm, 0, decompressed, decompressedLength);
+    free(decompressed);
+}
+
+void dataEncodeBase64(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+    int encodedLength;
+    char* encoded = EncodeDataBase64(data, length, &encodedLength);
+
+    wrenSetSlotBytes(vm, 0, encoded, encodedLength);
+    free(encoded);
+}
+
+void dataDecodeBase64(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+    int decodedLength;
+    unsigned char* decoded = DecodeDataBase64(data, &decodedLength);
+
+    wrenSetSlotBytes(vm, 0, decoded, decodedLength);
+    free(decoded);
+}
+
+void dataEncodeHex(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+    size_t encodedLength;
+    char* encoded = bytesToHex(data, length, &encodedLength);
+
+    wrenSetSlotBytes(vm, 0, encoded, encodedLength);
+    free(encoded);
+}
+
+void dataDecodeHex(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+    size_t decodedLength;
+    unsigned char* decoded = hexToBytes(data, length, &decodedLength);
+
+    wrenSetSlotBytes(vm, 0, decoded, decodedLength);
+    free(decoded);
+}
+
+void dataHash(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data");
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+    BYTE buf[SHA256_BLOCK_SIZE];
+    SHA256_CTX ctx;
+    sha256_init(&ctx);
+    sha256_update(&ctx, data, length);
+    sha256_final(&ctx, buf);
+
+    wrenSetSlotBytes(vm, 0, buf, SHA256_BLOCK_SIZE);
 }
 
 void directoryExists(WrenVM* vm)
