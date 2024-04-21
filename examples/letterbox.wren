@@ -24,7 +24,7 @@ while (!Window.closed) {
     Graphics.print("Resize the window!", 10, 10, 10, Color.white)
     Graphics.print("Virtual Mouse: [%(Mouse.x), %(Mouse.y)]", 10, 30, 10, Color.white)
 
-    Graphics.draw(bunny, 100, 100)
+    bunny.draw(100, 100)
 
     screen.end()
 
@@ -32,7 +32,7 @@ while (!Window.closed) {
 
     Graphics.clear(Color.indigo)
 
-    Graphics.draw(screenTexture, (Window.width - gameWidth * scale) / 2, (Window.height - gameHeight * scale) / 2, 0, scale, -scale, 0, 0, Color.white)
+    screenTexture.draw((Window.width - gameWidth * scale) / 2, (Window.height - gameHeight * scale) / 2, 0, scale, -scale, 0, 0, Color.white)
 
     Graphics.end()
 }

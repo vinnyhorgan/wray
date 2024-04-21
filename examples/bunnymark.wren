@@ -63,7 +63,7 @@ while (!Window.closed) {
     Graphics.clear(Color.white)
 
     for (b in bunnies) {
-        Graphics.draw(bunny, b.x, b.y, b.color)
+        bunny.draw(b.x, b.y, b.color)
     }
 
     Graphics.rectangle(0, 0, Window.width, 40, Color.black)

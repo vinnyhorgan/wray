@@ -602,6 +602,22 @@ void imageNew3(WrenVM* vm)
 void imageNew4(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "image");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "height");
+    Image* other = (Image*)wrenGetSlotForeign(vm, 1);
+    int x = (int)wrenGetSlotDouble(vm, 2);
+    int y = (int)wrenGetSlotDouble(vm, 3);
+    int width = (int)wrenGetSlotDouble(vm, 4);
+    int height = (int)wrenGetSlotDouble(vm, 5);
+    *image = ImageFromImage(*other, (Rectangle) { (float)x, (float)y, (float)width, (float)height });
+}
+
+void imageNew5(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
     ASSERT_SLOT_TYPE(vm, 3, NUM, "direction");
@@ -615,7 +631,7 @@ void imageNew4(WrenVM* vm)
     *image = GenImageGradientLinear(width, height, direction, *startColor, *endColor);
 }
 
-void imageNew5(WrenVM* vm)
+void imageNew6(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
@@ -631,7 +647,7 @@ void imageNew5(WrenVM* vm)
     *image = GenImageGradientRadial(width, height, density, *innerColor, *outerColor);
 }
 
-void imageNew6(WrenVM* vm)
+void imageNew7(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
@@ -653,6 +669,50 @@ void imageExport(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
     const char* path = wrenGetSlotString(vm, 1);
     wrenSetSlotBool(vm, 0, ExportImage(*image, path));
+}
+
+void imageCrop(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int width = (int)wrenGetSlotDouble(vm, 3);
+    int height = (int)wrenGetSlotDouble(vm, 4);
+    ImageCrop(image, (Rectangle) { (float)x, (float)y, (float)width, (float)height });
+}
+
+void imageResize(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
+    int width = (int)wrenGetSlotDouble(vm, 1);
+    int height = (int)wrenGetSlotDouble(vm, 2);
+    ImageResize(image, width, height);
+}
+
+void imageFlipVertical(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ImageFlipVertical(image);
+}
+
+void imageFlipHorizontal(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ImageFlipHorizontal(image);
+}
+
+void imageRotate(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "angle");
+    int angle = (int)wrenGetSlotDouble(vm, 1);
+    ImageRotate(image, angle);
 }
 
 void imageGetWidth(WrenVM* vm)

@@ -129,13 +129,17 @@ foreign class Image {
     foreign construct new(pathOrTexture)                                                // Load image from file (PNG, BMP, JPG) or texture
     foreign construct new(width, height, color)                                         // New image
     foreign construct fromScreen()                                                      // New image from screen
+    foreign construct fromImage(image, x, y, width, height)                             // New image from another image piece
     foreign construct gradientLinear(width, height, direction, startColor, endColor)    // New image from linear gradient, direction is in degrees
     foreign construct gradientRadial(width, height, density, innerColor, outerColor)    // New image from radial gradient
     foreign construct gradientSquare(width, height, density, innerColor, outerColor)    // New image from square gradient
 
     foreign export(path)                                                                // Save image to file, return true on success
-
-    // TODO: add more image methods
+    foreign crop(x, y, width, height)                                                   // Crop image to new size
+    foreign resize(width, height)                                                       // Resize image
+    foreign flipVertical()                                                              // Flip image vertically
+    foreign flipHorizontal()                                                            // Flip image horizontally
+    foreign rotate(angle)                                                               // Rotate image by angle in degrees
 
     foreign width                           // Get image width
     foreign height                          // Get image height
