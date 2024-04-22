@@ -1120,18 +1120,12 @@ void cameraScreenToWorld(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
-
     Vector2 result = GetScreenToWorld2D((Vector2) { (float)x, (float)y }, *camera);
-
-    wrenSetSlotNewMap(vm, 0);
-
-    wrenSetSlotString(vm, 1, "x");
-    wrenSetSlotDouble(vm, 2, result.x);
-    wrenSetMapValue(vm, 0, 1, 2);
-
-    wrenSetSlotString(vm, 1, "y");
+    wrenSetSlotNewList(vm, 0);
+    wrenSetSlotDouble(vm, 1, result.x);
     wrenSetSlotDouble(vm, 2, result.y);
-    wrenSetMapValue(vm, 0, 1, 2);
+    wrenInsertInList(vm, 0, 0, 1);
+    wrenInsertInList(vm, 0, 1, 2);
 }
 
 void cameraWorldToScreen(WrenVM* vm)
@@ -1141,18 +1135,12 @@ void cameraWorldToScreen(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
     int x = (int)wrenGetSlotDouble(vm, 1);
     int y = (int)wrenGetSlotDouble(vm, 2);
-
     Vector2 result = GetWorldToScreen2D((Vector2) { (float)x, (float)y }, *camera);
-
-    wrenSetSlotNewMap(vm, 0);
-
-    wrenSetSlotString(vm, 1, "x");
-    wrenSetSlotDouble(vm, 2, result.x);
-    wrenSetMapValue(vm, 0, 1, 2);
-
-    wrenSetSlotString(vm, 1, "y");
+    wrenSetSlotNewList(vm, 0);
+    wrenSetSlotDouble(vm, 1, result.x);
     wrenSetSlotDouble(vm, 2, result.y);
-    wrenSetMapValue(vm, 0, 1, 2);
+    wrenInsertInList(vm, 0, 0, 1);
+    wrenInsertInList(vm, 0, 1, 2);
 }
 
 void cameraGetX(WrenVM* vm)
@@ -1704,6 +1692,11 @@ void windowToggleFullscreen(WrenVM* vm)
     ToggleFullscreen();
 }
 
+void windowToggleBorderless(WrenVM* vm)
+{
+    ToggleBorderlessWindowed();
+}
+
 void windowMaximize(WrenVM* vm)
 {
     MaximizeWindow();
@@ -1758,6 +1751,47 @@ void windowSetSize(WrenVM* vm)
 void windowFocus(WrenVM* vm)
 {
     SetWindowFocused();
+}
+
+void windowGetMonitorInfo(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "monitor");
+    int monitor = (int)wrenGetSlotDouble(vm, 1);
+
+    wrenEnsureSlots(vm, 3);
+    wrenSetSlotNewMap(vm, 0);
+
+    wrenSetSlotString(vm, 1, "name");
+    wrenSetSlotString(vm, 2, GetMonitorName(monitor));
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "x");
+    wrenSetSlotDouble(vm, 2, GetMonitorPosition(monitor).x);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "y");
+    wrenSetSlotDouble(vm, 2, GetMonitorPosition(monitor).y);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "width");
+    wrenSetSlotDouble(vm, 2, GetMonitorWidth(monitor));
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "height");
+    wrenSetSlotDouble(vm, 2, GetMonitorHeight(monitor));
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "physicalWidth");
+    wrenSetSlotDouble(vm, 2, GetMonitorPhysicalWidth(monitor));
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "physicalHeight");
+    wrenSetSlotDouble(vm, 2, GetMonitorPhysicalHeight(monitor));
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "refreshRate");
+    wrenSetSlotDouble(vm, 2, GetMonitorRefreshRate(monitor));
+    wrenSetMapValue(vm, 0, 1, 2);
 }
 
 void windowListDropped(WrenVM* vm)
@@ -1828,6 +1862,18 @@ void windowGetHeight(WrenVM* vm)
     wrenSetSlotDouble(vm, 0, GetScreenHeight());
 }
 
+void windowGetMonitorCount(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetMonitorCount());
+}
+
+void windowGetMonitor(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetCurrentMonitor());
+}
+
 void windowGetX(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
@@ -1852,6 +1898,14 @@ void windowGetFileDropped(WrenVM* vm)
     wrenSetSlotBool(vm, 0, IsFileDropped());
 }
 
+void windowSetIcon(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "icon");
+    Image* icon = (Image*)wrenGetSlotForeign(vm, 1);
+    ImageFormat(icon, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+    SetWindowIcon(*icon);
+}
+
 void windowSetTitle(WrenVM* vm)
 {
     ASSERT_SLOT_TYPE(vm, 1, STRING, "title");
@@ -1859,14 +1913,24 @@ void windowSetTitle(WrenVM* vm)
     SetWindowTitle(title);
 }
 
-void windowSetIcon(WrenVM* vm)
+void windowSetMonitor(WrenVM* vm)
 {
-    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "icon");
-    Texture* icon = (Texture*)wrenGetSlotForeign(vm, 1);
-    Image image = LoadImageFromTexture(*icon);
-    ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
-    SetWindowIcon(image);
-    UnloadImage(image);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "monitor");
+    int monitor = (int)wrenGetSlotDouble(vm, 1);
+    SetWindowMonitor(monitor);
+}
+
+void windowSetOpacity(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "opacity");
+    float opacity = (float)wrenGetSlotDouble(vm, 1);
+
+    if (opacity < 0.0f || opacity > 1.0f) {
+        VM_ABORT(vm, "Opacity must be between 0.0 and 1.0.");
+        return;
+    }
+
+    SetWindowOpacity(opacity);
 }
 
 void windowSetTargetFps(WrenVM* vm)

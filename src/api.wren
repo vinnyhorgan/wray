@@ -208,8 +208,8 @@ foreign class Camera {
 
     foreign begin()                // Begin camera mode
     foreign end()                  // End camera mode
-    foreign screenToWorld(x, y)    // Get world space position from screen space (returns map with "x" and "y")
-    foreign worldToScreen(x, y)    // Get screen space position from world space (returns map with "x" and "y")
+    foreign screenToWorld(x, y)    // Get world space position from screen space (returns list with x and y)
+    foreign worldToScreen(x, y)    // Get screen space position from world space (returns list with x and y)
 
     foreign x                      // Get target x
     foreign y                      // Get target y
@@ -290,6 +290,7 @@ foreign class Gamepad {
 class Window {
     foreign static init(width, height, title)    // Initialize window
     foreign static toggleFullscreen()            // Toggle fullscreen mode
+    foreign static toggleBorderless()            // Toggle borderless windowed mode
     foreign static maximize()                    // Maximize window
     foreign static minimize()                    // Minimize window
     foreign static restore()                     // Restore window from minimized or maximized state
@@ -298,6 +299,7 @@ class Window {
     foreign static setMaxSize(width, height)     // Set maximum window dimensions
     foreign static setSize(width, height)        // Set window dimensions
     foreign static focus()                       // Set window focus
+    foreign static getMonitorInfo(monitor)       // Get monitor information (returns map)
     foreign static listDropped()                 // Get list of dropped files (check with fileDropped if any)
 
     foreign static closed                        // Check if window should be closed
@@ -309,12 +311,16 @@ class Window {
     foreign static resized                       // Check if window is resized last frame
     foreign static width                         // Get window width
     foreign static height                        // Get window height
+    foreign static monitorCount                  // Get monitor count
+    foreign static monitor                       // Get current monitor
     foreign static x                             // Get window position x
     foreign static y                             // Get window position y
     foreign static dpi                           // Get window dpi
     foreign static fileDropped                   // Check if any file has been dropped
+    foreign static icon=(v)                      // Set window icon from image
     foreign static title=(v)                     // Set window title
-    foreign static icon=(v)                      // Set window icon from texture
+    foreign static monitor=(v)                   // Set window monitor
+    foreign static opacity=(v)                   // Set window opacity (0.0 = transparent, 1.0 = opaque)
     foreign static targetFps=(v)                 // Set target FPS
 
     foreign static resizable                     // Check if window is resizable

@@ -205,8 +205,8 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("r=(_)", cameraSetRotation);
         BIND_METHOD("zoom=(_)", cameraSetZoom);
     } else if (TextIsEqual(className, "Shader")) {
-        BIND_METHOD("init new(_)", shaderNew);
-        BIND_METHOD("init new(_,_)", shaderNew2);
+        BIND_METHOD("init new(_,_)", shaderNew);
+        BIND_METHOD("init new(_)", shaderNew2);
         BIND_METHOD("begin()", shaderBegin);
         BIND_METHOD("end()", shaderEnd);
         BIND_METHOD("set(_,_)", shaderSet);
@@ -246,6 +246,7 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
     } else if (TextIsEqual(className, "Window")) {
         BIND_METHOD("init(_,_,_)", windowInit);
         BIND_METHOD("toggleFullscreen()", windowToggleFullscreen);
+        BIND_METHOD("toggleBorderless()", windowToggleBorderless);
         BIND_METHOD("maximize()", windowMaximize);
         BIND_METHOD("minimize()", windowMinimize);
         BIND_METHOD("restore()", windowRestore);
@@ -254,6 +255,7 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("setMaxSize(_,_)", windowSetMaxSize);
         BIND_METHOD("setSize(_,_)", windowSetSize);
         BIND_METHOD("focus()", windowFocus);
+        BIND_METHOD("getMonitorInfo(_)", windowGetMonitorInfo);
         BIND_METHOD("listDropped()", windowListDropped);
         BIND_METHOD("closed", windowGetClosed);
         BIND_METHOD("fullscreen", windowGetFullscreen);
@@ -264,12 +266,16 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("resized", windowGetResized);
         BIND_METHOD("width", windowGetWidth);
         BIND_METHOD("height", windowGetHeight);
+        BIND_METHOD("monitorCount", windowGetMonitorCount);
+        BIND_METHOD("monitor", windowGetMonitor);
         BIND_METHOD("x", windowGetX);
         BIND_METHOD("y", windowGetY);
         BIND_METHOD("dpi", windowGetDpi);
         BIND_METHOD("fileDropped", windowGetFileDropped);
-        BIND_METHOD("title=(_)", windowSetTitle);
         BIND_METHOD("icon=(_)", windowSetIcon);
+        BIND_METHOD("title=(_)", windowSetTitle);
+        BIND_METHOD("monitor=(_)", windowSetMonitor);
+        BIND_METHOD("opacity=(_)", windowSetOpacity);
         BIND_METHOD("targetFps=(_)", windowSetTargetFps);
         BIND_METHOD("resizable", windowGetResizable);
         BIND_METHOD("resizable=(_)", windowSetResizable);
