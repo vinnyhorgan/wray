@@ -155,7 +155,7 @@ void hostConnect(WrenVM* vm)
     *p = peer;
 }
 
-static pushEvent(WrenVM* vm, ENetEvent* event)
+static void pushEvent(WrenVM* vm, ENetEvent* event)
 {
     wrenEnsureSlots(vm, 4);
     wrenSetSlotNewMap(vm, 0);

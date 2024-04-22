@@ -21,8 +21,8 @@ while (!Window.closed) {
 
     Graphics.clear(Color.black)
 
-    Graphics.print("Resize the window!", 10, 10, 10, Color.white)
-    Graphics.print("Virtual Mouse: [%(Mouse.x), %(Mouse.y)]", 10, 30, 10, Color.white)
+    Graphics.print("Resize the window!", 10, 10, 12, Color.white)
+    Graphics.print("Virtual Mouse: [%(Mouse.x), %(Mouse.y)]", 10, 30, 12, Color.white)
 
     bunny.draw(100, 100)
 

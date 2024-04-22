@@ -56,6 +56,7 @@ class Graphics {
     foreign static print(text, x, y, size, color)                        // Draw text using default font
     foreign static pixel(x, y, color)                                    // Draw pixel
     foreign static line(x1, y1, x2, y2, thick, color)                    // Draw line
+    foreign static lineBezier(x1, y1, x2, y2, thick, color)              // Draw bezier curve
     foreign static circle(x, y, radius, color)                           // Draw circle
     foreign static circleLines(x, y, radius, color)                      // Draw circle outline
     foreign static ellipse(x, y, rx, ry, color)                          // Draw ellipse
@@ -69,6 +70,10 @@ class Graphics {
 
     static line(x1, y1, x2, y2, color) {
         line(x1, y1, x2, y2, 1, color)
+    }
+
+    static lineBezier(x1, y1, x2, y2, color) {
+        lineBezier(x1, y1, x2, y2, 1, color)
     }
 
     static rectangle(x, y, width, height, color) {
@@ -141,6 +146,8 @@ foreign class Image {
     foreign flipHorizontal()                                                            // Flip image horizontally
     foreign rotate(angle)                                                               // Rotate image by angle in degrees
 
+    // TO COMPLETE
+
     foreign width                                                                       // Get image width
     foreign height                                                                      // Get image height
     foreign format                                                                      // Get image pixel format
@@ -184,16 +191,16 @@ foreign class RenderTexture {
 }
 
 foreign class Font {
-    foreign construct new(path, size)              // Load font from file (FNT, TTF, OTF)
+    foreign construct new(path, size)                              // Load font from file (TTF, OTF)
 
-    foreign print(text, x, y, r, ox, oy, color)    // Draw text
-    foreign measure(text)                          // Measure text width
+    foreign print(text, x, y, r, scale, spacing, ox, oy, color)    // Draw text
+    foreign measure(text)                                          // Measure text width
 
     print(text, x, y, color) {
-        print(text, x, y, 0, 0, 0, color)
+        print(text, x, y, 0, 1, 0, 0, 0, color)
     }
 
-    foreign size                                   // Get font height
+    foreign size                                                   // Get font height
 }
 
 foreign class Camera {
@@ -376,6 +383,7 @@ class ENet {
 
 // This is a port of lua-enet. It tries to be as close as possible while adapting the api to wren.
 // Check out the documentation here: https://leafo.net/lua-enet/
+
 foreign class Host {
     foreign construct new(address, peerCount, channelCount, inBandwidth, outBandwidth)
 

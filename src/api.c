@@ -234,7 +234,11 @@ void graphicsMeasure(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 2, NUM, "size");
     const char* text = wrenGetSlotString(vm, 1);
     int size = (int)wrenGetSlotDouble(vm, 2);
-    wrenSetSlotDouble(vm, 0, MeasureText(text, size));
+
+    if (size < defaultFont.baseSize)
+        size = defaultFont.baseSize;
+
+    wrenSetSlotDouble(vm, 0, MeasureTextEx(defaultFont, text, (float)size, size / defaultFont.baseSize).x);
 }
 
 void graphicsNoise(WrenVM* vm)
@@ -302,6 +306,23 @@ void graphicsLine(WrenVM* vm)
     float thick = (float)wrenGetSlotDouble(vm, 5);
     Color* color = (Color*)wrenGetSlotForeign(vm, 6);
     DrawLineEx((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, thick, *color);
+}
+
+void graphicsLineBezier(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x1");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y1");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "x2");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "y2");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "thick");
+    ASSERT_SLOT_TYPE(vm, 6, FOREIGN, "color");
+    int x1 = (int)wrenGetSlotDouble(vm, 1);
+    int y1 = (int)wrenGetSlotDouble(vm, 2);
+    int x2 = (int)wrenGetSlotDouble(vm, 3);
+    int y2 = (int)wrenGetSlotDouble(vm, 4);
+    float thick = (float)wrenGetSlotDouble(vm, 5);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 6);
+    DrawLineBezier((Vector2) { (float)x1, (float)y1 }, (Vector2) { (float)x2, (float)y2 }, thick, *color);
 }
 
 void graphicsCircle(WrenVM* vm)
@@ -1031,17 +1052,21 @@ void fontPrint(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 2, NUM, "x");
     ASSERT_SLOT_TYPE(vm, 3, NUM, "y");
     ASSERT_SLOT_TYPE(vm, 4, NUM, "r");
-    ASSERT_SLOT_TYPE(vm, 5, NUM, "ox");
-    ASSERT_SLOT_TYPE(vm, 6, NUM, "oy");
-    ASSERT_SLOT_TYPE(vm, 7, FOREIGN, "color");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "scale");
+    ASSERT_SLOT_TYPE(vm, 6, NUM, "spacing");
+    ASSERT_SLOT_TYPE(vm, 7, NUM, "ox");
+    ASSERT_SLOT_TYPE(vm, 8, NUM, "oy");
+    ASSERT_SLOT_TYPE(vm, 9, FOREIGN, "color");
     const char* text = wrenGetSlotString(vm, 1);
     int x = (int)wrenGetSlotDouble(vm, 2);
     int y = (int)wrenGetSlotDouble(vm, 3);
     float r = (float)wrenGetSlotDouble(vm, 4);
-    int ox = (int)wrenGetSlotDouble(vm, 5);
-    int oy = (int)wrenGetSlotDouble(vm, 6);
-    Color* color = (Color*)wrenGetSlotForeign(vm, 7);
-    DrawTextPro(*font, text, (Vector2) { (float)x, (float)y }, (Vector2) { (float)ox, (float)oy }, r, (float)font->baseSize, 0, *color);
+    float scale = (float)wrenGetSlotDouble(vm, 5);
+    float spacing = (float)wrenGetSlotDouble(vm, 6);
+    int ox = (int)wrenGetSlotDouble(vm, 7);
+    int oy = (int)wrenGetSlotDouble(vm, 8);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 9);
+    DrawTextPro(*font, text, (Vector2) { (float)x, (float)y }, (Vector2) { (float)ox, (float)oy }, r, (float)font->baseSize * scale, spacing, *color);
 }
 
 void fontMeasure(WrenVM* vm)
@@ -1284,9 +1309,47 @@ void shaderSet(WrenVM* vm)
     if (wrenGetSlotType(vm, 2) == WREN_TYPE_NUM) {
         float value = (float)wrenGetSlotDouble(vm, 2);
         SetShaderValue(*shader, GetShaderLocation(*shader, name), &value, SHADER_UNIFORM_FLOAT);
+    } else if (wrenGetSlotType(vm, 2) == WREN_TYPE_LIST) {
+        wrenEnsureSlots(vm, 4);
+        int count = wrenGetListCount(vm, 2);
+
+        if (count == 2) {
+            float vec[2];
+            wrenGetListElement(vm, 2, 0, 3);
+            vec[0] = (float)wrenGetSlotDouble(vm, 3);
+            wrenGetListElement(vm, 2, 1, 3);
+            vec[1] = (float)wrenGetSlotDouble(vm, 3);
+            SetShaderValue(*shader, GetShaderLocation(*shader, name), vec, SHADER_UNIFORM_VEC2);
+        } else if (count == 3) {
+            float vec[3];
+            wrenGetListElement(vm, 2, 0, 3);
+            vec[0] = (float)wrenGetSlotDouble(vm, 3);
+            wrenGetListElement(vm, 2, 1, 3);
+            vec[1] = (float)wrenGetSlotDouble(vm, 3);
+            wrenGetListElement(vm, 2, 2, 3);
+            vec[2] = (float)wrenGetSlotDouble(vm, 3);
+            SetShaderValue(*shader, GetShaderLocation(*shader, name), vec, SHADER_UNIFORM_VEC3);
+        } else if (count == 4) {
+            float vec[4];
+            wrenGetListElement(vm, 2, 0, 3);
+            vec[0] = (float)wrenGetSlotDouble(vm, 3);
+            wrenGetListElement(vm, 2, 1, 3);
+            vec[1] = (float)wrenGetSlotDouble(vm, 3);
+            wrenGetListElement(vm, 2, 2, 3);
+            vec[2] = (float)wrenGetSlotDouble(vm, 3);
+            wrenGetListElement(vm, 2, 3, 3);
+            vec[3] = (float)wrenGetSlotDouble(vm, 3);
+            SetShaderValue(*shader, GetShaderLocation(*shader, name), vec, SHADER_UNIFORM_VEC4);
+        } else {
+            VM_ABORT(vm, "Invalid argument count.");
+            return;
+        }
     } else if (wrenGetSlotType(vm, 2) == WREN_TYPE_FOREIGN) {
         Texture* texture = (Texture*)wrenGetSlotForeign(vm, 2);
         SetShaderValueTexture(*shader, GetShaderLocation(*shader, name), *texture);
+    } else {
+        VM_ABORT(vm, "Invalid argument type.");
+        return;
     }
 }
 
@@ -1301,8 +1364,8 @@ void keyboardPressed(WrenVM* vm)
     const char* key = wrenGetSlotString(vm, 1);
 
     vmData* data = (vmData*)wrenGetUserData(vm);
-    KeyboardKey k = *map_get(&data->keys, key);
 
+    KeyboardKey k = *map_get(&data->keys, key);
     if (k == KEY_NULL) {
         VM_ABORT(vm, "Invalid key.");
         return;
@@ -1320,8 +1383,8 @@ void keyboardPressedRepeat(WrenVM* vm)
     const char* key = wrenGetSlotString(vm, 1);
 
     vmData* data = (vmData*)wrenGetUserData(vm);
-    KeyboardKey k = *map_get(&data->keys, key);
 
+    KeyboardKey k = *map_get(&data->keys, key);
     if (k == KEY_NULL) {
         VM_ABORT(vm, "Invalid key.");
         return;
@@ -1339,8 +1402,8 @@ void keyboardDown(WrenVM* vm)
     const char* key = wrenGetSlotString(vm, 1);
 
     vmData* data = (vmData*)wrenGetUserData(vm);
-    KeyboardKey k = *map_get(&data->keys, key);
 
+    KeyboardKey k = *map_get(&data->keys, key);
     if (k == KEY_NULL) {
         VM_ABORT(vm, "Invalid key.");
         return;
@@ -1358,8 +1421,8 @@ void keyboardReleased(WrenVM* vm)
     const char* key = wrenGetSlotString(vm, 1);
 
     vmData* data = (vmData*)wrenGetUserData(vm);
-    KeyboardKey k = *map_get(&data->keys, key);
 
+    KeyboardKey k = *map_get(&data->keys, key);
     if (k == KEY_NULL) {
         VM_ABORT(vm, "Invalid key.");
         return;

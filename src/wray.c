@@ -133,6 +133,7 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("print(_,_,_,_,_)", graphicsPrint);
         BIND_METHOD("pixel(_,_,_)", graphicsPixel);
         BIND_METHOD("line(_,_,_,_,_,_)", graphicsLine);
+        BIND_METHOD("lineBezier(_,_,_,_,_,_)", graphicsLineBezier);
         BIND_METHOD("circle(_,_,_,_)", graphicsCircle);
         BIND_METHOD("circleLines(_,_,_,_)", graphicsCircleLines);
         BIND_METHOD("ellipse(_,_,_,_,_)", graphicsEllipse);
@@ -182,7 +183,7 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("texture", renderTextureGetTexture);
     } else if (TextIsEqual(className, "Font")) {
         BIND_METHOD("init new(_,_)", fontNew);
-        BIND_METHOD("print(_,_,_,_,_,_,_)", fontPrint);
+        BIND_METHOD("print(_,_,_,_,_,_,_,_,_)", fontPrint);
         BIND_METHOD("measure(_)", fontMeasure);
         BIND_METHOD("size", fontGetSize);
     } else if (TextIsEqual(className, "Camera")) {
@@ -500,7 +501,7 @@ static int newCommand(int argc, const char** argv)
     mkdir(argv[0]);
     SaveFileText(TextFormat("%s/main.wren", argv[0]), "System.print(\"Hello, World!\")");
 
-    printf("Created project %s.\n", argv[0]);
+    printf("Created project %s\n", argv[0]);
 
     return 0;
 }
@@ -533,7 +534,7 @@ static int nestCommand(int argc, const char** argv)
     }
 
     if (!FileExists(TextFormat("%s/main.wren", argv[0]))) {
-        printf("No main.wren file found in %s.\n", argv[0]);
+        printf("No main.wren file found in %s\n", argv[0]);
         return 1;
     }
 
@@ -569,7 +570,7 @@ static int nestCommand(int argc, const char** argv)
 
     zip_close(zip);
 
-    printf("Packaged %s as %s.\n", argv[0], output);
+    printf("Packaged %s as %s\n", argv[0], output);
 
     return 0;
 }
@@ -670,9 +671,9 @@ static int fuseCommand(int argc, const char** argv)
     fuse(selfPath, argv[0]);
 
 #ifdef _WIN32
-    printf("Created %s.\n", TextFormat("%s.exe", GetFileNameWithoutExt(argv[0])));
+    printf("Created %s\n", TextFormat("%s.exe", GetFileNameWithoutExt(argv[0])));
 #else
-    printf("Created %s.\n", TextFormat("%s_out", GetFileNameWithoutExt(argv[0])));
+    printf("Created %s\n", TextFormat("%s_out", GetFileNameWithoutExt(argv[0])));
 #endif
 
     return 0;
@@ -752,7 +753,7 @@ int main(int argc, char** argv)
         ChangeDirectory(argv[0]);
 
         if (!FileExists("main.wren")) {
-            printf("No main.wren file found in %s.\n", argv[0]);
+            printf("No main.wren file found in %s\n", argv[0]);
             return 1;
         }
 
@@ -776,7 +777,7 @@ int main(int argc, char** argv)
 
         runWren(GetFileName(argv[0]), GetFileNameWithoutExt(argv[0]));
     } else {
-        printf("No such file or directory: %s.\n", argv[0]);
+        printf("No such file or directory: %s\n", argv[0]);
         return 1;
     }
 

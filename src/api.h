@@ -67,6 +67,7 @@ void graphicsClear(WrenVM* vm);
 void graphicsPrint(WrenVM* vm);
 void graphicsPixel(WrenVM* vm);
 void graphicsLine(WrenVM* vm);
+void graphicsLineBezier(WrenVM* vm);
 void graphicsCircle(WrenVM* vm);
 void graphicsCircleLines(WrenVM* vm);
 void graphicsEllipse(WrenVM* vm);
