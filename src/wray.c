@@ -146,6 +146,14 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("polygonLines(_,_,_,_,_,_,_)", graphicsPolygonLines);
         BIND_METHOD("noiseSeed=(_)", graphicsSetNoiseSeed);
         BIND_METHOD("lineSpacing=(_)", graphicsSetLineSpacing);
+    } else if (TextIsEqual(className, "UI")) {
+        BIND_METHOD("update()", uiUpdate);
+        BIND_METHOD("draw()", uiDraw);
+        BIND_METHOD("begin()", uiBegin);
+        BIND_METHOD("end()", uiEnd);
+        BIND_METHOD("beginWindow(_,_,_,_,_)", uiBeginWindow);
+        BIND_METHOD("endWindow()", uiEndWindow);
+        BIND_METHOD("label(_)", uiLabel);
     } else if (TextIsEqual(className, "Color")) {
         BIND_METHOD("init new(_,_,_,_)", colorNew);
         BIND_METHOD("init new(_,_,_)", colorNew2);
@@ -447,6 +455,11 @@ static void runWren(const char* script, const char* module)
     data->windowInit = false;
     data->enetInit = false;
 
+    data->uiCtx = malloc(sizeof(mu_Context));
+    mu_init(data->uiCtx);
+    data->uiCtx->text_width = uiTextWidth;
+    data->uiCtx->text_height = uiTextHeight;
+
     loadKeys(&data->keys);
 
     wrenEnsureSlots(vm, 1);
@@ -463,6 +476,8 @@ static void runWren(const char* script, const char* module)
     wrenReleaseHandle(vm, data->peerClass);
 
     map_deinit(&data->keys);
+
+    free(data->uiCtx);
 
     UnloadFileText(source);
     wrenFreeVM(vm);

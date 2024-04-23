@@ -54,6 +54,7 @@ set(SOURCES
     src/wray.c
     src/lib/argparse/argparse.c
     src/lib/map/map.c
+    src/lib/microui/microui.c
     src/lib/naett/naett.c
     src/lib/wren/wren.c
     src/lib/zip/zip.c

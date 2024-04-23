@@ -2,6 +2,7 @@
 #define API_H
 
 #include "lib/map/map.h"
+#include "lib/microui/microui.h"
 #include "lib/naett/naett.h"
 #include "lib/wren/wren.h"
 
@@ -23,6 +24,7 @@ typedef struct vmData {
     bool audioInit;
     bool windowInit;
     bool enetInit;
+    mu_Context* uiCtx;
     map_int_t keys;
     WrenHandle* textureClass;
     WrenHandle* peerClass;
@@ -30,6 +32,8 @@ typedef struct vmData {
 
 void setArgs(int argc, char** argv);
 void enetClose();
+int uiTextWidth(mu_Font font, const char* text, int len);
+int uiTextHeight(mu_Font font);
 
 // Audio
 
@@ -80,6 +84,14 @@ void graphicsPolygon(WrenVM* vm);
 void graphicsPolygonLines(WrenVM* vm);
 void graphicsSetNoiseSeed(WrenVM* vm);
 void graphicsSetLineSpacing(WrenVM* vm);
+
+void uiUpdate(WrenVM* vm);
+void uiDraw(WrenVM* vm);
+void uiBegin(WrenVM* vm);
+void uiEnd(WrenVM* vm);
+void uiBeginWindow(WrenVM* vm);
+void uiEndWindow(WrenVM* vm);
+void uiLabel(WrenVM* vm);
 
 void colorAllocate(WrenVM* vm);
 void colorNew(WrenVM* vm);

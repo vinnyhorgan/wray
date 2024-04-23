@@ -97,6 +97,7 @@ Thanks to all these amazing projects:
 - [enet](https://github.com/lsalzman/enet)
 - [argparse](https://github.com/cofyc/argparse)
 - [map](https://github.com/rxi/map)
+- [microui](https://github.com/rxi/microui)
 - [naett](https://github.com/erkkah/naett)
 - [zip](https://github.com/kuba--/zip)
 - [icon](https://www.flaticon.com/free-icon/robin_1230870?term=bird&page=1&position=8&origin=search&related_id=1230870)

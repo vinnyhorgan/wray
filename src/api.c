@@ -16,6 +16,16 @@ void setArgs(int argc, char** argv)
     args = argv;
 }
 
+int uiTextWidth(mu_Font font, const char* text, int len)
+{
+    return MeasureTextEx(defaultFont, text, defaultFont.baseSize, 1).x;
+}
+
+int uiTextHeight(mu_Font font)
+{
+    return defaultFont.baseSize;
+}
+
 // Audio
 
 void audioInit(WrenVM* vm)
@@ -505,6 +515,153 @@ void graphicsSetLineSpacing(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 1, NUM, "spacing");
     int spacing = (int)wrenGetSlotDouble(vm, 1);
     SetTextLineSpacing(spacing);
+}
+
+struct ButtonMap {
+    MouseButton rl;
+    int mu;
+};
+
+struct KeyMap {
+    KeyboardKey rl;
+    int mu;
+};
+
+static struct ButtonMap buttonMap[] = {
+    { MOUSE_BUTTON_LEFT, MU_MOUSE_LEFT },
+    { MOUSE_BUTTON_RIGHT, MU_MOUSE_RIGHT },
+    { MOUSE_BUTTON_MIDDLE, MU_MOUSE_MIDDLE },
+    { -1, -1 }
+};
+
+static struct KeyMap keyMap[] = {
+    { KEY_LEFT_SHIFT, MU_KEY_SHIFT },
+    { KEY_RIGHT_SHIFT, MU_KEY_SHIFT },
+    { KEY_LEFT_CONTROL, MU_KEY_CTRL },
+    { KEY_RIGHT_CONTROL, MU_KEY_CTRL },
+    { KEY_LEFT_ALT, MU_KEY_ALT },
+    { KEY_RIGHT_ALT, MU_KEY_ALT },
+    { KEY_ENTER, MU_KEY_RETURN },
+    { KEY_KP_ENTER, MU_KEY_RETURN },
+    { KEY_BACKSPACE, MU_KEY_BACKSPACE },
+    { -1, -1 },
+};
+
+void uiUpdate(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+
+    int x = GetMouseX();
+    int y = GetMouseY();
+    mu_input_mousemove(data->uiCtx, x, y);
+
+    Vector2 scroll = GetMouseWheelMoveV();
+    mu_input_scroll(data->uiCtx, scroll.x * -30, scroll.y * -30);
+
+    for (int i = 0;; i++) {
+        struct ButtonMap button = buttonMap[i];
+        if (button.rl == -1)
+            break;
+
+        if (IsMouseButtonPressed(button.rl))
+            mu_input_mousedown(data->uiCtx, x, y, button.mu);
+        else if (IsMouseButtonReleased(button.rl))
+            mu_input_mouseup(data->uiCtx, x, y, button.mu);
+    }
+
+    for (int i = 0;; i++) {
+        struct KeyMap key = keyMap[i];
+        if (key.rl == -1)
+            break;
+
+        if (IsKeyPressed(key.rl))
+            mu_input_keydown(data->uiCtx, key.mu);
+        else if (IsKeyReleased(key.rl))
+            mu_input_keyup(data->uiCtx, key.mu);
+    }
+
+    char buffer[512];
+    for (int i = 0; i < 512; i++) {
+        char c = GetCharPressed();
+        buffer[i] = c;
+        if (c == '\0')
+            break;
+    }
+    mu_input_text(data->uiCtx, buffer);
+}
+
+void uiDraw(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    BeginScissorMode(0, 0, GetScreenWidth(), GetScreenHeight());
+
+    mu_Command* cmd = NULL;
+    while (mu_next_command(data->uiCtx, &cmd)) {
+        switch (cmd->type) {
+        case MU_COMMAND_TEXT:
+            DrawTextEx(defaultFont, cmd->text.str, (Vector2) { (float)cmd->text.pos.x, (float)cmd->text.pos.y }, defaultFont.baseSize, 1, (Color) { cmd->text.color.r, cmd->text.color.g, cmd->text.color.b, cmd->text.color.a });
+            break;
+        case MU_COMMAND_RECT:
+            DrawRectangle(cmd->rect.rect.x, cmd->rect.rect.y, cmd->rect.rect.w, cmd->rect.rect.h, (Color) { cmd->rect.color.r, cmd->rect.color.g, cmd->rect.color.b, cmd->rect.color.a });
+            break;
+        case MU_COMMAND_ICON:
+            switch (cmd->icon.id) {
+            case MU_ICON_CLOSE:
+                Color color = (Color) { cmd->icon.color.r, cmd->icon.color.g, cmd->icon.color.b, cmd->icon.color.a };
+                DrawLine(cmd->icon.rect.x + 8, cmd->icon.rect.y + 8, cmd->icon.rect.x + cmd->icon.rect.w - 8, cmd->icon.rect.y + cmd->icon.rect.h - 8, color);
+                DrawLine(cmd->icon.rect.x + cmd->icon.rect.w - 8, cmd->icon.rect.y + 8, cmd->icon.rect.x + 8, cmd->icon.rect.y + cmd->icon.rect.h - 8, color);
+                break;
+            }
+        case MU_COMMAND_CLIP:
+            EndScissorMode();
+            BeginScissorMode(cmd->clip.rect.x, cmd->clip.rect.y, cmd->clip.rect.w, cmd->clip.rect.h);
+            break;
+        }
+    }
+
+    EndScissorMode();
+}
+
+void uiBegin(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    mu_begin(data->uiCtx);
+}
+
+void uiEnd(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    mu_end(data->uiCtx);
+}
+
+void uiBeginWindow(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "title");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "height");
+    const char* title = wrenGetSlotString(vm, 1);
+    int x = (int)wrenGetSlotDouble(vm, 2);
+    int y = (int)wrenGetSlotDouble(vm, 3);
+    int width = (int)wrenGetSlotDouble(vm, 4);
+    int height = (int)wrenGetSlotDouble(vm, 5);
+    wrenSetSlotBool(vm, 0, mu_begin_window(data->uiCtx, title, mu_rect(x, y, width, height)));
+}
+
+void uiEndWindow(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    mu_end_window(data->uiCtx);
+}
+
+void uiLabel(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    const char* text = wrenGetSlotString(vm, 1);
+    mu_label(data->uiCtx, text);
 }
 
 void colorAllocate(WrenVM* vm)

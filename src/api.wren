@@ -92,6 +92,16 @@ class Graphics {
     foreign static lineSpacing=(v)                                       // Set vertical line spacing for text
 }
 
+class UI {
+    foreign static update()
+    foreign static draw()
+    foreign static begin()
+    foreign static end()
+    foreign static beginWindow(title, x, y, width, height)
+    foreign static endWindow()
+    foreign static label(text)
+}
+
 foreign class Color {
     foreign construct new(r, g, b, a)                            // New color from RGBA
     foreign construct new(r, g, b)                               // New color from RGB
