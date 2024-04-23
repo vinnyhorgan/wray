@@ -92,6 +92,10 @@ void uiEnd(WrenVM* vm);
 void uiBeginWindow(WrenVM* vm);
 void uiEndWindow(WrenVM* vm);
 void uiLabel(WrenVM* vm);
+void uiHeader(WrenVM* vm);
+void uiButton(WrenVM* vm);
+void uiRow(WrenVM* vm);
+void uiTextbox(WrenVM* vm);
 
 void colorAllocate(WrenVM* vm);
 void colorNew(WrenVM* vm);

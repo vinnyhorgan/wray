@@ -100,6 +100,10 @@ class UI {
     foreign static beginWindow(title, x, y, width, height)
     foreign static endWindow()
     foreign static label(text)
+    foreign static header(text)
+    foreign static button(text)
+    foreign static row(items, widths, height)
+    foreign static textbox(text)
 }
 
 foreign class Color {

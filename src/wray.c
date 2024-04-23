@@ -154,6 +154,10 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("beginWindow(_,_,_,_,_)", uiBeginWindow);
         BIND_METHOD("endWindow()", uiEndWindow);
         BIND_METHOD("label(_)", uiLabel);
+        BIND_METHOD("header(_)", uiHeader);
+        BIND_METHOD("button(_)", uiButton);
+        BIND_METHOD("row(_,_,_)", uiRow);
+        BIND_METHOD("textbox(_)", uiTextbox);
     } else if (TextIsEqual(className, "Color")) {
         BIND_METHOD("init new(_,_,_,_)", colorNew);
         BIND_METHOD("init new(_,_,_)", colorNew2);

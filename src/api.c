@@ -605,13 +605,28 @@ void uiDraw(WrenVM* vm)
             DrawRectangle(cmd->rect.rect.x, cmd->rect.rect.y, cmd->rect.rect.w, cmd->rect.rect.h, (Color) { cmd->rect.color.r, cmd->rect.color.g, cmd->rect.color.b, cmd->rect.color.a });
             break;
         case MU_COMMAND_ICON:
+            Color color = (Color) { cmd->icon.color.r, cmd->icon.color.g, cmd->icon.color.b, cmd->icon.color.a };
+
             switch (cmd->icon.id) {
             case MU_ICON_CLOSE:
-                Color color = (Color) { cmd->icon.color.r, cmd->icon.color.g, cmd->icon.color.b, cmd->icon.color.a };
                 DrawLine(cmd->icon.rect.x + 8, cmd->icon.rect.y + 8, cmd->icon.rect.x + cmd->icon.rect.w - 8, cmd->icon.rect.y + cmd->icon.rect.h - 8, color);
                 DrawLine(cmd->icon.rect.x + cmd->icon.rect.w - 8, cmd->icon.rect.y + 8, cmd->icon.rect.x + 8, cmd->icon.rect.y + cmd->icon.rect.h - 8, color);
                 break;
+            case MU_ICON_CHECK:
+                DrawLine(cmd->icon.rect.x + 5, cmd->icon.rect.y + 5, cmd->icon.rect.x + cmd->icon.rect.w - 5, cmd->icon.rect.y + cmd->icon.rect.h - 5, color);
+                DrawLine(cmd->icon.rect.x + cmd->icon.rect.w - 5, cmd->icon.rect.y + 5, cmd->icon.rect.x + 5, cmd->icon.rect.y + cmd->icon.rect.h - 5, color);
+                break;
+            case MU_ICON_COLLAPSED:
+                DrawLine(cmd->icon.rect.x + 6, cmd->icon.rect.y + 6, cmd->icon.rect.x + cmd->icon.rect.w / 2, cmd->icon.rect.y + cmd->icon.rect.h / 2, color);
+                DrawLine(cmd->icon.rect.x + 6, cmd->icon.rect.y + cmd->icon.rect.h - 6, cmd->icon.rect.x + cmd->icon.rect.w / 2, cmd->icon.rect.y + cmd->icon.rect.h / 2, color);
+                break;
+            case MU_ICON_EXPANDED:
+                DrawLine(cmd->icon.rect.x + 6, cmd->icon.rect.y + 6, cmd->icon.rect.x + cmd->icon.rect.w / 2, cmd->icon.rect.y + cmd->icon.rect.h / 2, color);
+                DrawLine(cmd->icon.rect.x + cmd->icon.rect.w - 6, cmd->icon.rect.y + 6, cmd->icon.rect.x + cmd->icon.rect.w / 2, cmd->icon.rect.y + cmd->icon.rect.h / 2, color);
+                break;
             }
+
+            break;
         case MU_COMMAND_CLIP:
             EndScissorMode();
             BeginScissorMode(cmd->clip.rect.x, cmd->clip.rect.y, cmd->clip.rect.w, cmd->clip.rect.h);
@@ -662,6 +677,54 @@ void uiLabel(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
     const char* text = wrenGetSlotString(vm, 1);
     mu_label(data->uiCtx, text);
+}
+
+void uiHeader(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    const char* text = wrenGetSlotString(vm, 1);
+    wrenSetSlotBool(vm, 0, mu_header(data->uiCtx, text));
+}
+
+void uiButton(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    const char* text = wrenGetSlotString(vm, 1);
+    wrenSetSlotBool(vm, 0, mu_button(data->uiCtx, text));
+}
+
+void uiRow(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "items");
+    ASSERT_SLOT_TYPE(vm, 2, LIST, "widths");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "height");
+    int items = (int)wrenGetSlotDouble(vm, 1);
+
+    int count = wrenGetListCount(vm, 2);
+    int* widths = malloc(count * sizeof(int));
+    for (int i = 0; i < count; i++) {
+        wrenGetListElement(vm, 2, i, 1);
+        widths[i] = (int)wrenGetSlotDouble(vm, 1);
+    }
+
+    int height = (int)wrenGetSlotDouble(vm, 3);
+    mu_layout_row(data->uiCtx, items, widths, height);
+    free(widths);
+}
+
+void uiTextbox(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    const char* text = wrenGetSlotString(vm, 1);
+
+    char buf[128];
+    strcpy(buf, text);
+    mu_textbox(data->uiCtx, buf, sizeof(buf));
+    wrenSetSlotString(vm, 0, buf);
 }
 
 void colorAllocate(WrenVM* vm)
