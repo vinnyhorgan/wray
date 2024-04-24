@@ -100,10 +100,20 @@ class UI {
     foreign static beginWindow(title, x, y, width, height)
     foreign static endWindow()
     foreign static label(text)
-    foreign static header(text)
+    foreign static header(text, option)
     foreign static button(text)
     foreign static row(items, widths, height)
     foreign static textbox(text)
+    foreign static getWindowInfo()
+    foreign static setWindowSize(width, height)
+    foreign static openPopup(name)
+    foreign static beginPopup(name)
+    foreign static endPopup()
+    foreign static beginColumn()
+    foreign static endColumn()
+    foreign static slider(value, min, max)
+
+    static header(text) { header(text, "") }
 }
 
 foreign class Color {
@@ -379,6 +389,18 @@ class File {
     foreign static size(path)           // Get file size
     foreign static read(path)           // Read data from file
     foreign static write(path, data)    // Write data to file
+}
+
+foreign class Buffer {
+    foreign construct new(size)
+
+    foreign resize(size)
+    foreign readFloat()
+    foreign writeFloat(v)
+
+    foreign size
+    foreign pointer
+    foreign pointer=(v)
 }
 
 foreign class Request {

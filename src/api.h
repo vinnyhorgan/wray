@@ -1,6 +1,8 @@
 #ifndef API_H
 #define API_H
 
+#include <stdint.h>
+
 #include "lib/map/map.h"
 #include "lib/microui/microui.h"
 #include "lib/naett/naett.h"
@@ -96,6 +98,14 @@ void uiHeader(WrenVM* vm);
 void uiButton(WrenVM* vm);
 void uiRow(WrenVM* vm);
 void uiTextbox(WrenVM* vm);
+void uiGetWindowInfo(WrenVM* vm);
+void uiSetWindowSize(WrenVM* vm);
+void uiOpenPopup(WrenVM* vm);
+void uiBeginPopup(WrenVM* vm);
+void uiEndPopup(WrenVM* vm);
+void uiBeginColumn(WrenVM* vm);
+void uiEndColumn(WrenVM* vm);
+void uiSlider(WrenVM* vm);
 
 void colorAllocate(WrenVM* vm);
 void colorNew(WrenVM* vm);
@@ -280,6 +290,22 @@ void fileExists(WrenVM* vm);
 void fileSize(WrenVM* vm);
 void fileRead(WrenVM* vm);
 void fileWrite(WrenVM* vm);
+
+typedef struct {
+    int size;
+    int pointer;
+    uint8_t* data;
+} Buffer;
+
+void bufferAllocate(WrenVM* vm);
+void bufferFinalize(void* data);
+void bufferNew(WrenVM* vm);
+void bufferResize(WrenVM* vm);
+void bufferGetSize(WrenVM* vm);
+void bufferGetPointer(WrenVM* vm);
+void bufferSetPointer(WrenVM* vm);
+void bufferReadFloat(WrenVM* vm);
+void bufferWriteFloat(WrenVM* vm);
 
 typedef struct {
     naettReq* req;

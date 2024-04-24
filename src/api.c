@@ -405,9 +405,9 @@ void graphicsRectangle(WrenVM* vm)
     int y = (int)wrenGetSlotDouble(vm, 2);
     int width = (int)wrenGetSlotDouble(vm, 3);
     int height = (int)wrenGetSlotDouble(vm, 4);
-    int ox = (int)wrenGetSlotDouble(vm, 5);
-    int oy = (int)wrenGetSlotDouble(vm, 6);
-    float r = (float)wrenGetSlotDouble(vm, 7);
+    float r = (float)wrenGetSlotDouble(vm, 5);
+    int ox = (int)wrenGetSlotDouble(vm, 6);
+    int oy = (int)wrenGetSlotDouble(vm, 7);
     Color* color = (Color*)wrenGetSlotForeign(vm, 8);
     DrawRectanglePro((Rectangle) { (float)x, (float)y, (float)width, (float)height }, (Vector2) { (float)ox, (float)oy }, r, *color);
 }
@@ -683,8 +683,18 @@ void uiHeader(WrenVM* vm)
 {
     vmData* data = (vmData*)wrenGetUserData(vm);
     ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    ASSERT_SLOT_TYPE(vm, 2, STRING, "option");
     const char* text = wrenGetSlotString(vm, 1);
-    wrenSetSlotBool(vm, 0, mu_header(data->uiCtx, text));
+    const char* option = wrenGetSlotString(vm, 2);
+
+    int opt;
+    if (TextIsEqual(option, "expanded")) {
+        opt = MU_OPT_EXPANDED;
+    } else {
+        opt = 0;
+    }
+
+    wrenSetSlotBool(vm, 0, mu_header_ex(data->uiCtx, text, opt));
 }
 
 void uiButton(WrenVM* vm)
@@ -725,6 +735,101 @@ void uiTextbox(WrenVM* vm)
     strcpy(buf, text);
     mu_textbox(data->uiCtx, buf, sizeof(buf));
     wrenSetSlotString(vm, 0, buf);
+}
+
+void uiGetWindowInfo(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    mu_Container* win = mu_get_current_container(data->uiCtx);
+
+    wrenEnsureSlots(vm, 3);
+    wrenSetSlotNewMap(vm, 0);
+
+    wrenSetSlotString(vm, 1, "x");
+    wrenSetSlotDouble(vm, 2, win->rect.x);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "y");
+    wrenSetSlotDouble(vm, 2, win->rect.y);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "width");
+    wrenSetSlotDouble(vm, 2, win->rect.w);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "height");
+    wrenSetSlotDouble(vm, 2, win->rect.h);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "scrollX");
+    wrenSetSlotDouble(vm, 2, win->scroll.x);
+    wrenSetMapValue(vm, 0, 1, 2);
+
+    wrenSetSlotString(vm, 1, "scrollY");
+    wrenSetSlotDouble(vm, 2, win->scroll.y);
+    wrenSetMapValue(vm, 0, 1, 2);
+}
+
+void uiSetWindowSize(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
+    int width = (int)wrenGetSlotDouble(vm, 1);
+    int height = (int)wrenGetSlotDouble(vm, 2);
+    mu_Container* win = mu_get_current_container(data->uiCtx);
+    win->rect.w = width;
+    win->rect.h = height;
+}
+
+void uiOpenPopup(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "name");
+    const char* name = wrenGetSlotString(vm, 1);
+    mu_open_popup(data->uiCtx, name);
+}
+
+void uiBeginPopup(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "name");
+    const char* name = wrenGetSlotString(vm, 1);
+    wrenSetSlotBool(vm, 0, mu_begin_popup(data->uiCtx, name));
+}
+
+void uiEndPopup(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    mu_end_popup(data->uiCtx);
+}
+
+void uiBeginColumn(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    mu_layout_begin_column(data->uiCtx);
+}
+
+void uiEndColumn(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    mu_layout_end_column(data->uiCtx);
+}
+
+static float values[10];
+static int sliderIndex = 0;
+
+void uiSlider(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "buffer");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "min");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "max");
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 1);
+    int min = (int)wrenGetSlotDouble(vm, 2);
+    int max = (int)wrenGetSlotDouble(vm, 3);
+
+    mu_slider(data->uiCtx, (float*)buffer->data, min, max);
 }
 
 void colorAllocate(WrenVM* vm)
@@ -2440,6 +2545,103 @@ void fileWrite(WrenVM* vm)
     int length;
     const char* data = wrenGetSlotBytes(vm, 2, &length);
     SaveFileData(path, (void*)data, length);
+}
+
+void bufferAllocate(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotNewForeign(vm, 0, 0, sizeof(Buffer));
+}
+
+void bufferFinalize(void* data)
+{
+    Buffer* buffer = (Buffer*)data;
+    free(buffer->data);
+}
+
+void bufferNew(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "size");
+    int size = (int)wrenGetSlotDouble(vm, 1);
+
+    buffer->data = malloc(size);
+    if (buffer->data == NULL) {
+        VM_ABORT(vm, "Failed to allocate buffer.");
+        return;
+    }
+
+    buffer->size = size;
+    buffer->pointer = 0;
+}
+
+void bufferResize(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "size");
+    int size = (int)wrenGetSlotDouble(vm, 1);
+
+    buffer->data = realloc(buffer->data, size);
+    if (buffer->data == NULL) {
+        VM_ABORT(vm, "Failed to resize buffer.");
+        return;
+    }
+
+    buffer->size = size;
+}
+
+void bufferReadFloat(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+
+    if (buffer->pointer > buffer->size - sizeof(float)) {
+        VM_ABORT(vm, "Pointer out of bounds.");
+        return;
+    }
+
+    wrenSetSlotDouble(vm, 0, *(float*)(&buffer->data[buffer->pointer]));
+    buffer->pointer += sizeof(float);
+}
+
+void bufferWriteFloat(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "v");
+    int v = (int)wrenGetSlotDouble(vm, 1);
+
+    if (buffer->pointer > buffer->size - sizeof(float)) {
+        VM_ABORT(vm, "Pointer out of bounds.");
+        return;
+    }
+
+    *(float*)(&buffer->data[buffer->pointer]) = v;
+    buffer->pointer += sizeof(float);
+}
+
+void bufferGetSize(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, buffer->size);
+}
+
+void bufferGetPointer(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    wrenSetSlotDouble(vm, 0, buffer->pointer);
+}
+
+void bufferSetPointer(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "pointer");
+    int pointer = (int)wrenGetSlotDouble(vm, 1);
+
+    if (pointer < 0 || pointer > buffer->size) {
+        VM_ABORT(vm, "Pointer out of bounds.");
+        return;
+    }
+
+    buffer->pointer = pointer;
 }
 
 void requestAllocate(WrenVM* vm)

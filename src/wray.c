@@ -154,10 +154,18 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("beginWindow(_,_,_,_,_)", uiBeginWindow);
         BIND_METHOD("endWindow()", uiEndWindow);
         BIND_METHOD("label(_)", uiLabel);
-        BIND_METHOD("header(_)", uiHeader);
+        BIND_METHOD("header(_,_)", uiHeader);
         BIND_METHOD("button(_)", uiButton);
         BIND_METHOD("row(_,_,_)", uiRow);
         BIND_METHOD("textbox(_)", uiTextbox);
+        BIND_METHOD("getWindowInfo()", uiGetWindowInfo);
+        BIND_METHOD("setWindowSize(_,_)", uiSetWindowSize);
+        BIND_METHOD("openPopup(_)", uiOpenPopup);
+        BIND_METHOD("beginPopup(_)", uiBeginPopup);
+        BIND_METHOD("endPopup()", uiEndPopup);
+        BIND_METHOD("beginColumn()", uiBeginColumn);
+        BIND_METHOD("endColumn()", uiEndColumn);
+        BIND_METHOD("slider(_,_,_)", uiSlider);
     } else if (TextIsEqual(className, "Color")) {
         BIND_METHOD("init new(_,_,_,_)", colorNew);
         BIND_METHOD("init new(_,_,_)", colorNew2);
@@ -321,6 +329,14 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("size(_)", fileSize);
         BIND_METHOD("read(_)", fileRead);
         BIND_METHOD("write(_,_)", fileWrite);
+    } else if (TextIsEqual(className, "Buffer")) {
+        BIND_METHOD("init new(_)", bufferNew);
+        BIND_METHOD("resize(_)", bufferResize);
+        BIND_METHOD("readFloat()", bufferReadFloat);
+        BIND_METHOD("writeFloat(_)", bufferWriteFloat);
+        BIND_METHOD("size", bufferGetSize);
+        BIND_METHOD("pointer", bufferGetPointer);
+        BIND_METHOD("pointer=(_)", bufferSetPointer);
     } else if (TextIsEqual(className, "Request")) {
         BIND_METHOD("init new(_)", requestNew);
         BIND_METHOD("make()", requestMake);
@@ -402,6 +418,9 @@ static WrenForeignClassMethods wrenBindForeignClass(WrenVM* vm, const char* modu
         methods.finalize = shaderFinalize;
     } else if (TextIsEqual(className, "Gamepad")) {
         methods.allocate = gamepadAllocate;
+    } else if (TextIsEqual(className, "Buffer")) {
+        methods.allocate = bufferAllocate;
+        methods.finalize = bufferFinalize;
     } else if (TextIsEqual(className, "Request")) {
         methods.allocate = requestAllocate;
         methods.finalize = requestFinalize;
