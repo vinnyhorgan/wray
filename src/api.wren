@@ -112,6 +112,13 @@ class UI {
     foreign static beginColumn()
     foreign static endColumn()
     foreign static slider(value, min, max)
+    foreign static next()
+    foreign static drawRect(x, y, width, height, color)
+    foreign static drawText(text, x, y, width, height)
+    foreign static beginTreenode(text)
+    foreign static endTreenode()
+    foreign static checkbox(text, value)
+    foreign static text(text)
 
     static header(text) { header(text, "") }
 }

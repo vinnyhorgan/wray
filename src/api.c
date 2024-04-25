@@ -18,7 +18,47 @@ void setArgs(int argc, char** argv)
 
 int uiTextWidth(mu_Font font, const char* text, int len)
 {
-    return MeasureTextEx(defaultFont, text, defaultFont.baseSize, 1).x;
+    if (len == -1)
+        len = TextLength(text);
+
+    Vector2 textSize = { 0 };
+
+    int tempByteCounter = 0;
+    int byteCounter = 0;
+
+    float textWidth = 0.0f;
+    float tempTextWidth = 0.0f;
+
+    float textHeight = (float)defaultFont.baseSize;
+
+    int letter = 0;
+    int index = 0;
+
+    for (int i = 0; i < len;) {
+        byteCounter++;
+
+        int next = 0;
+        letter = GetCodepointNext(&text[i], &next);
+        index = GetGlyphIndex(defaultFont, letter);
+
+        i += next;
+
+        if (defaultFont.glyphs[index].advanceX != 0)
+            textWidth += defaultFont.glyphs[index].advanceX;
+        else
+            textWidth += (defaultFont.recs[index].width + defaultFont.glyphs[index].offsetX);
+
+        if (tempByteCounter < byteCounter)
+            tempByteCounter = byteCounter;
+    }
+
+    if (tempTextWidth < textWidth)
+        tempTextWidth = textWidth;
+
+    textSize.x = tempTextWidth + (float)((tempByteCounter - 1));
+    textSize.y = textHeight;
+
+    return textSize.x;
 }
 
 int uiTextHeight(mu_Font font)
@@ -728,13 +768,9 @@ void uiRow(WrenVM* vm)
 void uiTextbox(WrenVM* vm)
 {
     vmData* data = (vmData*)wrenGetUserData(vm);
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
-    const char* text = wrenGetSlotString(vm, 1);
-
-    char buf[128];
-    strcpy(buf, text);
-    mu_textbox(data->uiCtx, buf, sizeof(buf));
-    wrenSetSlotString(vm, 0, buf);
+    ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "buffer");
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 1);
+    mu_textbox(data->uiCtx, buffer->data, buffer->size);
 }
 
 void uiGetWindowInfo(WrenVM* vm)
@@ -816,9 +852,6 @@ void uiEndColumn(WrenVM* vm)
     mu_layout_end_column(data->uiCtx);
 }
 
-static float values[10];
-static int sliderIndex = 0;
-
 void uiSlider(WrenVM* vm)
 {
     vmData* data = (vmData*)wrenGetUserData(vm);
@@ -828,8 +861,92 @@ void uiSlider(WrenVM* vm)
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 1);
     int min = (int)wrenGetSlotDouble(vm, 2);
     int max = (int)wrenGetSlotDouble(vm, 3);
-
     mu_slider(data->uiCtx, (float*)buffer->data, min, max);
+}
+
+void uiNext(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    wrenEnsureSlots(vm, 2);
+    wrenSetSlotNewList(vm, 0);
+
+    mu_Rect r = mu_layout_next(data->uiCtx);
+
+    wrenSetSlotDouble(vm, 1, r.x);
+    wrenInsertInList(vm, 0, 0, 1);
+
+    wrenSetSlotDouble(vm, 1, r.y);
+    wrenInsertInList(vm, 0, 1, 1);
+
+    wrenSetSlotDouble(vm, 1, r.w);
+    wrenInsertInList(vm, 0, 2, 1);
+
+    wrenSetSlotDouble(vm, 1, r.h);
+    wrenInsertInList(vm, 0, 3, 1);
+}
+
+void uiDrawRect(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "height");
+    ASSERT_SLOT_TYPE(vm, 5, FOREIGN, "color");
+    int x = (int)wrenGetSlotDouble(vm, 1);
+    int y = (int)wrenGetSlotDouble(vm, 2);
+    int width = (int)wrenGetSlotDouble(vm, 3);
+    int height = (int)wrenGetSlotDouble(vm, 4);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 5);
+    mu_draw_rect(data->uiCtx, mu_rect(x, y, width, height), mu_color(color->r, color->g, color->b, color->a));
+}
+
+void uiDrawText(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "x");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "y");
+    ASSERT_SLOT_TYPE(vm, 4, NUM, "width");
+    ASSERT_SLOT_TYPE(vm, 5, NUM, "height");
+    const char* text = wrenGetSlotString(vm, 1);
+    int x = (int)wrenGetSlotDouble(vm, 2);
+    int y = (int)wrenGetSlotDouble(vm, 3);
+    int width = (int)wrenGetSlotDouble(vm, 4);
+    int height = (int)wrenGetSlotDouble(vm, 5);
+    mu_draw_control_text(data->uiCtx, text, mu_rect(x, y, width, height), MU_COLOR_TEXT, MU_OPT_ALIGNCENTER);
+}
+
+void uiBeginTreenode(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    const char* text = wrenGetSlotString(vm, 1);
+    wrenSetSlotBool(vm, 0, mu_begin_treenode(data->uiCtx, text));
+}
+
+void uiEndTreenode(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    mu_end_treenode(data->uiCtx);
+}
+
+void uiCheckbox(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    ASSERT_SLOT_TYPE(vm, 2, FOREIGN, "buffer");
+    const char* text = wrenGetSlotString(vm, 1);
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 2);
+    mu_checkbox(data->uiCtx, text, (int*)buffer->data);
+}
+
+void uiText(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    const char* text = wrenGetSlotString(vm, 1);
+    mu_text(data->uiCtx, text);
 }
 
 void colorAllocate(WrenVM* vm)

@@ -166,6 +166,13 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("beginColumn()", uiBeginColumn);
         BIND_METHOD("endColumn()", uiEndColumn);
         BIND_METHOD("slider(_,_,_)", uiSlider);
+        BIND_METHOD("next()", uiNext);
+        BIND_METHOD("drawRect(_,_,_,_,_)", uiDrawRect);
+        BIND_METHOD("drawText(_,_,_,_,_)", uiDrawText);
+        BIND_METHOD("beginTreenode(_)", uiBeginTreenode);
+        BIND_METHOD("endTreenode()", uiEndTreenode);
+        BIND_METHOD("checkbox(_,_)", uiCheckbox);
+        BIND_METHOD("text(_)", uiText);
     } else if (TextIsEqual(className, "Color")) {
         BIND_METHOD("init new(_,_,_,_)", colorNew);
         BIND_METHOD("init new(_,_,_)", colorNew2);

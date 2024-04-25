@@ -106,6 +106,13 @@ void uiEndPopup(WrenVM* vm);
 void uiBeginColumn(WrenVM* vm);
 void uiEndColumn(WrenVM* vm);
 void uiSlider(WrenVM* vm);
+void uiNext(WrenVM* vm);
+void uiDrawRect(WrenVM* vm);
+void uiDrawText(WrenVM* vm);
+void uiBeginTreenode(WrenVM* vm);
+void uiEndTreenode(WrenVM* vm);
+void uiCheckbox(WrenVM* vm);
+void uiText(WrenVM* vm);
 
 void colorAllocate(WrenVM* vm);
 void colorNew(WrenVM* vm);
