@@ -60,22 +60,22 @@ while (!Window.closed) {
 
     Graphics.begin()
 
-    Graphics.clear(Color.white)
+        Graphics.clear(Color.white)
 
-    for (b in bunnies) {
-        bunny.draw(b.x, b.y, b.color)
-    }
+        for (b in bunnies) {
+            bunny.draw(b.x, b.y, b.color)
+        }
 
-    Graphics.rectangle(0, 0, Window.width, 44, Color.black)
-    Graphics.print("Bunnies: %(bunnies.count)", 130, 10, 24, Color.white)
+        Graphics.rectangle(0, 0, Window.width, 44, Color.black)
+        Graphics.print("Bunnies: %(bunnies.count)", 130, 10, 24, Color.white)
 
-    if (Window.fps > 40) {
-        Graphics.print("FPS: %(Window.fps)", 10, 10, 24, Color.green)
-    } else if (Window.fps > 20) {
-        Graphics.print("FPS: %(Window.fps)", 10, 10, 24, Color.yellow)
-    } else {
-        Graphics.print("FPS: %(Window.fps)", 10, 10, 24, Color.red)
-    }
+        if (Window.fps > 40) {
+            Graphics.print("FPS: %(Window.fps)", 10, 10, 24, Color.green)
+        } else if (Window.fps > 20) {
+            Graphics.print("FPS: %(Window.fps)", 10, 10, 24, Color.yellow)
+        } else {
+            Graphics.print("FPS: %(Window.fps)", 10, 10, 24, Color.red)
+        }
 
     Graphics.end()
 }
