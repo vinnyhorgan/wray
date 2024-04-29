@@ -119,6 +119,9 @@ class UI {
     foreign static endTreenode()
     foreign static checkbox(text, value)
     foreign static text(text)
+    foreign static beginPanel(name)
+    foreign static endPanel()
+    foreign static focus()
 
     static header(text) { header(text, "") }
 }
@@ -404,6 +407,8 @@ foreign class Buffer {
     foreign resize(size)
     foreign readFloat()
     foreign writeFloat(v)
+    foreign readString(size)
+    foreign writeString(v)
 
     foreign size
     foreign pointer

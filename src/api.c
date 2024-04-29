@@ -770,7 +770,7 @@ void uiTextbox(WrenVM* vm)
     vmData* data = (vmData*)wrenGetUserData(vm);
     ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "buffer");
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 1);
-    mu_textbox(data->uiCtx, buffer->data, buffer->size);
+    wrenSetSlotBool(vm, 0, mu_textbox(data->uiCtx, buffer->data, buffer->size) & MU_RES_SUBMIT);
 }
 
 void uiGetWindowInfo(WrenVM* vm)
@@ -944,9 +944,34 @@ void uiCheckbox(WrenVM* vm)
 void uiText(WrenVM* vm)
 {
     vmData* data = (vmData*)wrenGetUserData(vm);
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
-    const char* text = wrenGetSlotString(vm, 1);
-    mu_text(data->uiCtx, text);
+
+    if (wrenGetSlotType(vm, 1) == WREN_TYPE_STRING) {
+        const char* text = wrenGetSlotString(vm, 1);
+        mu_text(data->uiCtx, text);
+    } else if (wrenGetSlotType(vm, 1) == WREN_TYPE_FOREIGN) {
+        Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 1);
+        mu_text(data->uiCtx, (const char*)buffer->data);
+    }
+}
+
+void uiBeginPanel(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "name");
+    const char* name = wrenGetSlotString(vm, 1);
+    mu_begin_panel(data->uiCtx, name);
+}
+
+void uiEndPanel(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    mu_end_panel(data->uiCtx);
+}
+
+void uiFocus(WrenVM* vm)
+{
+    vmData* data = (vmData*)wrenGetUserData(vm);
+    mu_set_focus(data->uiCtx, data->uiCtx->last_id);
 }
 
 void colorAllocate(WrenVM* vm)
@@ -2682,7 +2707,7 @@ void bufferNew(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 1, NUM, "size");
     int size = (int)wrenGetSlotDouble(vm, 1);
 
-    buffer->data = malloc(size);
+    buffer->data = calloc(size, 1);
     if (buffer->data == NULL) {
         VM_ABORT(vm, "Failed to allocate buffer.");
         return;
@@ -2733,6 +2758,43 @@ void bufferWriteFloat(WrenVM* vm)
 
     *(float*)(&buffer->data[buffer->pointer]) = v;
     buffer->pointer += sizeof(float);
+}
+
+void bufferReadString(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "size");
+    int size = (int)wrenGetSlotDouble(vm, 1);
+
+    if (buffer->pointer > buffer->size - size) {
+        VM_ABORT(vm, "Pointer out of bounds.");
+        return;
+    }
+
+    char* str = malloc(size + 1);
+    memcpy(str, &buffer->data[buffer->pointer], size);
+    str[size] = '\0';
+    wrenSetSlotString(vm, 0, str);
+    free(str);
+
+    buffer->pointer += size;
+}
+
+void bufferWriteString(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "v");
+    const char* v = wrenGetSlotString(vm, 1);
+
+    int size = TextLength(v);
+
+    if (buffer->pointer > buffer->size - size) {
+        VM_ABORT(vm, "Pointer out of bounds.");
+        return;
+    }
+
+    memcpy(&buffer->data[buffer->pointer], v, size);
+    buffer->pointer += size;
 }
 
 void bufferGetSize(WrenVM* vm)

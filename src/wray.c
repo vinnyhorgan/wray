@@ -173,6 +173,9 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("endTreenode()", uiEndTreenode);
         BIND_METHOD("checkbox(_,_)", uiCheckbox);
         BIND_METHOD("text(_)", uiText);
+        BIND_METHOD("beginPanel(_)", uiBeginPanel);
+        BIND_METHOD("endPanel()", uiEndPanel);
+        BIND_METHOD("focus()", uiFocus);
     } else if (TextIsEqual(className, "Color")) {
         BIND_METHOD("init new(_,_,_,_)", colorNew);
         BIND_METHOD("init new(_,_,_)", colorNew2);
@@ -341,6 +344,8 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("resize(_)", bufferResize);
         BIND_METHOD("readFloat()", bufferReadFloat);
         BIND_METHOD("writeFloat(_)", bufferWriteFloat);
+        BIND_METHOD("readString(_)", bufferReadString);
+        BIND_METHOD("writeString(_)", bufferWriteString);
         BIND_METHOD("size", bufferGetSize);
         BIND_METHOD("pointer", bufferGetPointer);
         BIND_METHOD("pointer=(_)", bufferSetPointer);
@@ -716,6 +721,11 @@ static int fuseCommand(int argc, const char** argv)
 
     if (!FileExists(argv[0])) {
         printf("File %s does not exist.\n", argv[0]);
+        return 1;
+    }
+
+    if (!TextIsEqual(GetFileExtension(argv[0]), ".egg")) {
+        printf("%s is not an egg file.\n", argv[0]);
         return 1;
     }
 

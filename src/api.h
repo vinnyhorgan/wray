@@ -113,6 +113,9 @@ void uiBeginTreenode(WrenVM* vm);
 void uiEndTreenode(WrenVM* vm);
 void uiCheckbox(WrenVM* vm);
 void uiText(WrenVM* vm);
+void uiBeginPanel(WrenVM* vm);
+void uiEndPanel(WrenVM* vm);
+void uiFocus(WrenVM* vm);
 
 void colorAllocate(WrenVM* vm);
 void colorNew(WrenVM* vm);
@@ -308,11 +311,13 @@ void bufferAllocate(WrenVM* vm);
 void bufferFinalize(void* data);
 void bufferNew(WrenVM* vm);
 void bufferResize(WrenVM* vm);
+void bufferReadFloat(WrenVM* vm);
+void bufferWriteFloat(WrenVM* vm);
+void bufferReadString(WrenVM* vm);
+void bufferWriteString(WrenVM* vm);
 void bufferGetSize(WrenVM* vm);
 void bufferGetPointer(WrenVM* vm);
 void bufferSetPointer(WrenVM* vm);
-void bufferReadFloat(WrenVM* vm);
-void bufferWriteFloat(WrenVM* vm);
 
 typedef struct {
     naettReq* req;

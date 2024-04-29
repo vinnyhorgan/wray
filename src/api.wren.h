@@ -1,4 +1,4 @@
-// Generated automatically from ..\Documents\projects\wray\src\api.wren. Do not edit.
+// Generated automatically from .\wray\src\api.wren. Do not edit.
 static const char* apiModuleSource =
 "//------------------------------\n"
 "// Audio\n"
@@ -121,6 +121,9 @@ static const char* apiModuleSource =
 "    foreign static endTreenode()\n"
 "    foreign static checkbox(text, value)\n"
 "    foreign static text(text)\n"
+"    foreign static beginPanel(name)\n"
+"    foreign static endPanel()\n"
+"    foreign static focus()\n"
 "\n"
 "    static header(text) { header(text, \"\") }\n"
 "}\n"
@@ -406,6 +409,8 @@ static const char* apiModuleSource =
 "    foreign resize(size)\n"
 "    foreign readFloat()\n"
 "    foreign writeFloat(v)\n"
+"    foreign readString(size)\n"
+"    foreign writeString(v)\n"
 "\n"
 "    foreign size\n"
 "    foreign pointer\n"
