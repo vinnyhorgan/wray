@@ -395,50 +395,51 @@ class Directory {
 }
 
 class File {
-    foreign static exists(path)         // Check if file exists
-    foreign static size(path)           // Get file size
-    foreign static read(path)           // Read data from file
-    foreign static write(path, data)    // Write data to file
+    foreign static exists(path)          // Check if file exists
+    foreign static size(path)            // Get file size
+    foreign static read(path)            // Read data from file
+    foreign static readEmbedded(path)    // Read data from egg file
+    foreign static write(path, data)     // Write data to file
 }
 
 foreign class Buffer {
-    foreign construct new(size)
-    foreign construct from(data)
+    foreign construct new(size)           // Allocate buffer of given size in bytes
+    foreign construct from(data)          // Create new buffer from: array of bytes, string or buffer
 
     foreign [index]
     foreign [index]=(v)
 
-    foreign fill(value)
+    foreign fill(value)                   // Fill buffer with given value
 
-    foreign readInt8(offset)
-    foreign readUint8(offset)
-    foreign readInt16(offset)
-    foreign readUint16(offset)
-    foreign readInt32(offset)
-    foreign readUint32(offset)
-    foreign readInt64(offset)
-    foreign readUint64(offset)
-    foreign readFloat(offset)
-    foreign readDouble(offset)
-    foreign readBool(offset)
-    foreign readString(size, offset)
+    foreign readInt8(offset)              // Read int8 from buffer at given offset
+    foreign readUint8(offset)             // Read uint8 from buffer at given offset
+    foreign readInt16(offset)             // Read int16 from buffer at given offset
+    foreign readUint16(offset)            // Read uint16 from buffer at given offset
+    foreign readInt32(offset)             // Read int32 from buffer at given offset
+    foreign readUint32(offset)            // Read uint32 from buffer at given offset
+    foreign readInt64(offset)             // Read int64 from buffer at given offset
+    foreign readUint64(offset)            // Read uint64 from buffer at given offset
+    foreign readFloat(offset)             // Read float from buffer at given offset
+    foreign readDouble(offset)            // Read double from buffer at given offset
+    foreign readBool(offset)              // Read bool from buffer at given offset
+    foreign readString(size, offset)      // Read string of specified size from buffer at given offset
 
-    foreign writeInt8(value, offset)
-    foreign writeUint8(value, offset)
-    foreign writeInt16(value, offset)
-    foreign writeUint16(value, offset)
-    foreign writeInt32(value, offset)
-    foreign writeUint32(value, offset)
-    foreign writeInt64(value, offset)
-    foreign writeUint64(value, offset)
-    foreign writeFloat(value, offset)
-    foreign writeDouble(value, offset)
-    foreign writeBool(value, offset)
-    foreign writeString(value, offset)
+    foreign writeInt8(value, offset)      // Write int8 to buffer at given offset, returns new offset
+    foreign writeUint8(value, offset)     // Write uint8 to buffer at given offset, returns new offset
+    foreign writeInt16(value, offset)     // Write int16 to buffer at given offset, returns new offset
+    foreign writeUint16(value, offset)    // Write uint16 to buffer at given offset, returns new offset
+    foreign writeInt32(value, offset)     // Write int32 to buffer at given offset, returns new offset
+    foreign writeUint32(value, offset)    // Write uint32 to buffer at given offset, returns new offset
+    foreign writeInt64(value, offset)     // Write int64 to buffer at given offset, returns new offset
+    foreign writeUint64(value, offset)    // Write uint64 to buffer at given offset, returns new offset
+    foreign writeFloat(value, offset)     // Write float to buffer at given offset, returns new offset
+    foreign writeDouble(value, offset)    // Write double to buffer at given offset, returns new offset
+    foreign writeBool(value, offset)      // Write bool to buffer at given offset, returns new offset
+    foreign writeString(value, offset)    // Write string to buffer at given offset, returns new offset
 
-    foreign size
-    foreign toString
-    foreign toList
+    foreign size                          // Get buffer size in bytes
+    foreign toString                      // Convert buffer to string
+    foreign toList                        // Convert buffer to list
 }
 
 foreign class Request {

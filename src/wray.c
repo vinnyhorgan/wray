@@ -338,6 +338,7 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("exists(_)", fileExists);
         BIND_METHOD("size(_)", fileSize);
         BIND_METHOD("read(_)", fileRead);
+        BIND_METHOD("readEmbedded(_)", fileReadEmbedded);
         BIND_METHOD("write(_,_)", fileWrite);
     } else if (TextIsEqual(className, "Buffer")) {
         BIND_METHOD("init new(_)", bufferNew);

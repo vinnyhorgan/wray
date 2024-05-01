@@ -1,5 +1,7 @@
 #include "api.h"
 
+#include <stdio.h>
+
 #include <raylib.h>
 
 #include "font.h"
@@ -2688,6 +2690,35 @@ void fileRead(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
     const char* path = wrenGetSlotString(vm, 1);
 
+    FILE* file = fopen(path, "rb");
+    if (file == NULL) {
+        VM_ABORT(vm, "Failed to open file.");
+        return;
+    }
+
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    rewind(file);
+
+    char* data = (char*)malloc(size);
+    if (data == NULL) {
+        fclose(file);
+        VM_ABORT(vm, "Failed to allocate memory.");
+        return;
+    }
+
+    fread(data, 1, size, file);
+    fclose(file);
+
+    wrenSetSlotBytes(vm, 0, data, size);
+    free(data);
+}
+
+void fileReadEmbedded(WrenVM* vm)
+{
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
+    const char* path = wrenGetSlotString(vm, 1);
+
     int length;
     unsigned char* file = LoadFileData(path, &length);
     wrenSetSlotBytes(vm, 0, file, length);
@@ -2735,28 +2766,55 @@ void bufferNew(WrenVM* vm)
 void bufferNew2(WrenVM* vm)
 {
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
-    ASSERT_SLOT_TYPE(vm, 1, LIST, "data");
 
-    int size = wrenGetListCount(vm, 1);
-    buffer->data = calloc(size, sizeof(uint8_t));
-    if (buffer->data == NULL) {
-        VM_ABORT(vm, "Failed to allocate buffer.");
-        return;
-    }
-
-    wrenEnsureSlots(vm, 3);
-    for (int i = 0; i < size; i++) {
-        wrenGetListElement(vm, 1, i, 2);
-
-        if (wrenGetSlotType(vm, 2) != WREN_TYPE_NUM) {
-            VM_ABORT(vm, "Invalid buffer data.");
+    if (wrenGetSlotType(vm, 1) == WREN_TYPE_LIST) {
+        int size = wrenGetListCount(vm, 1);
+        buffer->data = calloc(size, sizeof(uint8_t));
+        if (buffer->data == NULL) {
+            VM_ABORT(vm, "Failed to allocate buffer.");
             return;
         }
 
-        buffer->data[i] = (uint8_t)wrenGetSlotDouble(vm, 2);
-    }
+        wrenEnsureSlots(vm, 3);
+        for (int i = 0; i < size; i++) {
+            wrenGetListElement(vm, 1, i, 2);
 
-    buffer->size = size;
+            if (wrenGetSlotType(vm, 2) != WREN_TYPE_NUM) {
+                VM_ABORT(vm, "Invalid buffer data.");
+                return;
+            }
+
+            buffer->data[i] = (uint8_t)wrenGetSlotDouble(vm, 2);
+        }
+
+        buffer->size = size;
+    } else if (wrenGetSlotType(vm, 1) == WREN_TYPE_STRING) {
+        int length;
+        const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+        buffer->data = calloc(length, sizeof(uint8_t));
+        if (buffer->data == NULL) {
+            VM_ABORT(vm, "Failed to allocate buffer.");
+            return;
+        }
+
+        memcpy(buffer->data, data, length);
+        buffer->size = length;
+    } else if (wrenGetSlotType(vm, 1) == WREN_TYPE_FOREIGN) {
+        Buffer* other = (Buffer*)wrenGetSlotForeign(vm, 1);
+
+        buffer->data = calloc(other->size, sizeof(uint8_t));
+        if (buffer->data == NULL) {
+            VM_ABORT(vm, "Failed to allocate buffer.");
+            return;
+        }
+
+        memcpy(buffer->data, other->data, other->size);
+        buffer->size = other->size;
+    } else {
+        VM_ABORT(vm, "Invalid buffer data.");
+        return;
+    }
 }
 
 void bufferGetIndex(WrenVM* vm)

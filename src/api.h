@@ -299,6 +299,7 @@ void directoryList(WrenVM* vm);
 void fileExists(WrenVM* vm);
 void fileSize(WrenVM* vm);
 void fileRead(WrenVM* vm);
+void fileReadEmbedded(WrenVM* vm);
 void fileWrite(WrenVM* vm);
 
 typedef struct {
