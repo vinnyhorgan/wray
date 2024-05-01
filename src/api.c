@@ -856,12 +856,20 @@ void uiSlider(WrenVM* vm)
 {
     vmData* data = (vmData*)wrenGetUserData(vm);
     ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "buffer");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "min");
     ASSERT_SLOT_TYPE(vm, 3, NUM, "max");
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 1);
-    int min = (int)wrenGetSlotDouble(vm, 2);
-    int max = (int)wrenGetSlotDouble(vm, 3);
-    mu_slider(data->uiCtx, (float*)buffer->data, min, max);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+    int min = (int)wrenGetSlotDouble(vm, 3);
+    int max = (int)wrenGetSlotDouble(vm, 4);
+
+    if (offset < 0 || offset >= buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    mu_slider(data->uiCtx, (float*)(&buffer->data[offset]), min, max);
 }
 
 void uiNext(WrenVM* vm)
@@ -936,9 +944,17 @@ void uiCheckbox(WrenVM* vm)
     vmData* data = (vmData*)wrenGetUserData(vm);
     ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
     ASSERT_SLOT_TYPE(vm, 2, FOREIGN, "buffer");
+    ASSERT_SLOT_TYPE(vm, 3, NUM, "offset");
     const char* text = wrenGetSlotString(vm, 1);
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 2);
-    mu_checkbox(data->uiCtx, text, (int*)buffer->data);
+    int offset = (int)wrenGetSlotDouble(vm, 3);
+
+    if (offset < 0 || offset >= buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    mu_checkbox(data->uiCtx, text, (int*)(&buffer->data[offset]));
 }
 
 void uiText(WrenVM* vm)
@@ -2707,94 +2723,458 @@ void bufferNew(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 1, NUM, "size");
     int size = (int)wrenGetSlotDouble(vm, 1);
 
-    buffer->data = calloc(size, 1);
+    buffer->data = calloc(size, sizeof(uint8_t));
     if (buffer->data == NULL) {
         VM_ABORT(vm, "Failed to allocate buffer.");
         return;
     }
 
     buffer->size = size;
-    buffer->pointer = 0;
 }
 
-void bufferResize(WrenVM* vm)
+void bufferNew2(WrenVM* vm)
 {
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "size");
-    int size = (int)wrenGetSlotDouble(vm, 1);
+    ASSERT_SLOT_TYPE(vm, 1, LIST, "data");
 
-    buffer->data = realloc(buffer->data, size);
+    int size = wrenGetListCount(vm, 1);
+    buffer->data = calloc(size, sizeof(uint8_t));
     if (buffer->data == NULL) {
-        VM_ABORT(vm, "Failed to resize buffer.");
+        VM_ABORT(vm, "Failed to allocate buffer.");
         return;
+    }
+
+    wrenEnsureSlots(vm, 3);
+    for (int i = 0; i < size; i++) {
+        wrenGetListElement(vm, 1, i, 2);
+
+        if (wrenGetSlotType(vm, 2) != WREN_TYPE_NUM) {
+            VM_ABORT(vm, "Invalid buffer data.");
+            return;
+        }
+
+        buffer->data[i] = (uint8_t)wrenGetSlotDouble(vm, 2);
     }
 
     buffer->size = size;
 }
 
+void bufferGetIndex(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "index");
+    int index = (int)wrenGetSlotDouble(vm, 1);
+
+    if (index < 0 || index >= buffer->size) {
+        VM_ABORT(vm, "Invalid buffer index.");
+        return;
+    }
+
+    wrenSetSlotDouble(vm, 0, buffer->data[index]);
+}
+
+void bufferSetIndex(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "index");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "value");
+    int index = (int)wrenGetSlotDouble(vm, 1);
+    uint8_t value = (uint8_t)wrenGetSlotDouble(vm, 2);
+
+    if (index < 0 || index >= buffer->size) {
+        VM_ABORT(vm, "Invalid buffer index.");
+        return;
+    }
+
+    buffer->data[index] = value;
+}
+
+void bufferFill(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "value");
+    uint8_t value = (uint8_t)wrenGetSlotDouble(vm, 1);
+    memset(buffer->data, value, buffer->size);
+}
+
+void bufferReadInt8(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "offset");
+    int offset = (int)wrenGetSlotDouble(vm, 1);
+
+    if (offset < 0 || offset + 1 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    wrenSetSlotDouble(vm, 0, *(int8_t*)(&buffer->data[offset]));
+}
+
+void bufferReadUint8(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "offset");
+    int offset = (int)wrenGetSlotDouble(vm, 1);
+
+    if (offset < 0 || offset + 1 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    wrenSetSlotDouble(vm, 0, *(uint8_t*)(&buffer->data[offset]));
+}
+
+void bufferReadInt16(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "offset");
+    int offset = (int)wrenGetSlotDouble(vm, 1);
+
+    if (offset < 0 || offset + 2 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    wrenSetSlotDouble(vm, 0, *(int16_t*)(&buffer->data[offset]));
+}
+
+void bufferReadUint16(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "offset");
+    int offset = (int)wrenGetSlotDouble(vm, 1);
+
+    if (offset < 0 || offset + 2 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    wrenSetSlotDouble(vm, 0, *(uint16_t*)(&buffer->data[offset]));
+}
+
+void bufferReadInt32(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "offset");
+    int offset = (int)wrenGetSlotDouble(vm, 1);
+
+    if (offset < 0 || offset + 4 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    wrenSetSlotDouble(vm, 0, *(int32_t*)(&buffer->data[offset]));
+}
+
+void bufferReadUint32(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "offset");
+    int offset = (int)wrenGetSlotDouble(vm, 1);
+
+    if (offset < 0 || offset + 4 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    wrenSetSlotDouble(vm, 0, *(uint32_t*)(&buffer->data[offset]));
+}
+
+void bufferReadInt64(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "offset");
+    int offset = (int)wrenGetSlotDouble(vm, 1);
+
+    if (offset < 0 || offset + 8 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    wrenSetSlotDouble(vm, 0, *(int64_t*)(&buffer->data[offset]));
+}
+
+void bufferReadUint64(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "offset");
+    int offset = (int)wrenGetSlotDouble(vm, 1);
+
+    if (offset < 0 || offset + 8 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    wrenSetSlotDouble(vm, 0, *(uint64_t*)(&buffer->data[offset]));
+}
+
 void bufferReadFloat(WrenVM* vm)
 {
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "offset");
+    int offset = (int)wrenGetSlotDouble(vm, 1);
 
-    if (buffer->pointer > buffer->size - sizeof(float)) {
-        VM_ABORT(vm, "Pointer out of bounds.");
+    if (offset < 0 || offset + 4 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
         return;
     }
 
-    wrenSetSlotDouble(vm, 0, *(float*)(&buffer->data[buffer->pointer]));
-    buffer->pointer += sizeof(float);
+    wrenSetSlotDouble(vm, 0, *(float*)(&buffer->data[offset]));
 }
 
-void bufferWriteFloat(WrenVM* vm)
+void bufferReadDouble(WrenVM* vm)
 {
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "v");
-    int v = (int)wrenGetSlotDouble(vm, 1);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "offset");
+    int offset = (int)wrenGetSlotDouble(vm, 1);
 
-    if (buffer->pointer > buffer->size - sizeof(float)) {
-        VM_ABORT(vm, "Pointer out of bounds.");
+    if (offset < 0 || offset + 8 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
         return;
     }
 
-    *(float*)(&buffer->data[buffer->pointer]) = v;
-    buffer->pointer += sizeof(float);
+    wrenSetSlotDouble(vm, 0, *(double*)(&buffer->data[offset]));
+}
+
+void bufferReadBool(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "offset");
+    int offset = (int)wrenGetSlotDouble(vm, 1);
+
+    if (offset < 0 || offset + 1 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    wrenSetSlotBool(vm, 0, *(bool*)(&buffer->data[offset]));
 }
 
 void bufferReadString(WrenVM* vm)
 {
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, NUM, "size");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
     int size = (int)wrenGetSlotDouble(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
 
-    if (buffer->pointer > buffer->size - size) {
-        VM_ABORT(vm, "Pointer out of bounds.");
+    if (offset < 0 || offset + size > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
         return;
     }
 
     char* str = malloc(size + 1);
-    memcpy(str, &buffer->data[buffer->pointer], size);
+    memcpy(str, &buffer->data[offset], size);
     str[size] = '\0';
     wrenSetSlotString(vm, 0, str);
     free(str);
+}
 
-    buffer->pointer += size;
+void bufferWriteInt8(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    int8_t value = (int8_t)wrenGetSlotDouble(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+
+    if (offset < 0 || offset + 1 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    *(int8_t*)(&buffer->data[offset]) = value;
+    wrenSetSlotDouble(vm, 0, offset + 1);
+}
+
+void bufferWriteUint8(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    uint8_t value = (uint8_t)wrenGetSlotDouble(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+
+    if (offset < 0 || offset + 1 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    *(uint8_t*)(&buffer->data[offset]) = value;
+    wrenSetSlotDouble(vm, 0, offset + 1);
+}
+
+void bufferWriteInt16(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    int16_t value = (int16_t)wrenGetSlotDouble(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+
+    if (offset < 0 || offset + 2 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    *(int16_t*)(&buffer->data[offset]) = value;
+    wrenSetSlotDouble(vm, 0, offset + 2);
+}
+
+void bufferWriteUint16(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    uint16_t value = (uint16_t)wrenGetSlotDouble(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+
+    if (offset < 0 || offset + 2 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    *(uint16_t*)(&buffer->data[offset]) = value;
+    wrenSetSlotDouble(vm, 0, offset + 2);
+}
+
+void bufferWriteInt32(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    int32_t value = (int32_t)wrenGetSlotDouble(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+
+    if (offset < 0 || offset + 4 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    *(int32_t*)(&buffer->data[offset]) = value;
+    wrenSetSlotDouble(vm, 0, offset + 4);
+}
+
+void bufferWriteUint32(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    uint32_t value = (uint32_t)wrenGetSlotDouble(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+
+    if (offset < 0 || offset + 4 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    *(uint32_t*)(&buffer->data[offset]) = value;
+    wrenSetSlotDouble(vm, 0, offset + 4);
+}
+
+void bufferWriteInt64(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    int64_t value = (int64_t)wrenGetSlotDouble(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+
+    if (offset < 0 || offset + 8 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    *(int64_t*)(&buffer->data[offset]) = value;
+    wrenSetSlotDouble(vm, 0, offset + 8);
+}
+
+void bufferWriteUint64(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    uint64_t value = (uint64_t)wrenGetSlotDouble(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+
+    if (offset < 0 || offset + 8 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    *(uint64_t*)(&buffer->data[offset]) = value;
+    wrenSetSlotDouble(vm, 0, offset + 8);
+}
+
+void bufferWriteFloat(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    float value = (float)wrenGetSlotDouble(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+
+    if (offset < 0 || offset + 4 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    *(float*)(&buffer->data[offset]) = value;
+    wrenSetSlotDouble(vm, 0, offset + 4);
+}
+
+void bufferWriteDouble(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, NUM, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    double value = wrenGetSlotDouble(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+
+    if (offset < 0 || offset + 8 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    *(double*)(&buffer->data[offset]) = value;
+    wrenSetSlotDouble(vm, 0, offset + 8);
+}
+
+void bufferWriteBool(WrenVM* vm)
+{
+    Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, BOOL, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    bool value = wrenGetSlotBool(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
+
+    if (offset < 0 || offset + 1 > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
+        return;
+    }
+
+    *(bool*)(&buffer->data[offset]) = value;
+    wrenSetSlotDouble(vm, 0, offset + 1);
 }
 
 void bufferWriteString(WrenVM* vm)
 {
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
-    ASSERT_SLOT_TYPE(vm, 1, STRING, "v");
-    const char* v = wrenGetSlotString(vm, 1);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "value");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "offset");
+    const char* value = wrenGetSlotString(vm, 1);
+    int offset = (int)wrenGetSlotDouble(vm, 2);
 
-    int size = TextLength(v);
+    int size = TextLength(value);
 
-    if (buffer->pointer > buffer->size - size) {
-        VM_ABORT(vm, "Pointer out of bounds.");
+    if (offset < 0 || offset + size > buffer->size) {
+        VM_ABORT(vm, "Invalid buffer offset.");
         return;
     }
 
-    memcpy(&buffer->data[buffer->pointer], v, size);
-    buffer->pointer += size;
+    memcpy(&buffer->data[offset], value, size);
+    wrenSetSlotDouble(vm, 0, offset + size);
 }
 
 void bufferGetSize(WrenVM* vm)
@@ -2803,24 +3183,23 @@ void bufferGetSize(WrenVM* vm)
     wrenSetSlotDouble(vm, 0, buffer->size);
 }
 
-void bufferGetPointer(WrenVM* vm)
+void bufferGetToString(WrenVM* vm)
 {
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
-    wrenSetSlotDouble(vm, 0, buffer->pointer);
+    wrenSetSlotBytes(vm, 0, buffer->data, buffer->size);
 }
 
-void bufferSetPointer(WrenVM* vm)
+void bufferGetToList(WrenVM* vm)
 {
     Buffer* buffer = (Buffer*)wrenGetSlotForeign(vm, 0);
-    ASSERT_SLOT_TYPE(vm, 1, NUM, "pointer");
-    int pointer = (int)wrenGetSlotDouble(vm, 1);
 
-    if (pointer < 0 || pointer > buffer->size) {
-        VM_ABORT(vm, "Pointer out of bounds.");
-        return;
+    wrenEnsureSlots(vm, 2);
+    wrenSetSlotNewList(vm, 0);
+
+    for (int i = 0; i < buffer->size; i++) {
+        wrenSetSlotDouble(vm, 1, buffer->data[i]);
+        wrenInsertInList(vm, 0, i, 1);
     }
-
-    buffer->pointer = pointer;
 }
 
 void requestAllocate(WrenVM* vm)

@@ -302,22 +302,44 @@ void fileRead(WrenVM* vm);
 void fileWrite(WrenVM* vm);
 
 typedef struct {
-    int size;
-    int pointer;
     uint8_t* data;
+    int size;
 } Buffer;
 
 void bufferAllocate(WrenVM* vm);
 void bufferFinalize(void* data);
 void bufferNew(WrenVM* vm);
-void bufferResize(WrenVM* vm);
+void bufferNew2(WrenVM* vm);
+void bufferGetIndex(WrenVM* vm);
+void bufferSetIndex(WrenVM* vm);
+void bufferFill(WrenVM* vm);
+void bufferReadInt8(WrenVM* vm);
+void bufferReadUint8(WrenVM* vm);
+void bufferReadInt16(WrenVM* vm);
+void bufferReadUint16(WrenVM* vm);
+void bufferReadInt32(WrenVM* vm);
+void bufferReadUint32(WrenVM* vm);
+void bufferReadInt64(WrenVM* vm);
+void bufferReadUint64(WrenVM* vm);
 void bufferReadFloat(WrenVM* vm);
-void bufferWriteFloat(WrenVM* vm);
+void bufferReadDouble(WrenVM* vm);
+void bufferReadBool(WrenVM* vm);
 void bufferReadString(WrenVM* vm);
+void bufferWriteInt8(WrenVM* vm);
+void bufferWriteUint8(WrenVM* vm);
+void bufferWriteInt16(WrenVM* vm);
+void bufferWriteUint16(WrenVM* vm);
+void bufferWriteInt32(WrenVM* vm);
+void bufferWriteUint32(WrenVM* vm);
+void bufferWriteInt64(WrenVM* vm);
+void bufferWriteUint64(WrenVM* vm);
+void bufferWriteFloat(WrenVM* vm);
+void bufferWriteDouble(WrenVM* vm);
+void bufferWriteBool(WrenVM* vm);
 void bufferWriteString(WrenVM* vm);
 void bufferGetSize(WrenVM* vm);
-void bufferGetPointer(WrenVM* vm);
-void bufferSetPointer(WrenVM* vm);
+void bufferGetToString(WrenVM* vm);
+void bufferGetToList(WrenVM* vm);
 
 typedef struct {
     naettReq* req;

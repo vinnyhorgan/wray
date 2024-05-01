@@ -111,13 +111,13 @@ class UI {
     foreign static endPopup()
     foreign static beginColumn()
     foreign static endColumn()
-    foreign static slider(value, min, max)
+    foreign static slider(value, offset, min, max)
     foreign static next()
     foreign static drawRect(x, y, width, height, color)
     foreign static drawText(text, x, y, width, height)
     foreign static beginTreenode(text)
     foreign static endTreenode()
-    foreign static checkbox(text, value)
+    foreign static checkbox(text, value, offset)
     foreign static text(text)
     foreign static beginPanel(name)
     foreign static endPanel()
@@ -403,16 +403,42 @@ class File {
 
 foreign class Buffer {
     foreign construct new(size)
+    foreign construct from(data)
 
-    foreign resize(size)
-    foreign readFloat()
-    foreign writeFloat(v)
-    foreign readString(size)
-    foreign writeString(v)
+    foreign [index]
+    foreign [index]=(v)
+
+    foreign fill(value)
+
+    foreign readInt8(offset)
+    foreign readUint8(offset)
+    foreign readInt16(offset)
+    foreign readUint16(offset)
+    foreign readInt32(offset)
+    foreign readUint32(offset)
+    foreign readInt64(offset)
+    foreign readUint64(offset)
+    foreign readFloat(offset)
+    foreign readDouble(offset)
+    foreign readBool(offset)
+    foreign readString(size, offset)
+
+    foreign writeInt8(value, offset)
+    foreign writeUint8(value, offset)
+    foreign writeInt16(value, offset)
+    foreign writeUint16(value, offset)
+    foreign writeInt32(value, offset)
+    foreign writeUint32(value, offset)
+    foreign writeInt64(value, offset)
+    foreign writeUint64(value, offset)
+    foreign writeFloat(value, offset)
+    foreign writeDouble(value, offset)
+    foreign writeBool(value, offset)
+    foreign writeString(value, offset)
 
     foreign size
-    foreign pointer
-    foreign pointer=(v)
+    foreign toString
+    foreign toList
 }
 
 foreign class Request {
