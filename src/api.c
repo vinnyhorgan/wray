@@ -1130,6 +1130,22 @@ void imageNew4(WrenVM* vm)
 void imageNew5(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "size");
+    ASSERT_SLOT_TYPE(vm, 3, FOREIGN, "color");
+    const char* text = wrenGetSlotString(vm, 1);
+    int size = (int)wrenGetSlotDouble(vm, 2);
+    Color* color = (Color*)wrenGetSlotForeign(vm, 3);
+
+    if (size < defaultFont.baseSize)
+        size = defaultFont.baseSize;
+
+    *image = ImageTextEx(defaultFont, text, size, size / defaultFont.baseSize, *color);
+}
+
+void imageNew6(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
     ASSERT_SLOT_TYPE(vm, 2, NUM, "height");
     ASSERT_SLOT_TYPE(vm, 3, NUM, "direction");
@@ -1143,7 +1159,7 @@ void imageNew5(WrenVM* vm)
     *image = GenImageGradientLinear(width, height, direction, *startColor, *endColor);
 }
 
-void imageNew6(WrenVM* vm)
+void imageNew7(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
@@ -1159,7 +1175,7 @@ void imageNew6(WrenVM* vm)
     *image = GenImageGradientRadial(width, height, density, *innerColor, *outerColor);
 }
 
-void imageNew7(WrenVM* vm)
+void imageNew8(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");

@@ -34,7 +34,8 @@ This should output: "Hello, World!".
 
 If so you are ready to start writing code!
 Just open the new folder in a code editor.
-To learn everything you can do with wray, look at the [api](src/api.wren) file in the source directory. Also check out wren's [documentation](https://wren.io/syntax.html).
+To learn everything you can do with wray, look at the [api](src/api.wren) file in the source directory.
+Also check out wren's [documentation](https://wren.io/syntax.html).
 
 The following code opens a window:
 
@@ -54,6 +55,7 @@ while (!Window.closed) {
 ```
 
 For more examples check the `examples` folder in the repository!
+Also look at the [modules](modules) directory for some wren libraries to use in your projects!
 
 ## Distribution
 

@@ -132,6 +132,7 @@ void imageNew4(WrenVM* vm);
 void imageNew5(WrenVM* vm);
 void imageNew6(WrenVM* vm);
 void imageNew7(WrenVM* vm);
+void imageNew8(WrenVM* vm);
 void imageExport(WrenVM* vm);
 void imageCrop(WrenVM* vm);
 void imageResize(WrenVM* vm);

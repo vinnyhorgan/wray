@@ -186,9 +186,10 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("init new(_,_,_)", imageNew2);
         BIND_METHOD("init fromScreen()", imageNew3);
         BIND_METHOD("init fromImage(_,_,_,_,_)", imageNew4);
-        BIND_METHOD("init gradientLinear(_,_,_,_,_)", imageNew5);
-        BIND_METHOD("init gradientRadial(_,_,_,_,_)", imageNew6);
-        BIND_METHOD("init gradientSquare(_,_,_,_,_)", imageNew7);
+        BIND_METHOD("init fromText(_,_,_)", imageNew5);
+        BIND_METHOD("init fromGradientLinear(_,_,_,_,_)", imageNew6);
+        BIND_METHOD("init fromGradientRadial(_,_,_,_,_)", imageNew7);
+        BIND_METHOD("init fromGradientSquare(_,_,_,_,_)", imageNew8);
         BIND_METHOD("export(_)", imageExport);
         BIND_METHOD("crop(_,_,_,_)", imageCrop);
         BIND_METHOD("resize(_,_)", imageResize);

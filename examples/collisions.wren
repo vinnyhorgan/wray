@@ -2,7 +2,7 @@
 // https://github.com/OneLoneCoder/Javidx9/blob/master/PixelGameEngine/SmallerProjects/OneLoneCoder_PGE_Rectangles.cpp
 
 import "wray" for Color, Graphics, Keyboard, Mouse, RenderTexture, Window
-import "vector" for Vector
+import "../modules/vector" for Vector
 
 class Rect {
     construct new(pos, size, vel) {

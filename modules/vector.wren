@@ -1,5 +1,3 @@
-// Simple 2d vector class
-
 class Vector {
     construct new(x, y) {
         _x = x

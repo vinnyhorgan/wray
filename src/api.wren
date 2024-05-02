@@ -165,26 +165,35 @@ foreign class Color {
 }
 
 foreign class Image {
-    foreign construct new(pathOrTexture)                                                // Load image from file (PNG, BMP, JPG) or texture
-    foreign construct new(width, height, color)                                         // New image
-    foreign construct fromScreen()                                                      // New image from screen
-    foreign construct fromImage(image, x, y, width, height)                             // New image from another image piece
-    foreign construct gradientLinear(width, height, direction, startColor, endColor)    // New image from linear gradient, direction is in degrees
-    foreign construct gradientRadial(width, height, density, innerColor, outerColor)    // New image from radial gradient
-    foreign construct gradientSquare(width, height, density, innerColor, outerColor)    // New image from square gradient
+    foreign construct new(pathOrTexture)                                                    // Load image from file (PNG, BMP, JPG) or texture
+    foreign construct new(width, height, color)                                             // New image
+    foreign construct fromScreen()                                                          // New image from screen
+    foreign construct fromImage(image, x, y, width, height)                                 // New image from another image piece
+    foreign construct fromText(text, size, color)                                           // New image from text
+    foreign construct fromGradientLinear(width, height, direction, startColor, endColor)    // New image from linear gradient, direction is in degrees
+    foreign construct fromGradientRadial(width, height, density, innerColor, outerColor)    // New image from radial gradient
+    foreign construct fromGradientSquare(width, height, density, innerColor, outerColor)    // New image from square gradient
 
-    foreign export(path)                                                                // Save image to file, return true on success
-    foreign crop(x, y, width, height)                                                   // Crop image to new size
-    foreign resize(width, height)                                                       // Resize image
-    foreign flipVertical()                                                              // Flip image vertically
-    foreign flipHorizontal()                                                            // Flip image horizontally
-    foreign rotate(angle)                                                               // Rotate image by angle in degrees
+    foreign export(path)                                                                    // Save image to file, return true on success
+    foreign crop(x, y, width, height)                                                       // Crop image to new size
+    foreign resize(width, height)                                                           // Resize image
+    foreign flipVertical()                                                                  // Flip image vertically
+    foreign flipHorizontal()                                                                // Flip image horizontally
+    foreign rotate(angle)                                                                   // Rotate image by angle in degrees
 
-    // TO COMPLETE
+    foreign clear(color)
+    foreign pixel(x, y, color)
+    foreign line(x1, y1, x2, y2, color)
+    foreign circle(x, y, radius, color)
+    foreign circleLines(x, y, radius, color)
+    foreign rectangle(x, y, width, height, color)
+    foreign rectangleLines(x, y, width, height, color)
+    foreign draw(image, x, y, color)
+    foreign text()
 
-    foreign width                                                                       // Get image width
-    foreign height                                                                      // Get image height
-    foreign format                                                                      // Get image pixel format
+    foreign width                                                                           // Get image width
+    foreign height                                                                          // Get image height
+    foreign format                                                                          // Get image pixel format
 }
 
 foreign class Texture {
