@@ -54,7 +54,7 @@ while (!Window.closed) {
 }
 ```
 
-For more examples check the `examples` folder in the repository!
+For more examples check the [examples](examples) folder in the repository!
 Also look at the [modules](modules) directory for some wren libraries to use in your projects!
 
 ## Distribution

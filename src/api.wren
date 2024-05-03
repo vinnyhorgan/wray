@@ -167,6 +167,7 @@ foreign class Color {
 foreign class Image {
     foreign construct new(pathOrTexture)                                                    // Load image from file (PNG, BMP, JPG) or texture
     foreign construct new(width, height, color)                                             // New image
+    foreign construct fromMemory(type, data)                                                // Load image from memory, type is: ".png", ".bmp", ".jpg"
     foreign construct fromScreen()                                                          // New image from screen
     foreign construct fromImage(image, x, y, width, height)                                 // New image from another image piece
     foreign construct fromText(text, size, color)                                           // New image from text
@@ -175,21 +176,12 @@ foreign class Image {
     foreign construct fromGradientSquare(width, height, density, innerColor, outerColor)    // New image from square gradient
 
     foreign export(path)                                                                    // Save image to file, return true on success
+    foreign exportToMemory(type)                                                            // Save image data to memory, type is: ".png", ".bmp", ".jpg"
     foreign crop(x, y, width, height)                                                       // Crop image to new size
     foreign resize(width, height)                                                           // Resize image
     foreign flipVertical()                                                                  // Flip image vertically
     foreign flipHorizontal()                                                                // Flip image horizontally
     foreign rotate(angle)                                                                   // Rotate image by angle in degrees
-
-    foreign clear(color)
-    foreign pixel(x, y, color)
-    foreign line(x1, y1, x2, y2, color)
-    foreign circle(x, y, radius, color)
-    foreign circleLines(x, y, radius, color)
-    foreign rectangle(x, y, width, height, color)
-    foreign rectangleLines(x, y, width, height, color)
-    foreign draw(image, x, y, color)
-    foreign text()
 
     foreign width                                                                           // Get image width
     foreign height                                                                          // Get image height
@@ -235,6 +227,7 @@ foreign class RenderTexture {
 
 foreign class Font {
     foreign construct new(path, size)                              // Load font from file (TTF, OTF)
+    foreign construct fromMemory(data, size)                       // Load font from memory
 
     foreign print(text, x, y, r, scale, spacing, ox, oy, color)    // Draw text
     foreign measure(text)                                          // Measure text width
@@ -270,12 +263,14 @@ foreign class Camera {
 }
 
 foreign class Shader {
-    foreign construct new(vs, fs)    // Load shader from vertex and fragment files
-    foreign construct new(fs)        // Load shader from fragment file (uses default vertex shader)
+    foreign construct new(vs, fs)           // Load shader from vertex and fragment files
+    foreign construct new(fs)               // Load shader from fragment file (uses default vertex shader)
+    foreign construct fromMemory(vs, fs)    // Load shader from memory
+    foreign construct fromMemory(fs)        // Load shader from memory (uses default vertex shader)
 
-    foreign begin()                  // Begin shader mode
-    foreign end()                    // End shader mode
-    foreign set(name, value)         // Set uniform value
+    foreign begin()                         // Begin shader mode
+    foreign end()                           // End shader mode
+    foreign set(name, value)                // Set uniform value
 }
 
 //------------------------------
@@ -288,7 +283,8 @@ class Keyboard {
     foreign static down(key)             // Check if key is being pressed
     foreign static released(key)         // Check if key is released once
 
-    foreign static keyPressed            // Get latest key pressed
+    foreign static keyPressed            // Get latest key pressed (keycode)
+    foreign static charPressed           // Get latest character pressed (unicode)
 }
 
 class Mouse {

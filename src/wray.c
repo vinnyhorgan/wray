@@ -184,13 +184,15 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
     } else if (TextIsEqual(className, "Image")) {
         BIND_METHOD("init new(_)", imageNew);
         BIND_METHOD("init new(_,_,_)", imageNew2);
-        BIND_METHOD("init fromScreen()", imageNew3);
-        BIND_METHOD("init fromImage(_,_,_,_,_)", imageNew4);
-        BIND_METHOD("init fromText(_,_,_)", imageNew5);
-        BIND_METHOD("init fromGradientLinear(_,_,_,_,_)", imageNew6);
-        BIND_METHOD("init fromGradientRadial(_,_,_,_,_)", imageNew7);
-        BIND_METHOD("init fromGradientSquare(_,_,_,_,_)", imageNew8);
+        BIND_METHOD("init fromMemory(_,_)", imageNew3);
+        BIND_METHOD("init fromScreen()", imageNew4);
+        BIND_METHOD("init fromImage(_,_,_,_,_)", imageNew5);
+        BIND_METHOD("init fromText(_,_,_)", imageNew6);
+        BIND_METHOD("init fromGradientLinear(_,_,_,_,_)", imageNew7);
+        BIND_METHOD("init fromGradientRadial(_,_,_,_,_)", imageNew8);
+        BIND_METHOD("init fromGradientSquare(_,_,_,_,_)", imageNew9);
         BIND_METHOD("export(_)", imageExport);
+        BIND_METHOD("exportToMemory(_)", imageExportToMemory);
         BIND_METHOD("crop(_,_,_,_)", imageCrop);
         BIND_METHOD("resize(_,_)", imageResize);
         BIND_METHOD("flipVertical()", imageFlipVertical);
@@ -214,6 +216,7 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("texture", renderTextureGetTexture);
     } else if (TextIsEqual(className, "Font")) {
         BIND_METHOD("init new(_,_)", fontNew);
+        BIND_METHOD("init fromMemory(_,_)", fontNew2);
         BIND_METHOD("print(_,_,_,_,_,_,_,_,_)", fontPrint);
         BIND_METHOD("measure(_)", fontMeasure);
         BIND_METHOD("size", fontGetSize);
@@ -238,6 +241,8 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
     } else if (TextIsEqual(className, "Shader")) {
         BIND_METHOD("init new(_,_)", shaderNew);
         BIND_METHOD("init new(_)", shaderNew2);
+        BIND_METHOD("init fromMemory(_,_)", shaderNew3);
+        BIND_METHOD("init fromMemory(_)", shaderNew4);
         BIND_METHOD("begin()", shaderBegin);
         BIND_METHOD("end()", shaderEnd);
         BIND_METHOD("set(_,_)", shaderSet);
@@ -247,6 +252,7 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("down(_)", keyboardDown);
         BIND_METHOD("released(_)", keyboardReleased);
         BIND_METHOD("keyPressed", keyboardGetKeyPressed);
+        BIND_METHOD("charPressed", keyboardGetCharPressed);
     } else if (TextIsEqual(className, "Mouse")) {
         BIND_METHOD("pressed(_)", mousePressed);
         BIND_METHOD("down(_)", mouseDown);

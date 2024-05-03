@@ -1108,10 +1108,26 @@ void imageNew2(WrenVM* vm)
 void imageNew3(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
-    *image = LoadImageFromScreen();
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "type");
+    ASSERT_SLOT_TYPE(vm, 2, STRING, "data");
+    const char* type = wrenGetSlotString(vm, 1);
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 2, &length);
+    *image = LoadImageFromMemory(type, data, length);
+    if (!IsImageReady(*image)) {
+        VM_ABORT(vm, "Failed to load image.");
+        return;
+    }
 }
 
 void imageNew4(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    *image = LoadImageFromScreen();
+}
+
+void imageNew5(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, FOREIGN, "image");
@@ -1127,7 +1143,7 @@ void imageNew4(WrenVM* vm)
     *image = ImageFromImage(*other, (Rectangle) { (float)x, (float)y, (float)width, (float)height });
 }
 
-void imageNew5(WrenVM* vm)
+void imageNew6(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, STRING, "text");
@@ -1143,7 +1159,7 @@ void imageNew5(WrenVM* vm)
     *image = ImageTextEx(defaultFont, text, size, size / defaultFont.baseSize, *color);
 }
 
-void imageNew6(WrenVM* vm)
+void imageNew7(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
@@ -1159,7 +1175,7 @@ void imageNew6(WrenVM* vm)
     *image = GenImageGradientLinear(width, height, direction, *startColor, *endColor);
 }
 
-void imageNew7(WrenVM* vm)
+void imageNew8(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
@@ -1175,7 +1191,7 @@ void imageNew7(WrenVM* vm)
     *image = GenImageGradientRadial(width, height, density, *innerColor, *outerColor);
 }
 
-void imageNew8(WrenVM* vm)
+void imageNew9(WrenVM* vm)
 {
     Image* image = (Image*)wrenGetSlotForeign(vm, 0);
     ASSERT_SLOT_TYPE(vm, 1, NUM, "width");
@@ -1197,6 +1213,17 @@ void imageExport(WrenVM* vm)
     ASSERT_SLOT_TYPE(vm, 1, STRING, "path");
     const char* path = wrenGetSlotString(vm, 1);
     wrenSetSlotBool(vm, 0, ExportImage(*image, path));
+}
+
+void imageExportToMemory(WrenVM* vm)
+{
+    Image* image = (Image*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "type");
+    const char* type = wrenGetSlotString(vm, 1);
+
+    int length;
+    unsigned char* data = ExportImageToMemory(*image, type, &length);
+    wrenSetSlotBytes(vm, 0, data, length);
 }
 
 void imageCrop(WrenVM* vm)
@@ -1539,7 +1566,29 @@ void fontNew(WrenVM* vm)
         return;
     }
 
-    *font = LoadFontEx(path, size, NULL, 0);
+    *font = LoadFontEx(path, size, NULL, 250); // insert codepoint count in api
+    if (!IsFontReady(*font)) {
+        VM_ABORT(vm, "Failed to load font.");
+        return;
+    }
+}
+
+void fontNew2(WrenVM* vm)
+{
+    Font* font = (Font*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "data")
+    ASSERT_SLOT_TYPE(vm, 2, NUM, "size");
+    int size = (int)wrenGetSlotDouble(vm, 2);
+
+    int length;
+    const char* data = wrenGetSlotBytes(vm, 1, &length);
+
+    if (!IsWindowReady()) {
+        VM_ABORT(vm, "Cannot load font before window initialization.");
+        return;
+    }
+
+    *font = LoadFontFromMemory(".ttf", data, length, size, NULL, 250);
     if (!IsFontReady(*font)) {
         VM_ABORT(vm, "Failed to load font.");
         return;
@@ -1778,6 +1827,44 @@ void shaderNew2(WrenVM* vm)
     }
 }
 
+void shaderNew3(WrenVM* vm)
+{
+    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "vs");
+    ASSERT_SLOT_TYPE(vm, 2, STRING, "fs");
+    const char* vs = wrenGetSlotString(vm, 1);
+    const char* fs = wrenGetSlotString(vm, 2);
+
+    if (!IsWindowReady()) {
+        VM_ABORT(vm, "Cannot load shader before window initialization.");
+        return;
+    }
+
+    *shader = LoadShaderFromMemory(vs, fs);
+    if (!IsShaderReady(*shader)) {
+        VM_ABORT(vm, "Failed to load shader.");
+        return;
+    }
+}
+
+void shaderNew4(WrenVM* vm)
+{
+    Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
+    ASSERT_SLOT_TYPE(vm, 1, STRING, "fs");
+    const char* fs = wrenGetSlotString(vm, 1);
+
+    if (!IsWindowReady()) {
+        VM_ABORT(vm, "Cannot load shader before window initialization.");
+        return;
+    }
+
+    *shader = LoadShaderFromMemory(NULL, fs);
+    if (!IsShaderReady(*shader)) {
+        VM_ABORT(vm, "Failed to load shader.");
+        return;
+    }
+}
+
 void shaderBegin(WrenVM* vm)
 {
     Shader* shader = (Shader*)wrenGetSlotForeign(vm, 0);
@@ -1924,6 +2011,12 @@ void keyboardGetKeyPressed(WrenVM* vm)
 {
     wrenEnsureSlots(vm, 1);
     wrenSetSlotDouble(vm, 0, GetKeyPressed());
+}
+
+void keyboardGetCharPressed(WrenVM* vm)
+{
+    wrenEnsureSlots(vm, 1);
+    wrenSetSlotDouble(vm, 0, GetCharPressed());
 }
 
 void mousePressed(WrenVM* vm)
