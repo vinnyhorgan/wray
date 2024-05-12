@@ -956,7 +956,7 @@ void uiCheckbox(WrenVM* vm)
         return;
     }
 
-    mu_checkbox(data->uiCtx, text, (int*)(&buffer->data[offset]));
+    wrenSetSlotBool(vm, 0, mu_checkbox(data->uiCtx, text, (int*)(&buffer->data[offset])));
 }
 
 void uiText(WrenVM* vm)
