@@ -130,6 +130,28 @@ void hostNew(WrenVM* vm)
     }
 }
 
+void hostNew2(WrenVM* vm)
+{
+    ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);
+
+    if (wrenGetSlotType(vm, 1) == WREN_TYPE_NULL) {
+        *host = enet_host_create(NULL, 64, 1, 0, 0);
+    } else if (wrenGetSlotType(vm, 1) == WREN_TYPE_STRING) {
+        const char* address = wrenGetSlotString(vm, 1);
+        ENetAddress addr;
+        parse_address(vm, address, &addr);
+        *host = enet_host_create(&addr, 64, 1, 0, 0);
+    } else {
+        VM_ABORT(vm, "Invalid address type.");
+        return;
+    }
+
+    if (*host == NULL) {
+        VM_ABORT(vm, "Failed to create ENet host.");
+        return;
+    }
+}
+
 void hostConnect(WrenVM* vm)
 {
     ENetHost** host = (ENetHost**)wrenGetSlotForeign(vm, 0);

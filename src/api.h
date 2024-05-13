@@ -370,6 +370,7 @@ void enetGetVersion(WrenVM* vm);
 void hostAllocate(WrenVM* vm);
 void hostFinalize(void* data);
 void hostNew(WrenVM* vm);
+void hostNew2(WrenVM* vm);
 void hostConnect(WrenVM* vm);
 void hostService(WrenVM* vm);
 void hostCheckEvents(WrenVM* vm);

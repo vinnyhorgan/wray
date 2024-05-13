@@ -391,6 +391,7 @@ static WrenForeignMethodFn wrenBindForeignMethod(WrenVM* vm, const char* module,
         BIND_METHOD("version", enetGetVersion);
     } else if (TextIsEqual(className, "Host")) {
         BIND_METHOD("init new(_,_,_,_,_)", hostNew);
+        BIND_METHOD("init new(_)", hostNew2);
         BIND_METHOD("connect(_,_,_)", hostConnect);
         BIND_METHOD("service(_)", hostService);
         BIND_METHOD("checkEvents()", hostCheckEvents);

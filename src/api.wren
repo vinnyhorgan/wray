@@ -411,9 +411,6 @@ foreign class Buffer {
     foreign construct new(size)           // Allocate buffer of given size in bytes
     foreign construct from(data)          // Create new buffer from: array of bytes, string or buffer
 
-    foreign [index]
-    foreign [index]=(v)
-
     foreign fill(value)                   // Fill buffer with given value
 
     foreign readInt8(offset)              // Read int8 from buffer at given offset
@@ -445,6 +442,9 @@ foreign class Buffer {
     foreign size                          // Get buffer size in bytes
     foreign toString                      // Convert buffer to string
     foreign toList                        // Convert buffer to list
+
+    foreign [index]
+    foreign [index]=(v)
 }
 
 foreign class Request {
@@ -472,6 +472,7 @@ class ENet {
 
 foreign class Host {
     foreign construct new(address, peerCount, channelCount, inBandwidth, outBandwidth)
+    foreign construct new(address)
 
     foreign connect(address, channelCount, data)
     foreign service(timeout)
