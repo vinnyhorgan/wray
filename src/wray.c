@@ -516,46 +516,44 @@ static void runWren(const char* script, const char* module)
         return;
     }
 
-    vmData* data = malloc(sizeof(vmData));
-    data->audioInit = false;
-    data->windowInit = false;
-    data->enetInit = false;
+    vmData data;
+    data.audioInit = false;
+    data.windowInit = false;
+    data.enetInit = false;
 
-    data->uiCtx = malloc(sizeof(mu_Context));
-    mu_init(data->uiCtx);
-    data->uiCtx->text_width = uiTextWidth;
-    data->uiCtx->text_height = uiTextHeight;
+    data.uiCtx = malloc(sizeof(mu_Context));
+    mu_init(data.uiCtx);
+    data.uiCtx->text_width = uiTextWidth;
+    data.uiCtx->text_height = uiTextHeight;
 
-    loadKeys(&data->keys);
+    loadKeys(&data.keys);
 
     wrenEnsureSlots(vm, 1);
     wrenGetVariable(vm, "wray", "Texture", 0);
-    data->textureClass = wrenGetSlotHandle(vm, 0);
+    data.textureClass = wrenGetSlotHandle(vm, 0);
     wrenGetVariable(vm, "wray", "Peer", 0);
-    data->peerClass = wrenGetSlotHandle(vm, 0);
+    data.peerClass = wrenGetSlotHandle(vm, 0);
 
-    wrenSetUserData(vm, data);
+    wrenSetUserData(vm, &data);
 
     wrenInterpret(vm, module, source);
 
-    wrenReleaseHandle(vm, data->textureClass);
-    wrenReleaseHandle(vm, data->peerClass);
+    wrenReleaseHandle(vm, data.textureClass);
+    wrenReleaseHandle(vm, data.peerClass);
 
-    map_deinit(&data->keys);
+    map_deinit(&data.keys);
 
-    free(data->uiCtx);
+    free(data.uiCtx);
 
     UnloadFileText(source);
     wrenFreeVM(vm);
 
-    if (data->audioInit)
+    if (data.audioInit)
         CloseAudioDevice();
-    if (data->windowInit)
+    if (data.windowInit)
         CloseWindow();
-    if (data->enetInit)
+    if (data.enetInit)
         enetClose();
-
-    free(data);
 }
 
 typedef struct {

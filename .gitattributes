@@ -1,7 +1,6 @@
 * text=auto
 
-*.h linguist-language=C
-src/lib/* linguist-vendored
+src/lib/**     linguist-vendored
 src/api.wren.h linguist-vendored
-src/font.h linguist-vendored
-src/icon.h linguist-vendored
+src/font.h     linguist-vendored
+src/icon.h     linguist-vendored
